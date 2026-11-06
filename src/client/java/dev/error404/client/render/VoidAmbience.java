@@ -50,8 +50,10 @@ public final class VoidAmbience {
 
 		// Ambient bed: a looping, music-free ambience that follows the phase. Phase 1 gets a
 		// heartbeat instead - the world is still quiet, something in it is not.
+		// Tracks are exactly 19 s long and resume from a timer, so the restart is scheduled
+		// just before the loop ends instead of a full second late (which left a silent gap).
 		if (ambienceTimer-- <= 0 || !ambiencePlaying) {
-			ambienceTimer = 20 * 24;
+			ambienceTimer = 20 * 19;
 			boolean shouldBeDeleted = phase >= 2;
 
 			if (!ambiencePlaying || shouldBeDeleted != deletedAmbience) {

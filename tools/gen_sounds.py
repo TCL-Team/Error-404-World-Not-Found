@@ -110,13 +110,53 @@ def fade(x: np.ndarray, fin: float = 0.005, fout: float = 0.02) -> np.ndarray:
     return x
 
 
-def save(name: str, x: np.ndarray, peak: float = 0.89) -> None:
+def _soft_limit(x: np.ndarray, ceiling: float = 0.92) -> np.ndarray:
+    """tanh knee above 60% of the ceiling, so transients round off instead of clipping."""
+    knee = ceiling * 0.6
+    mag = np.abs(x)
+    over = mag > knee
+    if not np.any(over):
+        return x
+    out = x.copy()
+    out[over] = np.sign(x[over]) * (knee + (ceiling - knee) * np.tanh((mag[over] - knee) / (ceiling - knee)))
+    return out
+
+
+def save(name: str, x: np.ndarray, peak: float = 0.80, min_rms_db: float = -22.0,
+         loop: bool = False) -> None:
+    """
+    Normalise, then guarantee three things before the file is written:
+
+    * no sample is above ``peak`` after the soft limiter,
+    * nothing is quieter than ``min_rms_db`` (a footstep nobody can hear is a bug,
+      not restraint - the mix balances volume per sound in-game, not in the file),
+    * the *decoded* ogg is checked too, because Vorbis ringing can overshoot the
+      encoded peak by several dB and that is what actually clips in the mixer.
+    """
     x = np.asarray(x, dtype=np.float64)
+    x = np.nan_to_num(x)
     m = np.max(np.abs(x)) or 1.0
     x = x / m * peak
-    x = fade(x)
+    x = _soft_limit(x, peak + 0.06)
+
+    if not loop:
+        # A loop gets its fade from seamless(): fading the end out would punch a hole in it.
+        x = fade(x)
+
+    rms = float(np.sqrt(np.mean(x ** 2)) or 1e-9)
+    target = 10 ** (min_rms_db / 20.0)
+    if rms < target:
+        x = _soft_limit(x * min(target / rms, 6.0), peak + 0.06)
+
     os.makedirs(OUT, exist_ok=True)
-    sf.write(os.path.join(OUT, name + ".ogg"), x.astype(np.float32), SR, format="OGG", subtype="VORBIS")
+    path = os.path.join(OUT, name + ".ogg")
+    sf.write(path, x.astype(np.float32), SR, format="OGG", subtype="VORBIS")
+
+    data, _ = sf.read(path, dtype="float32", always_2d=True)
+    decoded_peak = float(np.max(np.abs(data)))
+    if decoded_peak > 0.95:
+        x = x * (0.95 / decoded_peak)
+        sf.write(path, x.astype(np.float32), SR, format="OGG", subtype="VORBIS")
 
 
 # ----------------------------------------------------------------------------- sounds
@@ -316,11 +356,37 @@ def title_drone():
     return lowpass(x * env, 1200, 2)
 
 
+def seamless(x: np.ndarray, xfade: float = 1.0, tail: float = 0.6) -> np.ndarray:
+    """
+    Makes a loop that does not click and does not breathe at the seam.
+
+    The last ``xfade`` seconds are cross-faded with the material just before ``tail``, and
+    the result is trimmed to a whole number of seconds so both ambience tracks are exactly
+    19 s - the client restarts them from the same timer, so a length mismatch would drift
+    into a gap.
+    """
+    n = len(x)
+    k = int(xfade * SR)
+
+    body = x[:-k].copy()
+    tailpart = x[-k:].copy()
+    fade_in = np.linspace(0.0, 1.0, k, dtype=np.float64)
+
+    # the seam: fade the tail out under the first k samples instead of over the end
+    body[:k] = tailpart * (1.0 - fade_in) + body[:k] * fade_in
+
+    total = int(SR * 19)
+    if len(body) < total:
+        body = np.pad(body, (0, total - len(body)))
+
+    return body[:total]
+
+
 def ambience_calm():
     d = 20.0
     wind = lowpass(noise(d, "pink"), 500, 2) * 0.7
     lfo = 0.6 + 0.4 * np.sin(2 * math.pi * 0.07 * t(d))
-    return wind * lfo
+    return seamless(wind * lfo)
 
 
 def ambience_deleted():
@@ -328,7 +394,7 @@ def ambience_deleted():
     hum = np.sin(2 * math.pi * 33 * t(d)) * 0.4 + np.sin(2 * math.pi * 49.5 * t(d)) * 0.2
     air = highpass(lowpass(noise(d, "pink"), 1800, 2), 200) * 0.25
     lfo = 0.7 + 0.3 * np.sin(2 * math.pi * 0.09 * t(d) + 1.0)
-    return (hum + air) * lfo
+    return seamless((hum + air) * lfo)
 
 
 SOUNDS = {
@@ -377,9 +443,12 @@ SUBTITLES = {
 }
 
 
+LOOPS = {"ambience_calm", "ambience_deleted", "title_drone"}
+
+
 def main() -> None:
     for name, fn in SOUNDS.items():
-        save(name, fn())
+        save(name, fn(), loop=name in LOOPS)
         print("  ->", name + ".ogg")
 
     sounds_json = {}
