@@ -347,6 +347,25 @@ a broken mod? Answer: a **named, bounded pool** of events with a visible cooldow
 | displacement | 8% | no | yes (walk back) |
 | fake message | 6% | no | n/a |
 
+### Visible collapse + personal collapse (v0.8.1)
+
+The complaint that killed 0.8.0's chunk event was simple: *"pata nahi kahan hota hai"*. Deletion
+that happens off-screen is indistinguishable from a bug. So deletion now has two visible forms.
+
+| Form | Trigger | What the player sees | Escape |
+|---|---|---|---|
+| Collapse in view | every deletion pass, budget `maxChunksPerSecond` | the chunk they are **looking at** (radius 3-9, view cone dot > 0.35) comes apart block by block, sound + particles + instant client resync | none - it is behind the horizon line of their vision |
+| Personal collapse | CASCADE+, after >= 1 death, 1-in-3 roll per 200 t | chat warning, title `NO SAVE DATA`, 9 s actionbar countdown, escalating heartbeat, nausea | walk out of the chunk |
+
+Personal collapse outcomes, deliberately asymmetric:
+
+- still inside at t=0: teleported to `minY - 24`, `Damage.worldDeleted` 8.0, chat
+  `ERR_FATAL: player position not found in chunk`, server broadcast
+- escaped: a single quiet confirmation line - the mod telling you that you got away is worse than
+  the death message, because it means it noticed
+
+Both paths journal every block, so `/error404 restore` still puts the world back.
+
 ### AI: what makes it different from a stalker
 
 | Layer | Behaviour |
@@ -358,3 +377,26 @@ a broken mod? Answer: a **named, bounded pool** of events with a visible cooldow
 | Sleep haunting | wakes sleepers, destroys the bed, stands next to it in ANNEXATION |
 | Wall breaking | chews through anything between it and the player |
 | Sanctuary | cannot enter, cannot teleport into a 32-block anchor zone |
+| Leash | never further than 40 blocks from a player: too far, and it repositions instead of despawning |
+| Never leaves | despawn timer only runs while nobody is within 40 blocks, so a watched 422 stays for the session |
+
+### The title screen is part of the horror (v0.8.1)
+
+A horror mod that opens on the stock Minecraft menu has already broken character. The title screen
+is shipped as a built-in resource pack (`resourcepacks/title` in the jar, overriding the `minecraft`
+namespace, `DEFAULT_ENABLED` - a player can switch it off in Resource Packs):
+
+- **panorama**: shipped as a proper cubemap - four 1024x512 side faces covering 90 degrees of yaw
+  each, plus a sky and a void face. One continuous 360 degree strip is painted and then sliced, so
+  the horizon never jumps at a seam. Content: a plain that ends at a jagged cut, blocks left floating
+  over the void, ruins on the skyline, and a 3:1 silhouette with two lit eyes that the rotation keeps
+  bringing back.
+- **wordmark**: original `ERROR 404 / WORLD NOT FOUND` pixel art (first letter corrupted, one slice
+  displaced) plus a `NULL EDITION` bar, replacing `minecraft.png` and `edition.png`.
+- **overlay**: 16x128, the exact size vanilla samples - a larger texture only shows its top-left
+  corner under vanilla's fixed quad, which is how 0.8.0 shipped a screen that was darker than intended.
+- **client overlay**: scanlines, drifting `[error404]` log lines, stack-trace splashes, and a rare
+  static burst that starts ten seconds after the menu opens (photosensitivity respected).
+
+Hard rule for all of it: never block a click, never move a button, never slow down getting into the
+game.

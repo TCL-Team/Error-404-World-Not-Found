@@ -201,7 +201,7 @@ CI har push par GitHub Actions se build hota hai (`.github/workflows/build.yml`)
 | **v0.1 code** | Fabric 1.21.11 project, integrity director, `/error404` commands, JSON config, CI build | ✅ build green |
 | **v0.2 assets** | 19 original synthesised sounds, textures, models, blockstates, item defs, lang, recipes | ✅ in game |
 | **v0.2 world** | chunk deletion front (hardcore), void_stone residue, restore path, world backup | ✅ in game |
-| **v0.3 anomalies** | 12 procedural structures, discovery logging, revoke, anomaly manager | ✅ in game |
+| **v0.3 anomalies** | 12 procedural structures (+ `ERR_404_X` heartbeat vault in 0.8.1), discovery logging, revoke, anomaly manager | ✅ in game |
 | **v0.4 entity** | 422 - 3 textures, custom model, Mix AI (stalker -> stare rule), glow, vanish loot | ✅ in game |
 | **v0.5 endings** | SALVAGE / DELETE / 0x00, anchor ritual, advancements, restore hardening | ✅ in game |
 | **v0.6 polish** | HUD glitch layer, fog/void horizon, ambience cross-fade, photosensitivity mode | ✅ in game |
@@ -232,6 +232,11 @@ Latest verified jar: **error404-0.8.1.jar, 1.04 MB** (release `v0.8.1`).
 /error404 backup                 write a world zip immediately
 /error404 reload | config save   config file round-trip
 ```
+
+Client-side settings screen: **Mod Menu → ERROR 404 → settings**, ya bina Mod Menu ke chat me
+`/error404config`. Har switch (real block deletion, chaos, photosensitivity, backup, destructive ending,
+chest protection, HUD, announce, pacing sliders, difficulty) wahin se, aur turant
+`config/error404.json` me save hota hai.
 
 ## Language
 

@@ -133,18 +133,21 @@ Har milestone ke baad jar GitHub Actions par build hota hai (latest run: green).
 | **v0.6** | Polish | HUD glitch layer (scanlines, drifting ERR lines, phase flash, static, vignette), fog + void-horizon mixin, ambience cross-fade, photosensitivity + HUD sync flags | ✅ |
 | **v0.6.0** | Release | `release.yml` (tag → jar + notes), `CHANGELOG.md`, version bump, install docs, 5 languages | ✅ [v0.6.0](https://github.com/TCL-Team/Error-404-World-Not-Found/releases/tag/v0.6.0) |
 | **v0.7** | Threat | 422 lethal kit: contact, escalating stare, chase, wall-breaking, sleep haunting, darkness aura, death feeding, mercy withdrawal, anchor sanctuary, `chill/standard/nightmare` presets, proximity dread overlay, emissive eyes, phantom server chat | ✅ |
-| **v1.0** | Distribution | CurseForge/Modrinth listing, banner + trailer, optional Mod Menu GUI | ⏳ |
+| **v0.8** | Chaos | chaos pool (9 weighted events), path memory + prediction + habit model, visible chunk collapse, proximity drone, death sting, all-English text | ✅ [v0.8.0](https://github.com/TCL-Team/Error-404-World-Not-Found/releases/tag/v0.8.0) |
+| **v0.8.1** | Presence | personal chunk collapse (warn → die or escape), creepy title screen + original wordmark via built-in resource pack, 422 leash + early spawns, Mod Menu config screen + `/error404config`, `ERR_404_X` heartbeat vault | ✅ [v0.8.1](https://github.com/TCL-Team/Error-404-World-Not-Found/releases/tag/v0.8.1) |
+| **v1.0** | Distribution | CurseForge/Modrinth listing, banner + trailer | ⏳ |
 
 ### CI ke baad kya bacha hai (honest list)
 
 - **In-game feel pass:** sirf player verify kar sakta hai — sound mix levels, fog aggressiveness,
   422 ki pacing, anomaly density. Sab `config/error404.json` se tunable hai.
-- **Mod Menu / config GUI** — optional dep, abhi file-based config.
+- ~~Mod Menu / config GUI~~ — done in 0.8.1: Mod Menu screen + `/error404config` fallback. Har change
+  turant `config/error404.json` me likha jaata hai.
 - **Dedicated-server soak test** — code MSPT-flat hai (1 chunk / pass), par 4+ ghante ka run
   bina test kiye claim nahi kar sakta.
 - **CurseForge / Modrinth listing** — jar aur source ready hain, listing metadata baaki hai.
-- **Bonus anomaly (`ERR_404_X`)** — 12 builders shipped; design me 14 the. Jo bache hain unke naam
-  GDD me hain, gameplay unke bina complete hai.
+- ~~Bonus anomaly (`ERR_404_X`)~~ — done in 0.8.1: THE HEARTBEAT VAULT, a sealed obsidian room with
+  every floor plate wired to nothing and a heartbeat inside.
 
 ---
 
