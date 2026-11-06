@@ -102,6 +102,40 @@ public final class Chaos {
 		fire(server, level, player, state);
 	}
 
+	/**
+	 * Fires one named event right now, regardless of cooldowns. Used by
+	 * {@code /error404 chaos fire <event>} so a player can see what the mod is capable of
+	 * before it decides to show them.
+	 *
+	 * @return the event name, or null if the name is unknown
+	 */
+	public static String forceFire(MinecraftServer server, ServerLevel level, ServerPlayer player, String event) {
+		IntegrityState state = IntegrityState.get(server);
+
+		switch (event) {
+			case "chunk" -> eventChunkGone(level, player, state);
+			case "inventory" -> eventInventoryScramble(level, player);
+			case "death" -> eventSuddenDeath(level, player, state);
+			case "doors" -> eventDoors(level, player);
+			case "sound" -> eventSound(level, player);
+			case "lightning" -> eventLightning(level, player);
+			case "mobs" -> eventMobs(level, player);
+			case "teleport" -> eventTeleport(level, player);
+			case "message" -> eventMessage(server, level, player, state);
+			default -> {
+				return null;
+			}
+		}
+
+		fired++;
+		return event;
+	}
+
+	public static java.util.List<String> events() {
+		return java.util.List.of("chunk", "inventory", "death", "doors", "sound", "lightning", "mobs",
+				"teleport", "message");
+	}
+
 	private static void fire(MinecraftServer server, ServerLevel level, ServerPlayer player, IntegrityState state) {
 		int roll = level.random.nextInt(100);
 

@@ -46,6 +46,14 @@ public final class Error404Commands {
 				.then(Commands.literal("stop").executes(Error404Commands::stop))
 				.then(Commands.literal("restore").executes(Error404Commands::restore))
 				.then(Commands.literal("demo").executes(Error404Commands::demo))
+				.then(Commands.literal("chaos")
+						.then(Commands.literal("on").executes(context -> setChaos(context, true)))
+						.then(Commands.literal("off").executes(context -> setChaos(context, false)))
+						.then(Commands.literal("fire")
+								.then(Commands.argument("event", com.mojang.brigadier.arguments.StringArgumentType.word())
+										.suggests((context, builder) -> net.minecraft.commands.SharedSuggestionProvider
+												.suggest(dev.error404.haunt.Chaos.events(), builder))
+										.executes(Error404Commands::fireChaos))))
 				.then(Commands.literal("difficulty")
 						.then(Commands.argument("preset", com.mojang.brigadier.arguments.StringArgumentType.word())
 								.suggests((context, builder) -> net.minecraft.commands.SharedSuggestionProvider.suggest(
@@ -121,6 +129,8 @@ public final class Error404Commands {
 		reply(source, "/error404 ending <salvage|delete|null> - trigger an ending now", ChatFormatting.GRAY);
 		reply(source, "/error404 summon - spawn 422 next to you", ChatFormatting.GRAY);
 		reply(source, "/error404 difficulty <chill|standard|nightmare> - how lethal 422 is", ChatFormatting.GRAY);
+		reply(source, "/error404 chaos on|off - random events (chunk loss, sudden death, ...)", ChatFormatting.GRAY);
+		reply(source, "/error404 chaos fire <event> - trigger one now", ChatFormatting.GRAY);
 		reply(source, "/error404 anomaly <code> - force one structure", ChatFormatting.GRAY);
 		reply(source, "/error404 backup - write a world zip right now", ChatFormatting.GRAY);
 		reply(source, "/error404 reload - reload config/error404.json", ChatFormatting.GRAY);
@@ -165,6 +175,32 @@ public final class Error404Commands {
 	 * Switches the threat preset live. Deliberately instant: a player who discovered they
 	 * cannot handle NIGHTMARE should not have to edit a json and restart the server.
 	 */
+	/** Turns the "the mod does things to you" layer on or off, live. */
+	private static int setChaos(CommandContext<CommandSourceStack> context, boolean on) {
+		dev.error404.Error404Config.get().chaos = on;
+		dev.error404.Error404Config.save();
+		reply(context.getSource(), on
+				? "chaos enabled - chunks, inventories, doors and the sky are no longer safe"
+				: "chaos disabled - the world will only be deleted, never tampered with", ChatFormatting.DARK_RED);
+		return 1;
+	}
+
+	private static int fireChaos(CommandContext<CommandSourceStack> context) {
+		net.minecraft.server.level.ServerPlayer player = context.getSource().getPlayerOrException();
+		String event = com.mojang.brigadier.arguments.StringArgumentType.getString(context, "event");
+		String fired = dev.error404.haunt.Chaos.forceFire(context.getSource().getServer(),
+				(net.minecraft.server.level.ServerLevel) player.level(), player, event);
+
+		if (fired == null) {
+			reply(context.getSource(), "unknown event (try: " + String.join(", ", dev.error404.haunt.Chaos.events()) + ")",
+					ChatFormatting.RED);
+			return 0;
+		}
+
+		reply(context.getSource(), "chaos event fired: " + fired, ChatFormatting.DARK_RED);
+		return 1;
+	}
+
 	private static int difficulty(CommandContext<CommandSourceStack> context) {
 		String preset = com.mojang.brigadier.arguments.StringArgumentType.getString(context, "preset");
 		dev.error404.Difficulty chosen = dev.error404.Difficulty.byId(preset);
