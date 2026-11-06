@@ -38,6 +38,12 @@ public final class PersonalCollapse {
 
 	private static ServerPlayer target;
 	private static int countdown;
+	/**
+	 * The dimension of the pending collapse. Without it, a player who takes a portal during the
+	 * nine second countdown gets the collapse fired in the overworld at their <em>Nether</em>
+	 * coordinates - a 20x20 hole in a place they have never been, while they escape untouched.
+	 */
+	private static net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> dimension;
 	private static int chunkX;
 	private static int chunkZ;
 	/** The 20x20 zone is centred here, in block coords, at the moment the warning starts. */
@@ -64,6 +70,7 @@ public final class PersonalCollapse {
 		}
 
 		target = player;
+		dimension = level.dimension();
 		countdown = Math.max(20, warningTicks);
 		chunkX = player.getBlockX() >> 4;
 		chunkZ = player.getBlockZ() >> 4;
@@ -92,11 +99,19 @@ public final class PersonalCollapse {
 
 	/** Called every server tick. */
 	public static void tick(ServerLevel level) {
-		if (target == null) {
+		if (target == null || !level.dimension().equals(dimension)) {
+			// the counter belongs to one dimension; the other dimensions return immediately
 			return;
 		}
 
 		if (target.isRemoved() || target.hasDisconnected() || !level.getServer().isRunning()) {
+			cancel();
+			return;
+		}
+
+		// a player who left the dimension keeps the countdown, but the collapse follows them:
+		// otherwise stepping through a portal cancels a deletion that was already announced
+		if (!(target.level() instanceof ServerLevel targetLevel) || !targetLevel.dimension().equals(dimension)) {
 			cancel();
 			return;
 		}
@@ -209,6 +224,7 @@ public final class PersonalCollapse {
 
 	public static void cancel() {
 		target = null;
+		dimension = null;
 		countdown = 0;
 	}
 
