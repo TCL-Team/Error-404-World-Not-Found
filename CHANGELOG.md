@@ -2,6 +2,38 @@
 
 Sab notable changes. Format [Keep a Changelog](https://keepachangelog.com/), versioning [SemVer](https://semver.org/).
 
+## [0.9.0] - 2026-11-06
+
+**"Woh dekh raha hai — aur dekhne nahi deta."** 422 ka window rule, teen naye chaos events, in-game settings.
+
+### Added
+
+- **Window rule.** 422 ko dekhte rehna ab free nahi hai: 2.25 second continuous eye contact ke baad
+  woh *sight wapas le leta hai* — static burst, particles, aur woh exactly us jagah se gayab ho jaata
+  hai jahan aap dekh rahe the, aapke cone ke bahar. Damage nahi (woh ANNEXATION ka stare rule hai),
+  sirf yeh ki aapki aankhein defence nahi hain.
+- **Watching you sleep.** Sote hue player ke bistar ke paas chup-chaap khada ho jaata hai — koi awaaz
+  nahi, koi damage nahi. `hauntSleepers()` wala violent version alag hai; yeh wala bas wahan hota hai.
+- **Teen naye chaos events** (pool 9 se 12):
+  - `night` — dopahar me hi raat, ek tick me (client ko explicit time packet, warna sky purana hi rehta hai)
+  - `hunger` — bhookh turant 4-9 point gir jaati hai, koi reason nahi, aakhri 2 point safe
+  - `silence` — 24 block ke andar saari awaazein 8 second ke liye band
+- **Settings screen** — Mod Menu entry, ya `/error404config` bina Mod Menu ke. Sab switches turant
+  `config/error404.json` me, destructive waalon pe tooltip ki exactly kya destroy hota hai.
+- **`ERR_404_X` — The Heartbeat Vault.** Sealed obsidian room, har floor block ek pressure plate jo
+  kahin wired nahi, aur beech me ek heartbeat. Andar jaane ka ek hi raasta hai: deewar todna.
+- **Static audit (`tools/audit.py`)** — CI me har push par: har `ModSounds` constant sounds.json me
+  hona chahiye aur uski ogg file maujood ho, har `translatable()` key ka translation ho, har model ka
+  texture disk pe ho, saare locales `en_us` ko mirror karein, aur Java literals me non-English text na ho.
+- **Store art** — `docs/art/banner.png`, `docs/art/icon_400.png` (`tools/gen_promo.py`, is repo ke
+  apne panorama + wordmark se), aur `docs/LISTING.md` me paste-ready listing copy.
+
+### Changed
+
+- `/error404 summon` ab 422 ko aapke **dekhne ke bahar** rakhta hai (bilkul natural spawn ki tarah),
+  aur `/error404 help` chaos ke saare fire-able event names list karta hai.
+- Saare locales (hi_in, en_gb, de_de, ja_jp) ab `en_us` ke saath exactly same keys rakhte hain.
+
 ## [0.8.1] - 2026-11-06
 
 **"Woh paas rehta hai."** Chunk collapse dikhta hai, apna chunk bhi jaata hai, aur title screen creepier.
