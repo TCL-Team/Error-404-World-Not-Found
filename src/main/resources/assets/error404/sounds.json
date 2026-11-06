@@ -187,5 +187,32 @@
         "stream": false
       }
     ]
+  },
+  "scare_sting": {
+    "subtitle": "subtitles.error404.scare_sting",
+    "sounds": [
+      {
+        "name": "error404:scare_sting",
+        "stream": false
+      }
+    ]
+  },
+  "scare_breath": {
+    "subtitle": "subtitles.error404.scare_breath",
+    "sounds": [
+      {
+        "name": "error404:scare_breath",
+        "stream": false
+      }
+    ]
+  },
+  "scare_whisper_name": {
+    "subtitle": "subtitles.error404.scare_whisper_name",
+    "sounds": [
+      {
+        "name": "error404:scare_whisper_name",
+        "stream": false
+      }
+    ]
   }
 }

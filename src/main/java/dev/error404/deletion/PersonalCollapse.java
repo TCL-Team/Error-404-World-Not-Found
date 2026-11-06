@@ -80,6 +80,10 @@ public final class PersonalCollapse {
 				Component.literal("nobody wrote this chunk down").withStyle(net.minecraft.ChatFormatting.GRAY)));
 		player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket(10, 60, 20));
 
+		// the countdown starts with a face on the screen: the player has nine seconds to run,
+		// and they spend the first of them deciding whether the game just glitched
+		dev.error404.haunt.Scares.onCollapseWarning(level, player);
+
 		level.playSound(null, player.blockPosition(), ModSounds.ERROR_TONE, SoundSource.AMBIENT, 1.4f, 0.4f);
 		level.playSound(null, player.blockPosition(), ModSounds.HEARTBEAT, SoundSource.AMBIENT, 1.6f, 0.5f);
 

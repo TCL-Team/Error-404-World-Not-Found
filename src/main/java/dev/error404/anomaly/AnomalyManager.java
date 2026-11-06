@@ -137,6 +137,12 @@ public final class AnomalyManager {
 				continue;
 			}
 
+			// If it appeared close enough that the player can see it, that is a scare moment:
+			// a building that was not there a second ago, inside fifteen blocks.
+			if (player.blockPosition().distSqr(pos) < 15.0 * 15.0) {
+				dev.error404.haunt.Scares.onStructure(level, player);
+			}
+
 			ACTIVE.add(new Instance(type, pos, state.ageTicks(), false, 0));
 			state.registerAnomaly(type.name(), pos);
 			level.playSound(null, pos, ModSounds.STRUCTURE_APPEAR, SoundSource.AMBIENT, 1.0f, 1.0f);

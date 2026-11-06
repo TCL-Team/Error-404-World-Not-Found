@@ -268,6 +268,10 @@ public class Error422Entity extends Mob {
 		watchedTicks = 0;
 		abilityCooldown = 25;
 
+		if (player instanceof ServerPlayer watcher) {
+			dev.error404.haunt.Scares.onWatched((ServerLevel) level(), watcher);
+		}
+
 		level().playSound(null, blockPosition(), ModSounds.STATIC_BURST, SoundSource.HOSTILE, 1.0f, 0.55f);
 
 		if (level() instanceof ServerLevel serverLevel) {
@@ -725,6 +729,18 @@ public class Error422Entity extends Mob {
 				.withStyle(net.minecraft.ChatFormatting.DARK_RED), true);
 		level().playSound(null, blockPosition(), ModSounds.ENTITY_ATTACK, SoundSource.HOSTILE, 1.5f, 0.7f);
 		dev.error404.event.ServerEvents.flashGlitch(level().getServer(), "ERR_422");
+
+		if (player instanceof ServerPlayer hurtPlayer) {
+			// It is already touching them - so the face is not a jump cut, it is the thing
+			// they are being hit by, finally in focus.
+			dev.error404.haunt.Scares.onContact(serverLevel, hurtPlayer);
+
+			// and if that hit left them at a quarter health, the second scare lands while
+			// they are still deciding whether to run
+			if (hurtPlayer.getHealth() <= hurtPlayer.getMaxHealth() * 0.25f) {
+				dev.error404.haunt.Scares.onNearDeath(serverLevel, hurtPlayer);
+			}
+		}
 		serverLevel.sendParticles(ParticleTypes.SCULK_SOUL, player.getX(), player.getY() + 1.2, player.getZ(),
 				24, 0.5, 0.7, 0.5, 0.04);
 	}

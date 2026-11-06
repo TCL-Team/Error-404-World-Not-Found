@@ -436,6 +436,99 @@ def death_sting():
     return lowpass(impact + body, 3000, 2)
 
 
+
+# --- jumpscare set ---------------------------------------------------------------
+
+def scare_sting():
+    """
+    The jumpscare itself: 0.35 s of everything happening at once.
+
+    Built from four layers - a sub drop, a bright noise slash, a detuned cluster of
+    high partials, and a short reverse-swell before the hit - because a single sound
+    reads as "loud", while four disagreeing sounds at the same instant read as "wrong".
+    """
+    n = t(0.35)
+
+    # sub drop: 70 Hz down to 28 Hz
+    sub = sweep(70.0, 28.0, 0.35, "exp") * expdecay(0.35, 9.0) * 0.9
+
+    # noise slash, bright, gone in 80 ms
+    slash = noise(0.35) * expdecay(0.35, 34.0) * 0.55
+    slash = highpass(slash, 1800.0)
+
+    # detuned cluster: three partials a few Hz apart, deliberately inharmonic
+    cluster = (
+        np.sin(2 * np.pi * 1230.0 * n) * 0.22
+        + np.sin(2 * np.pi * 1291.0 * n) * 0.18
+        + np.sin(2 * np.pi * 1747.0 * n) * 0.14
+    ) * expdecay(0.35, 14.0)
+
+    # reverse swell: 120 ms building into the hit
+    swell = np.zeros_like(n)
+    k = min(int(0.12 * SR), len(n))
+    swell[:k] = (noise(0.12)[:k] * (np.linspace(0, 1, k) ** 2)) * 0.35
+
+    out = sub + slash + cluster + swell
+    return reverb(out) * 0.9
+
+
+def scare_breath():
+    """
+    Right before the face: a wet, close exhale at the back of your neck.
+
+    Filtered noise with a slow amplitude envelope and a slight downward sweep, so it
+    reads as breathing rather than as wind. 1.1 s - long enough to be uncomfortable,
+    short enough that it is over before the player decides it was their imagination.
+    """
+    n = t(1.1)
+
+    breath = noise(1.1)
+    breath = lowpass(breath, 900.0)
+    breath = highpass(breath, 180.0)
+
+    # three uneven pulses: in, out, in - not a rhythm
+    env = (
+        np.exp(-((n - 0.18) ** 2) / 0.012) * 0.9
+        + np.exp(-((n - 0.55) ** 2) / 0.02) * 0.65
+        + np.exp(-((n - 0.92) ** 2) / 0.014) * 0.8
+    )
+
+    # a little pitch drift on the "voice" band so it is not pure noise
+    voice = np.sin(2 * np.pi * (170.0 - 30.0 * n / 1.1) * n) * 0.12
+
+    return reverb((breath * env + voice * env)) * 0.9
+
+
+def scare_whisper_name():
+    """
+    Something says part of a word, very close to the microphone and then stops.
+
+    Formant-shaped noise bursts (three bands) with the amplitude gated in syllable-like
+    chunks. No words - the brain supplies the word, which is always worse than a real one.
+    """
+    n = t(1.6)
+
+    base = noise(1.6)
+    formants = (
+        lowpass(highpass(base, 320.0), 700.0) * 0.5
+        + lowpass(highpass(base, 900.0), 1700.0) * 0.3
+        + lowpass(highpass(base, 2100.0), 3000.0) * 0.15
+    )
+
+    # syllable gate: irregular on/off, ends mid-syllable
+    gate = np.zeros_like(n)
+
+    for start, length, gain in [(0.05, 0.16, 0.9), (0.28, 0.22, 0.7), (0.58, 0.1, 0.8),
+                                (0.74, 0.34, 0.55), (1.18, 0.12, 0.35)]:
+        i0 = int(start * SR)
+        i1 = min(len(n), i0 + int(length * SR))
+        gate[i0:i1] = gain
+
+    gate = lowpass(gate, 40.0)  # soft attack/release on each syllable
+
+    return reverb(formants * gate) * 0.85
+
+
 SOUNDS = {
     "static_burst": static_burst,
     "error_blip": error_blip,
@@ -458,6 +551,9 @@ SOUNDS = {
     "ambience_deleted": ambience_deleted,
     "proximity_drone": proximity_drone,
     "death_sting": death_sting,
+    "scare_sting": scare_sting,
+    "scare_breath": scare_breath,
+    "scare_whisper_name": scare_whisper_name,
 }
 
 # subtitle keys + which ones are long loops (streamed by the client)
@@ -483,6 +579,9 @@ SUBTITLES = {
     "ambience_deleted": ("subtitles.error404.ambience_deleted", True),
     "proximity_drone": ("subtitles.error404.proximity_drone", True),
     "death_sting": ("subtitles.error404.death_sting", False),
+    "scare_sting": ("subtitles.error404.scare_sting", False),
+    "scare_breath": ("subtitles.error404.scare_breath", False),
+    "scare_whisper_name": ("subtitles.error404.scare_whisper_name", False),
 }
 
 

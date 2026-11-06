@@ -21,6 +21,8 @@ public final class ModNetworking {
 	public static final int EFFECT_DESATURATE = 4;
 	/** The fake crash screen. Client-side only - nothing on the server actually fails. */
 	public static final int EFFECT_CRASH = 5;
+	/** Jumpscare. The payload's message is the style: "0" breath, "1" sting, "2" whisper. */
+	public static final int EFFECT_SCARE = 6;
 
 	private ModNetworking() {
 	}

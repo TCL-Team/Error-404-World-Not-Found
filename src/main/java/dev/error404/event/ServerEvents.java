@@ -52,6 +52,9 @@ public final class ServerEvents {
 			dev.error404.haunt.PathMemory.clear();
 			dev.error404.deletion.PersonalCollapse.cancel();
 			dev.error404.haunt.PlayerModel.clear();
+			dev.error404.haunt.Scares.reset();
+			dev.error404.deletion.DeleteZone.reset();
+			dev.error404.commands.CommandGate.reset();
 		});
 
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> onJoin(server, handler.getPlayer()));

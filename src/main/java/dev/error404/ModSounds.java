@@ -34,6 +34,9 @@ public final class ModSounds {
 	/** The sudden-death impact. */
 	public static final SoundEvent DEATH_STING = register("death_sting");
 	public static final SoundEvent TITLE_DRONE = register("title_drone");
+	public static final SoundEvent SCARE_STING = register("scare_sting");
+	public static final SoundEvent SCARE_BREATH = register("scare_breath");
+	public static final SoundEvent SCARE_WHISPER_NAME = register("scare_whisper_name");
 	public static final SoundEvent AMBIENCE_CALM = register("ambience_calm");
 	public static final SoundEvent AMBIENCE_DELETED = register("ambience_deleted");
 

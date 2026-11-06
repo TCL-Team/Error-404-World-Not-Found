@@ -50,6 +50,9 @@ public final class HudGlitchRenderer {
 				(context, delta) -> {
 					FakeCrashOverlay.tick();
 					FakeCrashOverlay.render(context, context.guiWidth(), context.guiHeight());
+
+					JumpscareOverlay.tick();
+					JumpscareOverlay.render(context, context.guiWidth(), context.guiHeight());
 				});
 	}
 

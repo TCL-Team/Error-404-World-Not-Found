@@ -72,5 +72,8 @@
   "death.attack.world_deleted.player": "%1$s was deleted with the world by %2$s",
   "pack.error404.title": "Error 404: World Not Found - title screen",
   "title.error404.subtitle": "a world that is not there",
-  "title.error404.hint": "no saves found"
+  "title.error404.hint": "no saves found",
+  "subtitles.error404.scare_sting": "something hits the microphone",
+  "subtitles.error404.scare_breath": "breathing, very close",
+  "subtitles.error404.scare_whisper_name": "a word, unfinished"
 }

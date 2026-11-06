@@ -64,6 +64,9 @@ public final class ClientState {
 			}
 			case 4 -> desaturateTicks = Math.max(desaturateTicks, Math.max(10, ticks));
 			case 5 -> dev.error404.client.render.FakeCrashOverlay.show();
+			case 6 -> dev.error404.client.render.JumpscareOverlay.trigger(
+					text == null || text.isEmpty() ? 1 : Integer.parseInt(text.trim().substring(0, 1)),
+					photosensitive);
 			default -> {
 			}
 		}
