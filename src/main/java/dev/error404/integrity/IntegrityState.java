@@ -195,6 +195,17 @@ public class IntegrityState extends SavedData {
 		end(2);
 	}
 
+	/**
+	 * {@code /error404 restore}: put the world back into a playable, un-ended state.
+	 * Deliberately keeps the phase where it was - the player earned that scar.
+	 */
+	public void reopen() {
+		ended = false;
+		ending = 0;
+		active = false;
+		setDirty();
+	}
+
 	public void setIntegrity(int value) {
 		int clamped = clamp(value);
 		if (clamped == integrity) {

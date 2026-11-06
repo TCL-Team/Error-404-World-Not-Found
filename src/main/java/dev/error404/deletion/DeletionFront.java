@@ -36,6 +36,14 @@ public final class DeletionFront {
 	private DeletionFront() {
 	}
 
+	/**
+	 * SALVAGE: the front stops for the rest of the session. Already-deleted chunks stay
+	 * deleted until {@code /error404 restore} regenerates them.
+	 */
+	public static void hold(MinecraftServer server) {
+		IntegrityState.get(server).stop();
+	}
+
 	public static void tick(MinecraftServer server) {
 		Error404Config cfg = Error404Config.get();
 

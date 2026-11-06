@@ -31,6 +31,8 @@ public final class AnomalyManager {
 
 	/** Runtime list; the authoritative copy is mirrored into {@link IntegrityState}. */
 	private static final List<Instance> ACTIVE = new ArrayList<>();
+	/** Set by the SALVAGE ending: no new structures, no revocations. */
+	private static boolean frozen = false;
 
 	private AnomalyManager() {
 	}
@@ -54,7 +56,7 @@ public final class AnomalyManager {
 		Phase phase = state.phase();
 		long now = state.ageTicks();
 
-		if (phase.ordinal() >= Phase.DELETION.ordinal() && now % PLACE_INTERVAL_TICKS == 0) {
+		if (!frozen && phase.ordinal() >= Phase.DELETION.ordinal() && now % PLACE_INTERVAL_TICKS == 0) {
 			tryPlace(level, state, phase);
 		}
 
@@ -246,6 +248,14 @@ public final class AnomalyManager {
 
 	public static void clear() {
 		ACTIVE.clear();
+	}
+
+	/**
+	 * SALVAGE: the world stops growing new structures and stops revoking the ones it built.
+	 * Nothing is removed - the anomalies are the player's proof they were here.
+	 */
+	public static void freeze() {
+		frozen = true;
 	}
 
 	public static void forgetDiscovered(IntegrityState state) {

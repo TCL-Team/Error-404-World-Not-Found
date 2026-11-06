@@ -167,4 +167,14 @@ public final class ServerEvents {
 	public static void flashGlitch(MinecraftServer server, String message) {
 		ModNetworking.broadcastEffect(server, ModNetworking.EFFECT_STATIC, message, 14);
 	}
+
+	/**
+	 * SALVAGE ending housekeeping: the deletion front is told to stop touching new chunks,
+	 * anomalies are allowed to stay (they are the proof the player survived something), but
+	 * their revocation timers are cleared so the world stops dissolving.
+	 */
+	public static void clearAnomaliesAfterSalvage(MinecraftServer server) {
+		AnomalyManager.freeze();
+		DeletionFront.hold(server);
+	}
 }

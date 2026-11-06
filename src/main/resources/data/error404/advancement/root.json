@@ -1,0 +1,17 @@
+{
+  "display": {
+    "icon": { "id": "error404:error_log" },
+    "title": { "translate": "advancements.error404.root.title" },
+    "description": { "translate": "advancements.error404.root.description" },
+    "background": "minecraft:gui/advancements/backgrounds/stone",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "joined": {
+      "trigger": "minecraft:tick"
+    }
+  }
+}

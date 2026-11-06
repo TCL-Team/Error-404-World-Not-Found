@@ -41,7 +41,9 @@ public final class Error404Director {
 
 		IntegrityState state = IntegrityState.get(server);
 		if (state.ended()) {
-			player.sendSystemMessage(Component.literal("[Server] ERR_404: this world was already removed.").withStyle(ChatFormatting.DARK_RED));
+			// The ending already happened: show the closing card again instead of starting
+			// a second session on top of a finished world.
+			dev.error404.ending.EndingManager.reconcile(server);
 			return;
 		}
 
@@ -80,7 +82,7 @@ public final class Error404Director {
 		}
 
 		if (state.integrity() <= 0) {
-			announceWorldNotFound(server);
+			dev.error404.ending.EndingManager.triggerDelete(server);
 		}
 	}
 
@@ -89,11 +91,6 @@ public final class Error404Director {
 		for (ServerPlayer player : server.getPlayerList().getPlayers()) {
 			player.displayClientMessage(Component.literal(phase.whisper()).withStyle(ChatFormatting.DARK_GRAY), true);
 		}
-	}
-
-	private static void announceWorldNotFound(MinecraftServer server) {
-		broadcast(server, "ERR_404: world not found. requested region could not be processed.", ChatFormatting.DARK_RED);
-		Error404.LOGGER.warn("[error404] world reached integrity 0 - ending hooks are not wired up yet (v0.5)");
 	}
 
 	private static void broadcast(MinecraftServer server, String line, ChatFormatting color) {

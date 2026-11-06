@@ -1,6 +1,6 @@
 {
   "static_burst": {
-    "subtitle": "subtitles.error404.static",
+    "subtitle": "subtitles.error404.static_burst",
     "sounds": [
       {
         "name": "error404:static_burst",

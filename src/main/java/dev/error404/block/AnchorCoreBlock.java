@@ -2,9 +2,12 @@ package dev.error404.block;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
@@ -55,6 +58,39 @@ public class AnchorCoreBlock extends Block {
 
 	public static AABB protectionBox(BlockPos anchorPos) {
 		return new AABB(anchorPos).inflate(PROTECTED_RADIUS);
+	}
+
+	/**
+	 * The SALVAGE ritual: an anchor that already has the eight fragments committed, right
+	 * clicked in the final phase, rewrites the world instead of just holding it together.
+	 *
+	 * <p>No GUI, no menu - the moment is the reward. See
+	 * {@link dev.error404.ending.EndingManager#triggerSalvage}.</p>
+	 */
+	@Override
+	protected InteractionResult useWithoutItem(net.minecraft.world.level.block.state.BlockState state, Level level,
+			BlockPos pos, Player player, BlockHitResult hit) {
+		if (level.isClientSide() || !(level instanceof ServerLevel serverLevel)) {
+			return InteractionResult.SUCCESS;
+		}
+
+		dev.error404.integrity.IntegrityState integrity = dev.error404.integrity.IntegrityState.get(serverLevel.getServer());
+
+		if (integrity.ended()) {
+			return InteractionResult.PASS;
+		}
+
+		if (integrity.dataFragments() < 8) {
+			player.displayClientMessage(net.minecraft.network.chat.Component
+					.literal("ERR_404: anchor needs 8 committed fragments (" + integrity.dataFragments() + "/8)")
+					.withStyle(net.minecraft.ChatFormatting.GRAY), true);
+			return InteractionResult.CONSUME;
+		}
+
+		dev.error404.ending.EndingManager.triggerSalvage(serverLevel.getServer(),
+				player instanceof net.minecraft.server.level.ServerPlayer serverPlayer ? serverPlayer : null);
+
+		return InteractionResult.CONSUME;
 	}
 
 	/** Fired from {@link dev.error404.event.ServerEvents} when a player places an anchor. */

@@ -43,6 +43,16 @@ public final class Error404Commands {
 				.then(Commands.literal("stop").executes(Error404Commands::stop))
 				.then(Commands.literal("restore").executes(Error404Commands::restore))
 				.then(Commands.literal("demo").executes(Error404Commands::demo))
+				.then(Commands.literal("ending")
+						.then(Commands.argument("ending", StringArgumentType.word())
+								.suggests((context, builder) -> {
+									for (dev.error404.ending.EndingType type : dev.error404.ending.EndingType.values()) {
+										builder.suggest(type.name().toLowerCase(Locale.ROOT));
+									}
+
+									return builder.buildFuture();
+								})
+								.executes(Error404Commands::forceEnding)))
 				.then(Commands.literal("reload").executes(Error404Commands::reload))
 				.then(Commands.literal("phase")
 						.then(Commands.argument("phase", StringArgumentType.word())
@@ -109,10 +119,19 @@ public final class Error404Commands {
 	private static int restore(CommandContext<CommandSourceStack> context) {
 		MinecraftServer server = context.getSource().getServer();
 		IntegrityState state = IntegrityState.get(server);
-		// v0.2 will also regenerate deleted chunks here; v0.1 only restores the counter.
+
+		// The full undo: integrity back to 100, the ended flag cleared, every chunk the front
+		// touched regenerated from the seed, and the anomaly bookkeeping wiped.
+		int chunks = dev.error404.deletion.DeletionFront.restore(server);
+		state.reopen();
 		state.setIntegrity(IntegrityState.MAX_INTEGRITY);
 		state.stop();
-		reply(context.getSource(), "integrity restored to 100% (deleted chunks will be regenerated from v0.2)", ChatFormatting.GREEN);
+		dev.error404.ending.EndingManager.resetStareCount();
+		dev.error404.event.ServerEvents.pushState(server);
+
+		reply(context.getSource(), "integrity restored to 100%", ChatFormatting.GREEN);
+		reply(context.getSource(), chunks + " deleted chunk(s) queued for regeneration on next visit", ChatFormatting.GRAY);
+		reply(context.getSource(), "the world is no longer marked as ended - /error404 start begins a fresh session", ChatFormatting.GRAY);
 		return 1;
 	}
 
@@ -137,6 +156,29 @@ public final class Error404Commands {
 		state.setIntegrity(IntegrityState.MAX_INTEGRITY - (phase.ordinal() + 1) * 20 + 10);
 		state.forcePhase(phase);
 		reply(context.getSource(), "phase forced to " + phase.name(), ChatFormatting.YELLOW);
+		return 1;
+	}
+
+	private static int forceEnding(CommandContext<CommandSourceStack> context) {
+		String name = StringArgumentType.getString(context, "ending");
+		dev.error404.ending.EndingType type = dev.error404.ending.EndingType.byName(name);
+
+		if (type == null) {
+			reply(context.getSource(), "unknown ending \"" + name + "\" (salvage, delete, null)", ChatFormatting.RED);
+			return 0;
+		}
+
+		MinecraftServer server = context.getSource().getServer();
+		IntegrityState state = IntegrityState.get(server);
+
+		if (state.ended()) {
+			reply(context.getSource(), "this world already ended (" + dev.error404.ending.EndingType.byCode(state.ending()).title()
+					+ ") - run /error404 restore first", ChatFormatting.RED);
+			return 0;
+		}
+
+		dev.error404.ending.EndingManager.force(server, type);
+		reply(context.getSource(), "ending triggered: " + type.title(), ChatFormatting.YELLOW);
 		return 1;
 	}
 

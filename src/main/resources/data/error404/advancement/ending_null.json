@@ -1,0 +1,20 @@
+{
+  "parent": "error404:ending_delete",
+  "display": {
+    "icon": { "id": "error404:missing_texture" },
+    "title": { "translate": "advancements.error404.ending_null.title" },
+    "description": { "translate": "advancements.error404.ending_null.description" },
+    "frame": "challenge",
+    "show_toast": false,
+    "announce_to_chat": false,
+    "hidden": true
+  },
+  "criteria": {
+    "saw_the_face": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [ { "items": "error404:missing_texture" } ]
+      }
+    }
+  }
+}

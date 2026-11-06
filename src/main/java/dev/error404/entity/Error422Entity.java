@@ -286,8 +286,15 @@ public class Error422Entity extends Mob {
 			level().playSound(null, blockPosition(), ModSounds.WHISPER, SoundSource.HOSTILE, 1.0f, 0.7f);
 		}
 
-		if (stareTicks >= STARE_LIMIT_TICKS && tickCount % 20 == 0) {
-			punish(player);
+		if (stareTicks >= STARE_LIMIT_TICKS) {
+			// Three completed stares and the world answers with the 0x00 ending.
+			if (stareTicks == STARE_LIMIT_TICKS && player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+				dev.error404.ending.EndingManager.registerStare(serverPlayer);
+			}
+
+			if (tickCount % 20 == 0) {
+				punish(player);
+			}
 		}
 	}
 
