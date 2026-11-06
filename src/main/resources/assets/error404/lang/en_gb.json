@@ -41,5 +41,7 @@
   "advancements.error404.ending_delete.description": "Let the integrity reach zero. There is nothing left to process.",
   "advancements.error404.ending_null.title": "0x00",
   "advancements.error404.ending_null.description": "Look at it three times. It remembers.",
-  "subtitles.error404.static_burst": "static"
+  "subtitles.error404.static_burst": "static",
+  "subtitles.error404.proximity_drone": "something is near",
+  "subtitles.error404.death_sting": "you were not supposed to be here"
 }

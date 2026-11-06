@@ -29,6 +29,10 @@ public final class ModSounds {
 	public static final SoundEvent CHUNK_DELETE = register("chunk_delete");
 	public static final SoundEvent FOOTSTEP_ECHO = register("footstep_echo");
 	public static final SoundEvent ERROR_TONE = register("error_tone");
+	/** Sub-bass loop that plays while 422 is within earshot. */
+	public static final SoundEvent PROXIMITY_DRONE = register("proximity_drone");
+	/** The sudden-death impact. */
+	public static final SoundEvent DEATH_STING = register("death_sting");
 	public static final SoundEvent TITLE_DRONE = register("title_drone");
 	public static final SoundEvent AMBIENCE_CALM = register("ambience_calm");
 	public static final SoundEvent AMBIENCE_DELETED = register("ambience_deleted");

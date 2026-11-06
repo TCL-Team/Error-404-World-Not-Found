@@ -46,5 +46,7 @@
   "death.attack.unprocessable": "%1$s was not processed",
   "death.attack.unprocessable.player": "%1$s was not processed by %2$s",
   "death.attack.world_deleted": "%1$s was deleted with the world",
-  "death.attack.world_deleted.player": "%1$s was deleted with the world by %2$s"
+  "death.attack.world_deleted.player": "%1$s was deleted with the world by %2$s",
+  "subtitles.error404.proximity_drone": "something is near",
+  "subtitles.error404.death_sting": "you were not supposed to be here"
 }

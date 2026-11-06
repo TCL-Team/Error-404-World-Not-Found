@@ -41,5 +41,7 @@
   "advancements.error404.ending_delete.description": "整合性をゼロまで落とす。",
   "advancements.error404.ending_null.title": "0x00",
   "advancements.error404.ending_null.description": "三度見る。それは覚えている。",
-  "subtitles.error404.static_burst": "static"
+  "subtitles.error404.static_burst": "static",
+  "subtitles.error404.proximity_drone": "何かが近くにいる",
+  "subtitles.error404.death_sting": "ここにいてはいけない"
 }

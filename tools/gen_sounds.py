@@ -397,6 +397,45 @@ def ambience_deleted():
     return seamless((hum + air) * lfo)
 
 
+def proximity_drone():
+    """
+    The sound that plays while it is nearby: a sub-bass swell with a slow beating
+    dissonance (33 Hz vs 34.1 Hz) that gets physically uncomfortable on headphones, plus a
+    gated breath-like noise. Loopable, 12 s, no transient - it must never startle, it must
+    build dread.
+    """
+    d = 12.0
+    tt = t(d)
+    sub = np.sin(2 * math.pi * 33.0 * tt) * 0.5 + np.sin(2 * math.pi * 34.1 * tt) * 0.45
+    mid = np.sin(2 * math.pi * 98.0 * tt + 0.6 * np.sin(2 * math.pi * 0.11 * tt)) * 0.18
+    # breath: pink noise gated by a slow asymmetric envelope
+    breath = lowpass(noise(d, "pink"), 900, 2) * 0.22
+    gate = 0.55 + 0.45 * np.sin(2 * math.pi * 0.083 * tt - math.pi / 2) ** 3
+    x = (sub + mid) * (0.8 + 0.2 * np.sin(2 * math.pi * 0.05 * tt)) + breath * gate
+    return seamless(x, xfade=1.0)
+
+
+def death_sting():
+    """
+    The sudden-death hit: one hard low impact, a reversed tail that swells into it, and a
+    detuned pair of sine partials that die a beat apart. Nothing melodic - it has to sound
+    like something being switched off.
+    """
+    d = 2.6
+    tt = t(d)
+    impact = np.sin(2 * math.pi * 48.0 * tt) * expdecay(d, 9.0) * 1.2
+    impact += lowpass(noise(0.25), 180, 2)[: len(tt)] if len(noise(0.25)) >= len(tt) else 0.0
+    body = np.zeros(len(tt))
+    n = len(tt)
+
+    for f, delay, amp in ((220.0, 0.0, 0.32), (219.0, 0.02, 0.28), (110.5, 0.12, 0.22)):
+        start = int(delay * SR)
+        seg = np.sin(2 * math.pi * f * tt[: n - start]) * expdecay((n - start) / SR, 2.2) * amp
+        body[start:] += seg
+
+    return lowpass(impact + body, 3000, 2)
+
+
 SOUNDS = {
     "static_burst": static_burst,
     "error_blip": error_blip,
@@ -417,6 +456,8 @@ SOUNDS = {
     "title_drone": title_drone,
     "ambience_calm": ambience_calm,
     "ambience_deleted": ambience_deleted,
+    "proximity_drone": proximity_drone,
+    "death_sting": death_sting,
 }
 
 # subtitle keys + which ones are long loops (streamed by the client)
@@ -440,10 +481,12 @@ SUBTITLES = {
     "title_drone": ("subtitles.error404.title_drone", True),
     "ambience_calm": ("subtitles.error404.ambience_calm", True),
     "ambience_deleted": ("subtitles.error404.ambience_deleted", True),
+    "proximity_drone": ("subtitles.error404.proximity_drone", True),
+    "death_sting": ("subtitles.error404.death_sting", False),
 }
 
 
-LOOPS = {"ambience_calm", "ambience_deleted", "title_drone"}
+LOOPS = {"ambience_calm", "ambience_deleted", "title_drone", "proximity_drone"}
 
 
 def main() -> None:

@@ -24,6 +24,9 @@ public final class VoidAmbience {
 	private static int ambienceTimer = 0;
 	private static boolean deletedAmbience = false;
 	private static boolean ambiencePlaying = false;
+	/** The sub-bass loop that means "it is within earshot". Owned separately from the bed. */
+	private static boolean dronePlaying = false;
+	private static int droneTimer = 0;
 
 	private VoidAmbience() {
 	}
@@ -78,6 +81,9 @@ public final class VoidAmbience {
 		}
 
 		// position-dependent dread: heartbeat runs while 422 is close, footsteps answer at night
+		// proximity drone: a low dissonant swell that fades in under everything else
+		tickDrone(client);
+
 		if (phase >= 1 && level.getGameTime() % 40 == 0 && ClientState.integrity() < 90) {
 			playerHeartbeat(client, phase);
 		}
@@ -103,6 +109,35 @@ public final class VoidAmbience {
 		if (phase >= 2 && client.level.getGameTime() % 600 == 0 && !isDay(level)) {
 			client.level.playLocalSound(client.player.getX(), client.player.getY(), client.player.getZ(),
 					ModSounds.WHISPER, SoundSource.AMBIENT, 0.3f, 0.75f, false);
+		}
+	}
+
+	/**
+	 * Starts and stops the proximity drone. It is a loop, so it is started once, faded in by
+	 * the ambient volume, and stopped the moment the entity leaves - no per-tick play calls,
+	 * which is what makes an ambience layer cost nothing.
+	 */
+	private static void tickDrone(Minecraft client) {
+		float proximity = proximity(client);
+		boolean wanted = proximity > 0.15f;
+
+		if (droneTimer > 0) {
+			droneTimer--;
+		}
+
+		if (wanted && !dronePlaying) {
+			dronePlaying = true;
+			client.getSoundManager().play(net.minecraft.client.resources.sounds.SimpleSoundInstance
+					.forLocalAmbience(ModSounds.PROXIMITY_DRONE, 1.0f - proximity * 0.12f, 0.45f));
+			droneTimer = 20 * 19;
+		} else if (wanted && dronePlaying && droneTimer == 0) {
+			// restart just before the 19 s loop ends so there is no silent gap
+			droneTimer = 20 * 19;
+			client.getSoundManager().play(net.minecraft.client.resources.sounds.SimpleSoundInstance
+					.forLocalAmbience(ModSounds.PROXIMITY_DRONE, 1.0f - proximity * 0.12f, 0.45f));
+		} else if (!wanted && dronePlaying) {
+			dronePlaying = false;
+			client.getSoundManager().stop(ModSounds.PROXIMITY_DRONE.location(), SoundSource.AMBIENT);
 		}
 	}
 

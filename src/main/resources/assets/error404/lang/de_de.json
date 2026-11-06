@@ -41,5 +41,7 @@
   "advancements.error404.ending_delete.description": "Lass die Integrität auf null fallen.",
   "advancements.error404.ending_null.title": "0x00",
   "advancements.error404.ending_null.description": "Sieh dreimal hin. Es erinnert sich.",
-  "subtitles.error404.static_burst": "static"
+  "subtitles.error404.static_burst": "static",
+  "subtitles.error404.proximity_drone": "etwas ist in der Nähe",
+  "subtitles.error404.death_sting": "du solltest nicht hier sein"
 }

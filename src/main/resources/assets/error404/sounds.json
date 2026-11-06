@@ -169,5 +169,23 @@
         "stream": true
       }
     ]
+  },
+  "proximity_drone": {
+    "subtitle": "subtitles.error404.proximity_drone",
+    "sounds": [
+      {
+        "name": "error404:proximity_drone",
+        "stream": true
+      }
+    ]
+  },
+  "death_sting": {
+    "subtitle": "subtitles.error404.death_sting",
+    "sounds": [
+      {
+        "name": "error404:death_sting",
+        "stream": false
+      }
+    ]
   }
 }
