@@ -26,6 +26,12 @@ Sab notable changes. Format [Keep a Changelog](https://keepachangelog.com/), ver
 - **`/error404 chaos fire <event>`** and `chaos on|off` were already in 0.8.0; the chunk event is now
   budget-capped so it cannot delete more than one journal's worth of blocks.
 
+- **Settings screen** — Mod Menu entry (`/error404config` without Mod Menu). Every switch writes
+  straight to `config/error404.json`; the destructive ones carry tooltips that say exactly what they
+  destroy.
+- **`ERR_404_X` — the heartbeat vault** — a sealed obsidian room with every floor plate wired to
+  nothing and a heartbeat inside. Breaking in is the only way to the chest.
+
 ### Changed
 
 - **422 no longer wanders off.** It is leashed to the nearest player (40 blocks): too far away, and it
