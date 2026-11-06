@@ -147,11 +147,11 @@ public class Error422Entity extends Mob {
 		// It follows you into sleep. From CASCADE on, sleeping near it is not safe: the bed
 		// throws you out and it is standing there. This is the single nastiest thing it does,
 		// so it is gated on the world already being mostly gone.
-		if (phase.ordinal() >= Phase.CASCADE.ordinal() && tickCount % 40 == 0) {
+		if (phase.ordinal() >= dev.error404.Difficulty.current().sleepHauntFromPhase && tickCount % 40 == 0) {
 			hauntSleepers(phase);
 		}
 
-		if (phase == Phase.ANNEXATION && tickCount % 60 == 0) {
+		if (dev.error404.Difficulty.current().darknessAura && phase == Phase.ANNEXATION && tickCount % 60 == 0) {
 			Player near = nearestPlayer();
 
 			if (near != null && distanceTo(near) < 20.0 && near instanceof net.minecraft.server.level.ServerPlayer sp) {
@@ -297,7 +297,9 @@ public class Error422Entity extends Mob {
 		}
 
 		// Doors are a suggestion. If it cannot reach you, it makes a hole.
-		if (tickCount % 20 == 0 && distance < 24.0 && !hasLineOfSightTo(player)) {
+		int breakInterval = dev.error404.Difficulty.current().breakIntervalTicks;
+
+		if (breakInterval > 0 && tickCount % breakInterval == 0 && distance < 24.0 && !hasLineOfSightTo(player)) {
 			breakTowards(player);
 		}
 
@@ -307,7 +309,7 @@ public class Error422Entity extends Mob {
 		}
 
 		// If you cannot see it, it is already somewhere else - always closer.
-		if (abilityCooldown == 0 && random.nextInt(40) == 0) {
+		if (abilityCooldown == 0 && random.nextInt(Math.max(1, dev.error404.Difficulty.current().teleportIntervalTicks)) == 0) {
 			double step = distance > 12.0 ? 10.0 : (distance > 6.0 ? 5.0 : 2.5);
 			teleportToRing(player, Math.max(2.2, distance - step));
 			playData(1.0f);
@@ -381,8 +383,13 @@ public class Error422Entity extends Mob {
 			return;
 		}
 
+		dev.error404.Difficulty difficulty = dev.error404.Difficulty.current();
 		int stage = Math.min(4, stareTicks / STARE_LIMIT_TICKS);
-		float damage = 3.0f + stage * 1.5f;
+		float damage = difficulty.stareBaseDamage + stage * difficulty.stareDamageStep;
+
+		if (damage <= 0.0f) {
+			return;
+		}
 
 		player.hurtServer(serverLevel, Damage.unprocessable(level(), this), damage);
 		player.displayClientMessage(net.minecraft.network.chat.Component
@@ -528,7 +535,13 @@ public class Error422Entity extends Mob {
 			return;
 		}
 
-		player.hurtServer(serverLevel, Damage.unprocessable(level(), this), 6.0f);
+		float contact = dev.error404.Difficulty.current().contactDamage;
+
+		if (contact <= 0.0f) {
+			return;
+		}
+
+		player.hurtServer(serverLevel, Damage.unprocessable(level(), this), contact);
 		player.knockback(0.6, getX() - player.getX(), getZ() - player.getZ());
 		player.displayClientMessage(net.minecraft.network.chat.Component
 				.literal("ERR_422: you are in the way")

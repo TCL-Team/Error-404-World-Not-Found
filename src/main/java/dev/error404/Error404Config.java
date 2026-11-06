@@ -39,6 +39,13 @@ public final class Error404Config {
 	/** Reduces full-screen flashing for photosensitive players. */
 	public boolean photosensitivity = false;
 
+	// --- threat level ----------------------------------------------------------
+	/**
+	 * "chill" | "standard" | "nightmare". Changes what 422 is *allowed to do* (damage,
+	 * wall-breaking, waking you up, how many exist), not just its health. See {@link Difficulty}.
+	 */
+	public String difficulty = "standard";
+
 	// --- integrity pacing ------------------------------------------------------
 	/** Seconds of survival per 1% of integrity lost (hardcore preset = 45). */
 	public int secondsPerIntegrityPoint = 45;

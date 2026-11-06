@@ -34,7 +34,6 @@ public final class AnomalyManager {
 	private static final List<Instance> ACTIVE = new ArrayList<>();
 	/** Set by the SALVAGE ending: no new structures, no revocations. */
 	private static boolean frozen = false;
-	private static final int MAX_422 = 2;
 	private static final int SPAWN_CHECK_TICKS = 100;
 	private static final int SPAWN_COOLDOWN_TICKS = 20 * 90;
 	private static long lastSpawnTick = 0L;
@@ -260,7 +259,7 @@ public final class AnomalyManager {
 		List<Error422Entity> alive = level.getEntitiesOfClass(Error422Entity.class,
 				new net.minecraft.world.phys.AABB(level.getRespawnData().globalPos().pos()).inflate(4096.0));
 
-		if (alive.size() >= MAX_422) {
+		if (alive.size() >= dev.error404.Difficulty.current().maxAlive) {
 			return;
 		}
 

@@ -46,6 +46,12 @@ public final class Error404Commands {
 				.then(Commands.literal("stop").executes(Error404Commands::stop))
 				.then(Commands.literal("restore").executes(Error404Commands::restore))
 				.then(Commands.literal("demo").executes(Error404Commands::demo))
+				.then(Commands.literal("difficulty")
+						.then(Commands.argument("preset", com.mojang.brigadier.arguments.StringArgumentType.word())
+								.suggests((context, builder) -> net.minecraft.commands.SharedSuggestionProvider.suggest(
+										java.util.Arrays.stream(dev.error404.Difficulty.values())
+												.map(dev.error404.Difficulty::id).toList(), builder))
+								.executes(Error404Commands::difficulty)))
 				.then(Commands.literal("summon").executes(Error404Commands::summon))
 				.then(Commands.literal("backup").executes(Error404Commands::backup))
 				.then(Commands.literal("anomaly")
@@ -114,6 +120,7 @@ public final class Error404Commands {
 		reply(source, "/error404 demo - 15x faster pacing for testing", ChatFormatting.GRAY);
 		reply(source, "/error404 ending <salvage|delete|null> - trigger an ending now", ChatFormatting.GRAY);
 		reply(source, "/error404 summon - spawn 422 next to you", ChatFormatting.GRAY);
+		reply(source, "/error404 difficulty <chill|standard|nightmare> - how lethal 422 is", ChatFormatting.GRAY);
 		reply(source, "/error404 anomaly <code> - force one structure", ChatFormatting.GRAY);
 		reply(source, "/error404 backup - write a world zip right now", ChatFormatting.GRAY);
 		reply(source, "/error404 reload - reload config/error404.json", ChatFormatting.GRAY);
@@ -151,6 +158,25 @@ public final class Error404Commands {
 		reply(context.getSource(), "integrity restored to 100%", ChatFormatting.GREEN);
 		reply(context.getSource(), blocks + " block(s) put back from the deletion journal", ChatFormatting.GRAY);
 		reply(context.getSource(), "the world is no longer marked as ended - /error404 start begins a fresh session", ChatFormatting.GRAY);
+		return 1;
+	}
+
+	/**
+	 * Switches the threat preset live. Deliberately instant: a player who discovered they
+	 * cannot handle NIGHTMARE should not have to edit a json and restart the server.
+	 */
+	private static int difficulty(CommandContext<CommandSourceStack> context) {
+		String preset = com.mojang.brigadier.arguments.StringArgumentType.getString(context, "preset");
+		dev.error404.Difficulty chosen = dev.error404.Difficulty.byId(preset);
+		dev.error404.Error404Config.get().difficulty = chosen.id();
+		dev.error404.Error404Config.save();
+
+		reply(context.getSource(), "422 threat level: " + chosen.id().toUpperCase(), ChatFormatting.DARK_RED);
+		reply(context.getSource(), "  contact " + chosen.contactDamage + " dmg · stare "
+				+ chosen.stareBaseDamage + "+" + chosen.stareDamageStep + "/stage · max alive " + chosen.maxAlive,
+				ChatFormatting.GRAY);
+		reply(context.getSource(), "  breaks walls every " + chosen.breakIntervalTicks
+				+ "t · wakes sleepers from phase " + chosen.sleepHauntFromPhase, ChatFormatting.GRAY);
 		return 1;
 	}
 
