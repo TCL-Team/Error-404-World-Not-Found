@@ -6,6 +6,7 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
@@ -143,6 +144,13 @@ public class Error422Entity extends Mob {
 
 		// ANNEXATION aura: darkness follows it. The player has to hold a light source, not
 		// just stand still and out-heal it.
+		// It follows you into sleep. From CASCADE on, sleeping near it is not safe: the bed
+		// throws you out and it is standing there. This is the single nastiest thing it does,
+		// so it is gated on the world already being mostly gone.
+		if (phase.ordinal() >= Phase.CASCADE.ordinal() && tickCount % 40 == 0) {
+			hauntSleepers(phase);
+		}
+
 		if (phase == Phase.ANNEXATION && tickCount % 60 == 0) {
 			Player near = nearestPlayer();
 
@@ -373,6 +381,62 @@ public class Error422Entity extends Mob {
 		serverLevel.sendParticles(ParticleTypes.SCULK_SOUL, getX(), getY() + 2.2, getZ(), 40, 0.6, 0.8, 0.6, 0.03);
 
 		IntegrityState.get(level().getServer()).drain(2);
+	}
+
+	/**
+	 * Wakes a sleeping player inside its radius by destroying the bed under them. In
+	 * ANNEXATION it also teleports right next to the bed, so the first thing the player sees
+	 * when the screen fades back in is it, three blocks away, facing them.
+	 */
+	private void hauntSleepers(Phase phase) {
+		if (!(level() instanceof ServerLevel serverLevel)) {
+			return;
+		}
+
+		for (ServerPlayer sleeper : serverLevel.players()) {
+			if (!sleeper.isSleeping()) {
+				continue;
+			}
+
+			double distance = distanceTo(sleeper);
+
+			if (distance > 32.0) {
+				continue;
+			}
+
+			BlockPos bed = sleeper.getSleepingPos().orElse(null);
+
+			if (bed == null) {
+				continue;
+			}
+
+			sleeper.stopSleeping();
+
+			if (phase == Phase.ANNEXATION) {
+				teleportToRing(sleeper, 3.0);
+				face(sleeper);
+			}
+
+			sleeper.displayClientMessage(net.minecraft.network.chat.Component
+					.literal("ERR_422: you were not asleep. it was.")
+					.withStyle(net.minecraft.ChatFormatting.DARK_RED), false);
+			serverLevel.playSound(null, bed, ModSounds.ENTITY_ATTACK, SoundSource.HOSTILE, 1.6f, 0.6f);
+			serverLevel.playSound(null, bed, ModSounds.WHISPER, SoundSource.AMBIENT, 1.2f, 0.5f);
+			dev.error404.event.ServerEvents.flashGlitch(serverLevel.getServer(), "ERR_422");
+			IntegrityState.get(level().getServer()).drain(4);
+
+			// The bed itself does not survive this.
+			if (dev.error404.Error404Config.get().realBlockDeletion) {
+				BlockState bedState = serverLevel.getBlockState(bed);
+
+				if (bedState.is(net.minecraft.tags.BlockTags.BEDS)) {
+					dev.error404.deletion.DeletionJournal.record(bed.getX() >> 4, bed.getZ() >> 4, bed, bedState);
+					serverLevel.destroyBlock(bed, false, this, 512);
+				}
+			}
+
+			return;
+		}
 	}
 
 	/** Straight line from its head to the player's eye, checked against the world. */
