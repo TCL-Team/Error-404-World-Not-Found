@@ -259,6 +259,14 @@ public class Error422Entity extends Mob {
 			}
 		}
 
+		// It does not aim at you. It aims at where you will be in two seconds, which is why
+		// turning a corner does not shake it and why running in a straight line always fails.
+		if (player instanceof ServerPlayer serverPlayer && distanceTo(player) > 6.0) {
+			BlockPos predicted = dev.error404.haunt.PathMemory.predict(serverPlayer);
+			getNavigation().moveTo(predicted.getX() + 0.5, predicted.getY(), predicted.getZ() + 0.5, 1.2);
+			face(player);
+		}
+
 		getLookControl().setLookAt(player, 90f, 90f);
 	}
 
