@@ -64,8 +64,8 @@ public class ChunkSeamAnomaly implements Anomaly {
 				StructureKit.shard(),
 				StructureKit.shard(),
 				StructureKit.writtenBook("seam", List.of(
-						"do duniya ek hi chunk mein silaai gayi hain.",
-						"dono galat hain."))
+						"two worlds were sewn into one chunk.",
+						"neither of them belongs here."))
 		));
 
 		StructureKit.sign(level, ox, StructureKit.ground(level, ox, oz + radius + 1) + 1, oz + radius + 1,

@@ -48,10 +48,10 @@ public class MirrorVillageAnomaly implements Anomaly {
 
 		StructureKit.chest(level, ox, ly + 1, oz + 1, Direction.NORTH, List.of(
 				StructureKit.fragment(),
-				StructureKit.writtenBook("gaon", List.of(
-						"gaon me koi bolta nahi.",
-						"lekin sab dekh rahe hain.",
-						"aur sab ek hi taraf dekh rahe hain."))
+				StructureKit.writtenBook("village", List.of(
+						"nobody in the village speaks.",
+						"but everyone is looking.",
+						"and they are all looking the same way."))
 		));
 	}
 

@@ -63,8 +63,8 @@ public class InvertedTreeAnomaly implements Anomaly {
 				StructureKit.fragment(),
 				StructureKit.shard(),
 				StructureKit.writtenBook("ped", List.of(
-						"ped ulta hai.",
-						"ya main?"
+						"the tree is upside down.",
+						"or am i?"
 				))
 		));
 

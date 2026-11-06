@@ -46,6 +46,14 @@ public final class Error404Config {
 	 */
 	public String difficulty = "standard";
 
+	// --- chaos ----------------------------------------------------------------
+	/**
+	 * The "the mod does things to you" layer: a chunk vanishing, your inventory shuffling,
+	 * a lightning bolt with no storm, doors opening by themselves. Off makes the mod a slow
+	 * deletion simulator; on makes it the reason people stop playing at 3 am.
+	 */
+	public boolean chaos = true;
+
 	// --- integrity pacing ------------------------------------------------------
 	/** Seconds of survival per 1% of integrity lost (hardcore preset = 45). */
 	public int secondsPerIntegrityPoint = 45;

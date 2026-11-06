@@ -75,11 +75,11 @@ public class MemoryOfHomeAnomaly implements Anomaly {
 		StructureKit.bed(level, ox - 2, y, oz - 1, Direction.NORTH);
 		StructureKit.chest(level, ox + 2, y, oz - 2, Direction.SOUTH, List.of(
 				StructureKit.fragment(),
-				StructureKit.writtenBook("ghar", List.of(
-						"ye tumhara ghar hai.",
-						"main jaanta hoon.",
-						"maine ise yaad rakha.",
-						"lekin tum kahan the?")),
+				StructureKit.writtenBook("home", List.of(
+						"this is your house.",
+						"i know it is.",
+						"i remembered it.",
+						"where were you?")),
 				new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.BREAD, 3)
 		));
 

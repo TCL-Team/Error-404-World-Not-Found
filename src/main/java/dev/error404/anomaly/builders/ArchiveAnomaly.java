@@ -58,9 +58,9 @@ public class ArchiveAnomaly implements Anomaly {
 
 		StructureKit.chest(level, ox, y, oz + 42, net.minecraft.core.Direction.SOUTH, List.of(
 				StructureKit.writtenBook("archive", List.of(
-						"jo duniya delete ho rahi hai,",
-						"woh apna hisaab rakhti hai.",
-						"tumhara bhi."))
+						"the world is being deleted,",
+						"and it keeps a record.",
+						"so do you."))
 		));
 	}
 

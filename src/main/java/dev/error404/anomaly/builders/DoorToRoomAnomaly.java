@@ -56,11 +56,11 @@ public class DoorToRoomAnomaly implements Anomaly {
 		StructureKit.chest(level, ox, y, oz + 3, Direction.NORTH, List.of(
 				StructureKit.fragment(),
 				StructureKit.shard(),
-				StructureKit.writtenBook("kamra", List.of(
-						"kamre ka koi exit nahi hai.",
-						"lekin main andar aa gaya.",
-						"matlab exit tha.",
-						"ab nahi hai."))
+				StructureKit.writtenBook("the room", List.of(
+						"there is no exit from this room.",
+						"but i got in.",
+						"so there was an exit.",
+						"there is not one now."))
 		));
 
 		StructureKit.sign(level, ox + 3, y + 1, oz + 2, "ERR_404_F", "room without", "a door inside it", "");

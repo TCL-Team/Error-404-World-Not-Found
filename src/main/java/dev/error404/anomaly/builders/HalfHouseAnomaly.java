@@ -67,11 +67,11 @@ public class HalfHouseAnomaly implements Anomaly {
 		StructureKit.bed(level, ox + 1, y, oz + 1, Direction.NORTH);
 
 		StructureKit.chest(level, ox - 2, y, oz + 2, Direction.SOUTH, List.of(
-				StructureKit.writtenBook("deewar", List.of(
-						"maine teen deewarein banayi thi.",
-						"ab do hain.",
-						"main dekh raha tha. koi aaya nahi.",
-						"lekin ek gayab ho gayi.")),
+				StructureKit.writtenBook("walls", List.of(
+						"i built three walls.",
+						"there are two now.",
+						"i was watching. nobody came.",
+						"but one of them is missing.")),
 				StructureKit.fragment()
 		));
 

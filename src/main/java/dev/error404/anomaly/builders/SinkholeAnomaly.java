@@ -69,11 +69,11 @@ public class SinkholeAnomaly implements Anomaly {
 		StructureKit.chest(level, ox, bottom + 1, oz, Direction.SOUTH, List.of(
 				StructureKit.shard(),
 				StructureKit.shard(),
-				StructureKit.writtenBook("gaddha", List.of(
-						"ye gaddha perfect hai.",
-						"koi natural cheez perfect nahi hoti.",
-						"iska matlab kisi ne banaya hai.",
-						"aur usne neeche kuchh rakha hai."))
+				StructureKit.writtenBook("the pit", List.of(
+						"this pit is perfect.",
+						"nothing natural is perfect.",
+						"so something made it.",
+						"and it left something down there."))
 		));
 
 		StructureKit.sign(level, ox + RADIUS + 1, surface + 1, oz, "ERR_404_G", "perfect circle", "no debris", "");
