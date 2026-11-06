@@ -55,14 +55,22 @@ jobs:
             First run, in game:
 
             ```
-            /error404 status      # what the world thinks its integrity is
-            /error404 demo        # 15x pacing, a full session in ~5 minutes
-            /error404 stop        # freeze everything
-            /error404 restore     # put every deleted block back
+            /error404 status                  # what the world thinks its integrity is
+            /error404 demo                    # 15x pacing, a full session in ~5 minutes
+            /error404 difficulty nightmare    # how lethal 422 is (chill | standard | nightmare)
+            /error404 summon                  # meet it on purpose, once, then never again
+            /error404 stop                    # freeze everything
+            /error404 restore                 # put every deleted block back
             ```
 
+            422 is not killable. It deals contact damage, it hunts you while your back is turned,
+            it breaks through walls, it wakes you up, and staring at it is what hurts *you*.
+            The only ground it will not cross is an active Anchor Core.
+
             Everything the mod adds is generated from scratch: 19 sounds, all textures,
-            all structures. No assets are taken from other mods.
+            all structures, all code. No assets are taken from other mods.
+
+            **Turn the volume up and read nothing before playing.**
           files: dist/*.jar
 
       - name: Upload jar
