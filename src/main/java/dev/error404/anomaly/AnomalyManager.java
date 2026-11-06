@@ -35,6 +35,12 @@ public final class AnomalyManager {
 	/** Set by the SALVAGE ending: no new structures, no revocations. */
 	private static boolean frozen = false;
 	private static final int SPAWN_CHECK_TICKS = 100;
+	/**
+	 * Nothing makes a session stop being scary faster than the entity appearing and doing
+	 * nothing for five minutes. In the final phase it presses in; otherwise it keeps its
+	 * distance and plays dead. The cooldown is per-session, so it is not a new timer.
+	 */
+	private static final int PRESSURE_INTERVAL = 20 * 45;
 	private static final int SPAWN_COOLDOWN_TICKS = 20 * 90;
 	private static long lastSpawnTick = 0L;
 
@@ -258,6 +264,17 @@ public final class AnomalyManager {
 
 		List<Error422Entity> alive = level.getEntitiesOfClass(Error422Entity.class,
 				new net.minecraft.world.phys.AABB(level.getRespawnData().globalPos().pos()).inflate(4096.0));
+
+		// Pressure: an existing 422 gets moved into the player's blind spot on a slow timer,
+		// so "it stopped appearing" never becomes "it is gone".
+		if (phase.ordinal() >= Phase.CASCADE.ordinal() && now % PRESSURE_INTERVAL == 0 && !alive.isEmpty()) {
+			Error422Entity entity = alive.get(level.random.nextInt(alive.size()));
+			ServerPlayer victim = level.players().get(level.random.nextInt(level.players().size()));
+
+			if (entity.distanceTo(victim) > 40.0) {
+				entity.pressIn(victim);
+			}
+		}
 
 		if (alive.size() >= dev.error404.Difficulty.current().maxAlive) {
 			return;

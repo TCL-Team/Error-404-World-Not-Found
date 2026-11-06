@@ -744,6 +744,17 @@ public class Error422Entity extends Mob {
 		discard();
 	}
 
+	/**
+	 * Called by the anomaly manager when the session has gone quiet: it is not gone, it was
+	 * just standing somewhere you could not see. Places it in the player's blind spot, 20-28
+	 * blocks out, and does *not* let it teleport into an anchor zone.
+	 */
+	public void pressIn(Player player) {
+		teleportToRing(player, 20.0 + random.nextInt(8));
+		face(player);
+		level().playSound(null, player.blockPosition(), ModSounds.WHISPER, SoundSource.AMBIENT, 0.5f, 0.6f);
+	}
+
 	/** Used by the void pearl: it saw where you went and it will walk there. */
 	public void setStalkTarget(BlockPos pos) {
 		this.stalkTarget = pos.immutable();
