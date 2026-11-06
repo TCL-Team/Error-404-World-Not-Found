@@ -106,6 +106,12 @@ public final class VoidAmbience {
 			}
 		}
 
+		// near death: the world drops out under you, once every second and a half
+		if (client.player.getHealth() <= 4.0f && client.level.getGameTime() % 30 == 0) {
+			client.level.playLocalSound(client.player.getX(), client.player.getY(), client.player.getZ(),
+					ModSounds.DEATH_STING, SoundSource.AMBIENT, 0.22f, 1.0f, false);
+		}
+
 		if (phase >= 2 && client.level.getGameTime() % 600 == 0 && !isDay(level)) {
 			client.level.playLocalSound(client.player.getX(), client.player.getY(), client.player.getZ(),
 					ModSounds.WHISPER, SoundSource.AMBIENT, 0.3f, 0.75f, false);
