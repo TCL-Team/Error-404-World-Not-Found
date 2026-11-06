@@ -44,14 +44,14 @@ public final class Error404ConfigScreen extends Screen {
 
 		// --- the two switches that matter most -------------------------------------
 		this.addRenderableWidget(checkbox(left, y, "config.error404.realBlockDeletion",
-				config.realBlockDeletion, value -> {
+				config.realBlockDeletion, (box, value) -> {
 					config.realBlockDeletion = value;
 					Error404Config.save();
 				},
 				"config.error404.realBlockDeletion.tooltip"));
 
 		this.addRenderableWidget(checkbox(right, y, "config.error404.chaos",
-				config.chaos, value -> {
+				config.chaos, (box, value) -> {
 					config.chaos = value;
 					Error404Config.save();
 				},
@@ -60,14 +60,14 @@ public final class Error404ConfigScreen extends Screen {
 		// --- safety ---------------------------------------------------------------
 		y += row;
 		this.addRenderableWidget(checkbox(left, y, "config.error404.photosensitivity",
-				config.photosensitivity, value -> {
+				config.photosensitivity, (box, value) -> {
 					config.photosensitivity = value;
 					Error404Config.save();
 				},
 				"config.error404.photosensitivity.tooltip"));
 
 		this.addRenderableWidget(checkbox(right, y, "config.error404.backupOnStart",
-				config.backupOnStart, value -> {
+				config.backupOnStart, (box, value) -> {
 					config.backupOnStart = value;
 					Error404Config.save();
 				},
@@ -76,14 +76,14 @@ public final class Error404ConfigScreen extends Screen {
 		// --- the world being deleted ---------------------------------------------
 		y += row;
 		this.addRenderableWidget(checkbox(left, y, "config.error404.destructiveEnding",
-				config.destructiveEnding, value -> {
+				config.destructiveEnding, (box, value) -> {
 					config.destructiveEnding = value;
 					Error404Config.save();
 				},
 				"config.error404.destructiveEnding.tooltip"));
 
 		this.addRenderableWidget(checkbox(right, y, "config.error404.protectBlockEntities",
-				config.protectBlockEntities, value -> {
+				config.protectBlockEntities, (box, value) -> {
 					config.protectBlockEntities = value;
 					Error404Config.save();
 				},
@@ -92,14 +92,14 @@ public final class Error404ConfigScreen extends Screen {
 		// --- feedback -------------------------------------------------------------
 		y += row;
 		this.addRenderableWidget(checkbox(left, y, "config.error404.hud",
-				config.hud, value -> {
+				config.hud, (box, value) -> {
 					config.hud = value;
 					Error404Config.save();
 				},
 				"config.error404.hud.tooltip"));
 
 		this.addRenderableWidget(checkbox(right, y, "config.error404.announceOnJoin",
-				config.announceOnJoin, value -> {
+				config.announceOnJoin, (box, value) -> {
 					config.announceOnJoin = value;
 					Error404Config.save();
 				},
