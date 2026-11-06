@@ -44,17 +44,42 @@ DELETION phase ke baad, har 1–3 minute me duniya kuch aisa karti hai jo nahi h
 
 | Event | Kya hota hai |
 |---|---|
-| `chunk` | ek poora chunk player ke paas se **gayab** — jaise load hi nahi hua ho |
+| `chunk` | ek poora chunk **tumhare saamne** gir jaata hai — block-by-block, sound + particles ke saath |
 | `inventory` | hotbar ka saaman apni jagah badal leta hai (kuch delete nahi hota) |
 | `death` | bina toofan ke bijli, aur death screen: *"this player is not in the save file"* |
 | `doors` | 20 block ke andar saare darwaze ek saath khul jaate hain |
 | `sound` | tumhare theek peeche full volume awaaz — mudo to kuch nahi |
 | `lightning` | jis block par tum abhi kadam rakhne wale the, wahan bijli |
-| `mobs` | tumhare peeche zombie/skeleton/enderman/**warden** spawn, pehle se tumhe target karke |
+| `mobs` | tumhare peeche zombie/skeleton/creeper/enderman spawn, pehle se tumhe target karke |
 | `teleport` | 8–18 block door phenk diya (deewar ya lava me nahi) |
 | `message` | tumhare hi naam se ek fake diagnostic chat line |
 
 Anchor zone me chaos **kabhi** nahi hota. `/error404 chaos off` se poora band, `chaos fire <event>` se ek test.
+
+### Chunk collapse dikhta hai (v0.8.1)
+
+Pehle chunk kahin door gayab hota tha aur pata bhi nahi chalta tha. Ab do tarah se hota hai, aur dono
+dikhte hain:
+
+- **Saamne wala chunk** — tumhare view cone ke andar, 3–9 chunk ki doori par, 1024 blocks tak ek saath
+  girte hain (sound + particles + turant client resync, to hole banta hua nazar aata hai)
+- **Tumhara apna chunk** — CASCADE ke baad, pehli death ke baad. 9 second ka announcement
+  (*YOU ARE STANDING IN A DELETED CHUNK*), actionbar countdown, tez hota heartbeat. Chunk jaata hai:
+  andar rahe to void me teleport + 8 damage aur server sabko batata hai ki tum apne chunk ke saath
+  delete ho gaye; nikal gaye to woh bhi batata hai.
+
+Sab kuch journal me likha jaata hai — `/error404 restore` sab wapas laata hai.
+
+### Creepy title screen (v0.8.1)
+
+Built-in resource pack (`Error 404: World Not Found - title screen`, default **on**, Resource Packs me
+off kar sakte ho):
+
+- deleted world ka **original panorama** — terrain beech me khatam (jagged cut), void ke upar tairte
+  blocks, skyline pe ruins, aur ek 3:1 silhouette jo rotation ke saath wapas aata hai
+- **original `ERROR 404 / WORLD NOT FOUND` wordmark** (pehla letter corrupted, ek slice shifted) aur
+  `NULL EDITION` bar — vanilla logo ki jagah
+- scanlines, chalti hui error lines, kabhi-kabhi static burst, aur stack-trace splashes
 
 ### 422 kitni khatarnak hai (v0.7)
 
@@ -180,11 +205,14 @@ CI har push par GitHub Actions se build hota hai (`.github/workflows/build.yml`)
 | **v0.4 entity** | 422 - 3 textures, custom model, Mix AI (stalker -> stare rule), glow, vanish loot | ✅ in game |
 | **v0.5 endings** | SALVAGE / DELETE / 0x00, anchor ritual, advancements, restore hardening | ✅ in game |
 | **v0.6 polish** | HUD glitch layer, fog/void horizon, ambience cross-fade, photosensitivity mode | ✅ in game |
+| **v0.7 entity AI** | path replay, prediction, habit model, home invasion, wall break, sleep haunting, darkness aura | ✅ in game |
+| **v0.8 chaos** | chaos layer, proximity drone, death sting, all-English text, visible collapse front | ✅ [v0.8.0](https://github.com/TCL-Team/Error-404-World-Not-Found/releases/tag/v0.8.0) |
+| **v0.8.1** | personal collapse, creepy title screen + original wordmark, 422 leash + early spawns | ✅ [v0.8.1](https://github.com/TCL-Team/Error-404-World-Not-Found/releases/tag/v0.8.1) |
 | **v0.6.0 release** | release workflow (tag → jar + notes), deletion journal (`restore` sach me wapas deta hai), natural 422 spawner, anchor ritual, 5 languages | ✅ [v0.6.0](https://github.com/TCL-Team/Error-404-World-Not-Found/releases/tag/v0.6.0) |
 
 Har push par GitHub Actions build hota hai (JDK 25 + Gradle 9.8.2). `v*` tag push karne par
 `release.yml` jar + release notes publish karta hai.
-Latest verified jar: **error404-0.6.0.jar, 753 KB** (release `v0.6.0`).
+Latest verified jar: **error404-0.8.1.jar, 1.04 MB** (release `v0.8.1`).
 
 ## In-game commands (operator only)
 
