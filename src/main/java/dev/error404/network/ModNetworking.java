@@ -49,14 +49,41 @@ public final class ModNetworking {
 			flags |= StateSyncPayload.FLAG_HUD;
 		}
 
-		ServerPlayNetworking.send(player, new StateSyncPayload(
+		StateSyncPayload payload = new StateSyncPayload(
 				state.integrity(),
 				state.phase().ordinal(),
 				state.sessionSeed(),
 				state.dataFragments(),
 				state.ended(),
 				flags
-		));
+		);
+
+		// identical to the last one this player got: nothing to say
+		if (payload.equals(LAST_SENT.get(player.getUUID()))) {
+			return;
+		}
+
+		LAST_SENT.put(player.getUUID(), payload);
+		ServerPlayNetworking.send(player, payload);
+	}
+
+	/**
+	 * Last payload actually sent per player.
+	 *
+	 * <p>The director pushes state four times a second for the whole session. Integrity changes
+	 * maybe twice a minute, so almost every one of those packets repeated the previous one. This
+	 * drops the identical ones: the client only hears about a change, which is both cheaper and
+	 * removes the chance of a repeated sync re-arming a client-side timer.</p>
+	 */
+	private static final java.util.Map<java.util.UUID, StateSyncPayload> LAST_SENT = new java.util.HashMap<>();
+
+	/** Drops the cache for one player, so their next join gets a fresh snapshot. */
+	public static void forgetState(java.util.UUID uuid) {
+		LAST_SENT.remove(uuid);
+	}
+
+	public static void clearStateCache() {
+		LAST_SENT.clear();
 	}
 
 	/** Pushes the world state to everyone (used by the director when a phase changes). */

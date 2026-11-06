@@ -71,6 +71,7 @@ public final class ServerEvents {
 			dev.error404.haunt.PlayerModel.forget(player.getUUID());
 			dev.error404.haunt.PathMemory.forget(player.getUUID());
 			dev.error404.haunt.Scares.forget(player.getUUID());
+			dev.error404.network.ModNetworking.forgetState(player.getUUID());
 		});
 
 		ServerTickEvents.END_SERVER_TICK.register(ServerEvents::onEndTick);
