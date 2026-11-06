@@ -41,7 +41,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_type == 'tag' && github.ref_name || format('v{0}', steps.jars.outputs.version) }}
-          name: Error 404: World Not Found ${{ steps.jars.outputs.version }}
+          name: "Error 404: World Not Found ${{ steps.jars.outputs.version }}"
           draft: false
           prerelease: false
           generate_release_notes: true
