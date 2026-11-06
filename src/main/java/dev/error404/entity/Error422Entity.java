@@ -339,7 +339,7 @@ public class Error422Entity extends Mob {
 			BlockState state = serverLevel.getBlockState(pos);
 
 			if (!state.isAir() && state.getDestroySpeed(serverLevel, pos) < 50) {
-				serverLevel.destroyBlock(pos, false);
+				serverLevel.destroyBlock(pos, false, this, 512);
 				serverLevel.sendParticles(ParticleTypes.PORTAL, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 3, 0.2, 0.2, 0.2, 0.05);
 			}
 		}
