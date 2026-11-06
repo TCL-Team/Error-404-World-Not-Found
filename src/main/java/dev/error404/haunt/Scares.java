@@ -42,6 +42,14 @@ public final class Scares {
 	private static final java.util.Map<java.util.UUID, Long> LAST_SCARE = new java.util.HashMap<>();
 	private static final java.util.Map<java.util.UUID, Long> AFTERSHOCK = new java.util.HashMap<>();
 
+	/** Cheap: only expires stale entries, so it is safe to call for every dimension. */
+	public static void tick(ServerLevel level) {
+		if (!level.players().isEmpty() && level.getGameTime() % 600 == 0) {
+			long now = level.getGameTime();
+			AFTERSHOCK.entrySet().removeIf(entry -> entry.getValue() < now - 20 * 60);
+		}
+	}
+
 	public static void reset() {
 		LAST_SCARE.clear();
 		AFTERSHOCK.clear();

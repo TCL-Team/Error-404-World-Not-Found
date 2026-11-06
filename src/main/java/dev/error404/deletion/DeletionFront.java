@@ -46,10 +46,19 @@ public final class DeletionFront {
 		IntegrityState.get(server).stop();
 	}
 
+	/** The overworld keeps the shared pacing clock. */
 	public static void tick(MinecraftServer server) {
+		tickDimension(server, server.overworld());
+	}
+
+	/**
+	 * Same front, one dimension. The pacing clock is shared (so a Nether player does not double
+	 * the deletion rate), but the zone is seeded around a player <b>in that dimension</b>.
+	 */
+	public static void tickDimension(MinecraftServer server, ServerLevel level) {
 		Error404Config cfg = Error404Config.get();
 
-		if (!cfg.enabled) {
+		if (!cfg.enabled || level == null || level.players().isEmpty()) {
 			return;
 		}
 
@@ -72,12 +81,7 @@ public final class DeletionFront {
 			return;
 		}
 
-		ServerLevel level = server.overworld();
-		if (level == null || level.players().isEmpty()) {
-			return;
-		}
-
-		ServerPlayer anchorPlayer = level.players().get(server.overworld().random.nextInt(level.players().size()));
+		ServerPlayer anchorPlayer = level.players().get(level.random.nextInt(level.players().size()));
 
 		// The 20x20 advancing zone is the experience now: it eats the world in waves the
 		// player can watch, tile by tile, instead of a 16x16 chunk blinking out between two

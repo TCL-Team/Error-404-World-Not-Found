@@ -179,30 +179,48 @@ public final class ServerEvents {
 			DeletionFront.tick(server);
 			AnomalyManager.tick(server);
 			dev.error404.haunt.PhantomServer.tick(server);
-			dev.error404.haunt.HomeInvasion.tick(server.overworld());
-			dev.error404.haunt.Chaos.tick(server);
-			dev.error404.haunt.Disturbing.tick(server.overworld());
+
+			// Every dimension, not just the overworld. A player who runs to the Nether to escape
+			// the mod used to escape it completely - 422 never followed, chaos never fired and
+			// the deletion front never reached them. That was the largest hole in the design.
+			for (ServerLevel dimension : server.getAllLevels()) {
+				if (dimension.players().isEmpty()) {
+					continue;
+				}
+
+				dev.error404.anomaly.AnomalyManager.tick(server, dimension);
+				dev.error404.haunt.HomeInvasion.tick(dimension);
+				dev.error404.haunt.Chaos.tick(server, dimension);
+				dev.error404.haunt.Disturbing.tick(dimension);
+				dev.error404.deletion.PersonalCollapse.tick(dimension);
+				dev.error404.haunt.Scares.tick(dimension);
+				dev.error404.deletion.DeletionFront.tickDimension(server, dimension);
+			}
 
 			// The chunk the player is standing in can be reclaimed. It is announced first.
 			dev.error404.deletion.PersonalCollapse.tick(server.overworld());
 
 			if (server.getTickCount() % 200 == 0) {
-				for (ServerPlayer player : server.overworld().players()) {
-					if (server.overworld().random.nextInt(3) == 0
-							&& dev.error404.deletion.PersonalCollapse.allowed(server.overworld(), player)) {
-						dev.error404.deletion.PersonalCollapse.start(server.overworld(), player,
-								dev.error404.deletion.PersonalCollapse.WARNING_TICKS);
-						break;
+				for (ServerLevel dimension : server.getAllLevels()) {
+					for (ServerPlayer player : dimension.players()) {
+						if (dimension.random.nextInt(3) == 0
+								&& dev.error404.deletion.PersonalCollapse.allowed(dimension, player)) {
+							dev.error404.deletion.PersonalCollapse.start(dimension, player,
+									dev.error404.deletion.PersonalCollapse.WARNING_TICKS);
+							break;
+						}
 					}
 				}
 			}
 
 			// One path sample per second is enough to replay a minute of walking.
 			if (server.getTickCount() % 20 == 0) {
-				dev.error404.haunt.PathMemory.sample(server.overworld());
+				for (ServerLevel dimension : server.getAllLevels()) {
+					dev.error404.haunt.PathMemory.sample(dimension);
 
-				for (ServerPlayer player : server.overworld().players()) {
-					dev.error404.haunt.PlayerModel.observe(player);
+					for (ServerPlayer player : dimension.players()) {
+						dev.error404.haunt.PlayerModel.observe(player);
+					}
 				}
 			}
 			tickExplorationCost(server, state, cfg);

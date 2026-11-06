@@ -24,14 +24,22 @@ import net.minecraft.world.phys.Vec3;
  */
 public final class PathMemory {
 	private static final int SAMPLES = 60;
-	private static final Map<UUID, Deque<Vec3>> PATHS = new HashMap<>();
+	/**
+	 * Dimension-aware on purpose: without this a 422 in the Nether would replay overworld
+	 * coordinates and either fall into the void or teleport across the world.
+	 */
+	private static final Map<String, Deque<Vec3>> PATHS = new HashMap<>();
+
+	private static String key(ServerPlayer player) {
+		return player.level().dimension().location() + "/" + player.getUUID();
+	}
 
 	private PathMemory() {
 	}
 
 	public static void sample(ServerLevel level) {
 		for (ServerPlayer player : level.players()) {
-			Deque<Vec3> path = PATHS.computeIfAbsent(player.getUUID(), uuid -> new ArrayDeque<>(SAMPLES));
+			Deque<Vec3> path = PATHS.computeIfAbsent(key(player), k -> new ArrayDeque<>(SAMPLES));
 
 			if (path.size() >= SAMPLES) {
 				path.pollFirst();
@@ -43,13 +51,13 @@ public final class PathMemory {
 
 	/** The oldest remembered position: exactly one minute behind the player. */
 	public static Vec3 oldest(ServerPlayer player) {
-		Deque<Vec3> path = PATHS.get(player.getUUID());
+		Deque<Vec3> path = PATHS.get(key(player));
 		return path == null || path.isEmpty() ? null : path.peekFirst();
 	}
 
 	/** Where the player was {@code secondsAgo} seconds ago, if we remember that far. */
 	public static Vec3 at(ServerPlayer player, int secondsAgo) {
-		Deque<Vec3> path = PATHS.get(player.getUUID());
+		Deque<Vec3> path = PATHS.get(key(player));
 
 		if (path == null || path.isEmpty()) {
 			return null;

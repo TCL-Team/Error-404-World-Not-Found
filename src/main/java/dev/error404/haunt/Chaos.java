@@ -60,14 +60,16 @@ public final class Chaos {
 		return List.copyOf(LOG);
 	}
 
-	public static void tick(MinecraftServer server) {
+	/**
+	 * Chaos is server-wide, but it fires where a player actually is. Passing the dimension in
+	 * (instead of always using the overworld) is what stops the Nether being a safe room.
+	 */
+	public static void tick(MinecraftServer server, ServerLevel level) {
 		Error404Config cfg = Error404Config.get();
 
 		if (!cfg.enabled || !cfg.chaos) {
 			return;
 		}
-
-		ServerLevel level = server.overworld();
 
 		if (level == null || level.players().isEmpty()) {
 			return;

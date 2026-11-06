@@ -39,7 +39,18 @@ public final class PhantomServer {
 
 	/** Called from the server tick while a session is active. */
 	public static void tick(MinecraftServer server) {
+		// phantom messages are global chat, so they may come from any dimension - pick the one
+		// with players in it, overworld first
 		ServerLevel level = server.overworld();
+
+		if (level == null || level.players().isEmpty()) {
+			for (ServerLevel candidate : server.getAllLevels()) {
+				if (!candidate.players().isEmpty()) {
+					level = candidate;
+					break;
+				}
+			}
+		}
 
 		if (level == null || level.players().isEmpty()) {
 			return;

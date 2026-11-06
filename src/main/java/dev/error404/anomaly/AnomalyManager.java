@@ -50,9 +50,12 @@ public final class AnomalyManager {
 	public record Instance(AnomalyType type, BlockPos pos, long bornTick, boolean revoking, int razedBlocks) {
 	}
 
+	/** Overworld entry point; other dimensions call {@link #tick(MinecraftServer, ServerLevel)}. */
 	public static void tick(MinecraftServer server) {
-		ServerLevel level = server.overworld();
+		tick(server, server.overworld());
+	}
 
+	public static void tick(MinecraftServer server, ServerLevel level) {
 		if (level == null || level.players().isEmpty()) {
 			return;
 		}
