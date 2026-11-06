@@ -2,6 +2,41 @@
 
 Sab notable changes. Format [Keep a Changelog](https://keepachangelog.com/), versioning [SemVer](https://semver.org/).
 
+## [0.8.1] - 2026-11-06
+
+**"Woh paas rehta hai."** Chunk collapse dikhta hai, apna chunk bhi jaata hai, aur title screen creepier.
+
+### Added
+
+- **Visible chunk collapse** — deleted chunks are now taken apart right in front of you: the one you
+  are looking at (within a 3-9 chunk cone), block by block, with the sound and particles to match,
+  then instantly resynced to the client so you watch the hole appear instead of walking into it later.
+- **Personal collapse** — from CASCADE, after your first death, the mod can pick *your* chunk. Nine
+  seconds of announcement ("YOU ARE STANDING IN A DELETED CHUNK", actionbar countdown, heartbeat),
+  then the chunk goes. Still inside? Teleported into the void, 8 damage, and the server tells everyone
+  you were deleted with your chunk. Out in time? It tells you that too.
+- **Creepy title screen** — shipped as a built-in resource pack (`Error 404: World Not Found - title
+  screen`, on by default, switchable off in Resource Packs):
+  - an original panorama of a world that has been deleted — terrain that ends at a jagged cut,
+    floating blocks over the void, ruins on the skyline, and a tall silhouette that is closer than
+    it was the last time you looked
+  - an original `ERROR 404 / WORLD NOT FOUND` wordmark with a corrupted first letter and a
+    misplaced slice, plus a `NULL EDITION` bar, replacing vanilla's logo
+  - scanlines, drifting error lines, a rare burst of static, and stack-trace splashes
+- **`/error404 chaos fire <event>`** and `chaos on|off` were already in 0.8.0; the chunk event is now
+  budget-capped so it cannot delete more than one journal's worth of blocks.
+
+### Changed
+
+- **422 no longer wanders off.** It is leashed to the nearest player (40 blocks): too far away, and it
+  repositions instead of quietly despawning. Its despawn timer only runs while nobody is near, so a
+  watched 422 never leaves. That is what "it follows you" should have meant all along.
+- **422 spawns from the very first phase** (45 s cooldown instead of 90 s, no longer gated behind
+  DESYNC), and the difficulty presets allow one extra alive at once, so a session meets it in minutes
+  instead of twenty.
+- Panorama overlay is the vanilla 16x128 size now — a 1024x512 overlay only ever showed its top-left
+  corner under vanilla's fixed-size quad, which made the whole screen darker than intended.
+
 ## [0.8.0] - 2026-11-06
 
 **"Anything can happen."** Chaos layer + an AI that learns you. Everything in-game is English now.
