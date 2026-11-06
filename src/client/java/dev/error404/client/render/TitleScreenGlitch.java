@@ -11,6 +11,7 @@ import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.Screens;
 
 import dev.error404.Error404;
+import dev.error404.client.ClientState;
 
 /**
  * The title screen, made wrong.
