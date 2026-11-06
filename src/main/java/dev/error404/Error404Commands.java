@@ -185,7 +185,7 @@ public final class Error404Commands {
 		return 1;
 	}
 
-	private static int fireChaos(CommandContext<CommandSourceStack> context) {
+	private static int fireChaos(CommandContext<CommandSourceStack> context) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
 		net.minecraft.server.level.ServerPlayer player = context.getSource().getPlayerOrException();
 		String event = com.mojang.brigadier.arguments.StringArgumentType.getString(context, "event");
 		String fired = dev.error404.haunt.Chaos.forceFire(context.getSource().getServer(),
