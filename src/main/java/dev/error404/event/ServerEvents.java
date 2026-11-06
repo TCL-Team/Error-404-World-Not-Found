@@ -53,6 +53,7 @@ public final class ServerEvents {
 			dev.error404.deletion.PersonalCollapse.cancel();
 			dev.error404.haunt.PlayerModel.clear();
 			dev.error404.haunt.Scares.reset();
+			dev.error404.haunt.Disturbing.reset();
 			dev.error404.deletion.DeleteZone.reset();
 			dev.error404.commands.CommandGate.reset();
 		});
@@ -177,6 +178,7 @@ public final class ServerEvents {
 			dev.error404.haunt.PhantomServer.tick(server);
 			dev.error404.haunt.HomeInvasion.tick(server.overworld());
 			dev.error404.haunt.Chaos.tick(server);
+			dev.error404.haunt.Disturbing.tick(server.overworld());
 
 			// The chunk the player is standing in can be reclaimed. It is announced first.
 			dev.error404.deletion.PersonalCollapse.tick(server.overworld());

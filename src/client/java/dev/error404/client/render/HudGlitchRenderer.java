@@ -37,6 +37,8 @@ public final class HudGlitchRenderer {
 
 	private static final net.minecraft.resources.Identifier LAYER_CRASH =
 			dev.error404.Error404.id("hud_fake_crash");
+	private static final net.minecraft.resources.Identifier LAYER_DREAD =
+			dev.error404.Error404.id("hud_dread");
 
 	private HudGlitchRenderer() {
 	}
@@ -53,6 +55,13 @@ public final class HudGlitchRenderer {
 
 					JumpscareOverlay.tick();
 					JumpscareOverlay.render(context, context.guiWidth(), context.guiHeight());
+				});
+
+		// the slow layer goes under the HUD, so chat and health stay readable
+		HudElementRegistry.attachElementBefore(VanillaHudElements.HOTBAR, LAYER_DREAD,
+				(context, delta) -> {
+					DreadOverlay.tick(net.minecraft.client.Minecraft.getInstance());
+					DreadOverlay.render(context, context.guiWidth(), context.guiHeight());
 				});
 	}
 

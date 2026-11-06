@@ -88,6 +88,11 @@ public final class DeletionJournal {
 	}
 
 	/** Returns every remembered block, newest chunk first, and forgets it. */
+	/** Read-only view for flavour systems (they must never consume the journal). */
+	public static java.util.Collection<Deque<Entry>> peek() {
+		return java.util.Collections.unmodifiableCollection(JOURNAL.values());
+	}
+
 	public static Map<Long, Deque<Entry>> drain() {
 		Map<Long, Deque<Entry>> copy = new HashMap<>(JOURNAL);
 		JOURNAL.clear();
