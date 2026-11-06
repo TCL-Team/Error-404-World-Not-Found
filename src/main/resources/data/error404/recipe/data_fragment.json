@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "SGS",
+    "GEG",
+    "SGS"
+  ],
+  "key": {
+    "S": "error404:corrupt_shard",
+    "G": "minecraft:glowstone_dust",
+    "E": "minecraft:ender_pearl"
+  },
+  "result": {
+    "id": "error404:data_fragment",
+    "count": 1
+  }
+}

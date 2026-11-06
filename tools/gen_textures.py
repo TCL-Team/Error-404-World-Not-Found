@@ -12,6 +12,9 @@ Outputs:
   src/main/resources/assets/error404/models/block/*.json
   src/main/resources/assets/error404/blockstates/*.json
   src/main/resources/assets/error404/items/*.json   (1.21.11 item definition format)
+
+Note: this script only writes `assets/`. Everything under `data/` (recipes, loot tables,
+advancements, tags) is hand-written and must not be generated from here.
 """
 
 import json
