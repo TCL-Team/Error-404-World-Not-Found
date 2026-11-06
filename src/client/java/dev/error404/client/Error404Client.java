@@ -29,12 +29,12 @@ public class Error404Client implements ClientModInitializer {
 		VoidAmbience.register();
 
 		ClientPlayNetworking.registerGlobalReceiver(StateSyncPayload.ID, (payload, context) ->
-				ClientState.apply(payload.integrity(), payload.phase(), payload.seed(), payload.fragments(), payload.ended()));
+				ClientState.apply(payload.integrity(), payload.phase(), payload.seed(), payload.fragments(), payload.ended(), payload.flags()));
 
 		ClientPlayNetworking.registerGlobalReceiver(EffectPayload.ID, (payload, context) ->
 				ClientState.trigger(payload.kind(), payload.message(), payload.durationTicks()));
 
-		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> ClientState.apply(100, 0, 0L, 0, false));
+		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> ClientState.apply(100, 0, 0L, 0, false, 0));
 
 		// Cold open: the title-screen drone, only when the mod is present and enabled.
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {

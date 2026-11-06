@@ -77,7 +77,7 @@ public final class HudGlitchRenderer {
 		}
 
 		// --- integrity readout (opt-in via config, off by default)
-		if (dev.error404.Error404Config.get().hud) {
+		if (ClientState.hudReadout()) {
 			String readout = "integrity " + ClientState.integrity() + "%  " + ClientState.phaseName()
 					+ "  fragments " + ClientState.fragments() + "/8";
 			graphics.drawString(client.font, readout, 6, 6, 0xFF9E9E9E, false);
@@ -93,16 +93,16 @@ public final class HudGlitchRenderer {
 
 		// --- phase flash
 		if (ClientState.phaseFlashActive()) {
-			float strength = ClientState.phaseFlashStrength();
+			float strength = ClientState.phaseFlashStrength() * (ClientState.photosensitive() ? 0.3f : 1.0f);
 			graphics.fill(0, 0, width, height, ((int) (0x55 * strength) << 24) | 0x00101010);
 			String title = "ERR_404 :: " + ClientState.phaseName();
 			int x = (width - client.font.width(title)) / 2;
 			graphics.drawString(client.font, title, x, height / 2 - 30, 0xFFC81830, true);
 		}
 
-		// --- static burst
+		// --- static burst (halved for photosensitive players)
 		if (ClientState.staticActive()) {
-			float strength = ClientState.staticStrength();
+			float strength = ClientState.staticStrength() * (ClientState.photosensitive() ? 0.35f : 1.0f);
 			int lines = (int) (height * 0.35f * strength);
 
 			for (int i = 0; i < lines; i++) {

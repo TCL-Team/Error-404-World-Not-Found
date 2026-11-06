@@ -125,6 +125,15 @@ public final class DeletionFront {
 	/** Removes up to {@link #BLOCKS_PER_PASS} blocks from the top of a chunk. */
 	private static boolean stripChunk(ServerLevel level, int chunkX, int chunkZ, IntegrityState state) {
 		RandomSource random = level.random;
+
+		if (!Error404Config.get().realBlockDeletion) {
+			// Safe mode: the world is never modified, but the books stay in sync so the HUD,
+			// the fog and the endings still play exactly as they would.
+			state.markDeletedChunk(chunkX, chunkZ);
+			level.playSound(null, new BlockPos(chunkX << 4, level.getSeaLevel(), chunkZ << 4),
+					ModSounds.CHUNK_DELETE, SoundSource.BLOCKS, 0.35f, 0.8f);
+			return true;
+		}
 		int budget = BLOCKS_PER_PASS;
 		int removed = 0;
 		int layer = Math.min(10, 3 + state.phase().ordinal() * 2);

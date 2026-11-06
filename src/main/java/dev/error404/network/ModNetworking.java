@@ -34,12 +34,24 @@ public final class ModNetworking {
 	/** Pushes the world state to one player. */
 	public static void sendState(net.minecraft.server.level.ServerPlayer player, net.minecraft.server.MinecraftServer server) {
 		var state = dev.error404.integrity.IntegrityState.get(server);
+		var cfg = dev.error404.Error404Config.get();
+		int flags = 0;
+
+		if (cfg.photosensitivity) {
+			flags |= StateSyncPayload.FLAG_PHOTOSENSITIVITY;
+		}
+
+		if (cfg.hud) {
+			flags |= StateSyncPayload.FLAG_HUD;
+		}
+
 		ServerPlayNetworking.send(player, new StateSyncPayload(
 				state.integrity(),
 				state.phase().ordinal(),
 				state.sessionSeed(),
 				state.dataFragments(),
-				state.ended()
+				state.ended(),
+				flags
 		));
 	}
 

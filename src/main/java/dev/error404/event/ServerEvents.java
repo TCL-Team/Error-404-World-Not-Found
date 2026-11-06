@@ -124,6 +124,8 @@ public final class ServerEvents {
 		if (state.active() && !state.ended()) {
 			DeletionFront.tick(server);
 			AnomalyManager.tick(server);
+			tickExplorationCost(server, state, cfg);
+			tickAnchorRecovery(server, state, cfg);
 		}
 
 		// 4x per second is plenty for a HUD-ish sync, and keeps the payload cheap.
@@ -139,6 +141,93 @@ public final class ServerEvents {
 		if (phaseChanged) {
 			ModNetworking.broadcastEffect(server, ModNetworking.EFFECT_PHASE_SHIFT, state.phase().name(), 60);
 			lastSyncedPhase = state.phase();
+		}
+	}
+
+	/**
+	 * New ground costs integrity: every chunk the party uncovers for the first time charges
+	 * {@code newChunkDrainHundredths} hundredths of a point. That is what makes exploring -
+	 * the core activity of Minecraft - the thing that kills the world.
+	 *
+	 * <p>Runs at most once per second and only looks at chunks around players that are already
+	 * loaded, so it never causes chunk generation by itself.</p>
+	 */
+	private static void tickExplorationCost(MinecraftServer server, IntegrityState state, Error404Config cfg) {
+		if (cfg.newChunkDrainHundredths <= 0 || server.getTickCount() % 20 != 0) {
+			return;
+		}
+
+		ServerLevel level = server.overworld();
+
+		if (level == null) {
+			return;
+		}
+
+		int charge = 0;
+
+		for (ServerPlayer player : level.players()) {
+			int cx = player.getBlockX() >> 4;
+			int cz = player.getBlockZ() >> 4;
+
+			for (int dx = -2; dx <= 2; dx++) {
+				for (int dz = -2; dz <= 2; dz++) {
+					if (state.markChunkSeen(cx + dx, cz + dz)) {
+						charge += cfg.newChunkDrainHundredths;
+					}
+				}
+			}
+		}
+
+		while (charge >= 100) {
+			charge -= 100;
+			state.drain(1);
+		}
+
+		if (charge > 0) {
+			// Sub-point charges are kept in the runtime accumulator so nothing is lost.
+			state.drainHundredths(charge);
+		}
+	}
+
+	/** Standing inside a 32-block anchor zone slowly gives the world back. */
+	private static void tickAnchorRecovery(MinecraftServer server, IntegrityState state, Error404Config cfg) {
+		if (cfg.anchorRecoveryPer30s <= 0 || state.anchorPositions().isEmpty()) {
+			return;
+		}
+
+		ServerLevel level = server.overworld();
+
+		if (level == null) {
+			return;
+		}
+
+		boolean inside = false;
+
+		for (ServerPlayer player : level.players()) {
+			for (BlockPos anchor : state.anchorPositions()) {
+				if (AnchorCoreBlock.protects(anchor, player.blockPosition())) {
+					inside = true;
+					break;
+				}
+			}
+
+			if (inside) {
+				break;
+			}
+		}
+
+		if (!inside) {
+			state.resetAnchorAccumulator();
+			return;
+		}
+
+		long ticksPerUnit = 30L * 20L;
+		int units = state.accumulateAnchorTicks(1L, ticksPerUnit);
+
+		if (units > 0) {
+			state.restore(units * cfg.anchorRecoveryPer30s);
+			level.playSound(null, level.players().getFirst().blockPosition(), ModSounds.ANCHOR_HUM,
+					net.minecraft.sounds.SoundSource.BLOCKS, 0.6f, 1.2f);
 		}
 	}
 

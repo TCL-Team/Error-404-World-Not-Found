@@ -1,6 +1,7 @@
 package dev.error404.integrity;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -70,6 +71,12 @@ public class IntegrityState extends SavedData {
 
 	/** Runtime-only pacing accumulator, deliberately not persisted. */
 	private long tickAccumulator = 0L;
+	/** Chunks already counted for the "new ground" drain, runtime only. */
+	private final Set<Long> seenChunks = new HashSet<>();
+	/** Anchor-zone recovery accumulator, runtime only. */
+	private long anchorAccumulator = 0L;
+	/** Sub-point drain (hundredths of a point), runtime only. */
+	private int fractionalDrain = 0;
 
 	public IntegrityState() {
 	}
@@ -228,6 +235,24 @@ public class IntegrityState extends SavedData {
 		setIntegrity(integrity - points);
 	}
 
+	/**
+	 * Sub-point drain used by the exploration cost: {@code hundredths} is charged in whole
+	 * points as soon as enough of them have piled up, and never rounds a point away.
+	 */
+	public void drainHundredths(int hundredths) {
+		if (!active || ended || hundredths <= 0) {
+			return;
+		}
+
+		fractionalDrain += hundredths;
+
+		if (fractionalDrain >= 100) {
+			int points = fractionalDrain / 100;
+			fractionalDrain -= points * 100;
+			setIntegrity(integrity - points);
+		}
+	}
+
 	public void restore(int points) {
 		if (ended || points <= 0) {
 			return;
@@ -332,6 +357,32 @@ public class IntegrityState extends SavedData {
 
 	public void tickAge() {
 		ageTicks++;
+	}
+
+	/**
+	 * Counts a chunk the party has just uncovered. Returns {@code true} the first time a chunk
+	 * is seen, so the caller can charge integrity for it.
+	 */
+	public boolean markChunkSeen(int chunkX, int chunkZ) {
+		long key = ((long) chunkX << 32) | (chunkZ & 0xFFFFFFFFL);
+		return seenChunks.size() < 500_000 && seenChunks.add(key);
+	}
+
+	/** Accumulates anchor-zone time; returns how many whole recovery units are ready. */
+	public int accumulateAnchorTicks(long ticks, long ticksPerUnit) {
+		anchorAccumulator += ticks;
+
+		if (ticksPerUnit <= 0 || anchorAccumulator < ticksPerUnit) {
+			return 0;
+		}
+
+		int units = (int) (anchorAccumulator / ticksPerUnit);
+		anchorAccumulator -= units * ticksPerUnit;
+		return units;
+	}
+
+	public void resetAnchorAccumulator() {
+		anchorAccumulator = 0L;
 	}
 
 	private static int clamp(int value) {

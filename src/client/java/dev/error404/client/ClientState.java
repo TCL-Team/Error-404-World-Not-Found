@@ -16,6 +16,9 @@ public final class ClientState {
 	private static long seed = 0L;
 	private static int fragments = 0;
 	private static boolean ended = false;
+	/** Mirrored from the server config: reduces flashing (1) and enables the HUD readout (2). */
+	private static boolean photosensitive = false;
+	private static boolean hudReadout = false;
 
 	// one-shot effects
 	private static int staticTicks = 0;
@@ -24,12 +27,22 @@ public final class ClientState {
 	private static String message = "";
 	private static int messageTicks = 0;
 
-	public static void apply(int newIntegrity, int newPhase, long newSeed, int newFragments, boolean newEnded) {
+	public static void apply(int newIntegrity, int newPhase, long newSeed, int newFragments, boolean newEnded, int flags) {
 		integrity = newIntegrity;
 		phase = Mth.clamp(newPhase, 0, 4);
 		seed = newSeed;
 		fragments = newFragments;
 		ended = newEnded;
+		photosensitive = (flags & 1) != 0;
+		hudReadout = (flags & 2) != 0;
+	}
+
+	public static boolean photosensitive() {
+		return photosensitive;
+	}
+
+	public static boolean hudReadout() {
+		return hudReadout;
 	}
 
 	public static void trigger(int kind, String text, int ticks) {
