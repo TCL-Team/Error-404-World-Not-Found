@@ -271,6 +271,10 @@ public class IntegrityState extends SavedData {
 		setDirty();
 	}
 
+	public boolean hasDeletedChunk(int chunkX, int chunkZ) {
+		return deletedChunks.contains(((long) chunkX << 32) | (chunkZ & 0xFFFFFFFFL));
+	}
+
 	public void markDeletedChunk(int chunkX, int chunkZ) {
 		if (deletedChunks.size() < 200_000 && deletedChunks.add(((long) chunkX << 32) | (chunkZ & 0xFFFFFFFFL))) {
 			setDirty();

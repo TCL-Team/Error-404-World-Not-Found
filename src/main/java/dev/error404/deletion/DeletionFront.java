@@ -97,7 +97,7 @@ public final class DeletionFront {
 				continue;
 			}
 
-			candidates.add(new net.minecraft.world.level.ChunkPos(chunkX, chunkZ));
+			newChunkCandidate(level, chunkX, chunkZ).ifPresent(candidates::add);
 		}
 
 		if (candidates.isEmpty()) {
@@ -120,6 +120,21 @@ public final class DeletionFront {
 
 		net.minecraft.world.level.ChunkPos ticket = candidates.get(random.nextInt(candidates.size()));
 		level.getChunk(ticket.x, ticket.z);
+	}
+
+	/**
+	 * Only chunks that were never touched before can be eaten.
+	 *
+	 * <p>The front works outwards from the player, so most of the ring is terrain the player
+	 * has already lived in. Without this check every pass re-clears the same few chunks and
+	 * the front stops advancing: the world looks fine while the bookkeeping says it is 40%
+	 * gone. Side effect: 422's own block damage does not count, only the front does.</p>
+	 */
+	private static java.util.Optional<net.minecraft.world.level.ChunkPos> newChunkCandidate(
+			ServerLevel level, int chunkX, int chunkZ) {
+		return IntegrityState.get(level.getServer()).hasDeletedChunk(chunkX, chunkZ)
+				? java.util.Optional.empty()
+				: java.util.Optional.of(new net.minecraft.world.level.ChunkPos(chunkX, chunkZ));
 	}
 
 	/** Removes up to {@link #BLOCKS_PER_PASS} blocks from the top of a chunk. */
