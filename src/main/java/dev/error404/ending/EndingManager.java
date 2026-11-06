@@ -20,7 +20,7 @@ import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.phys.Vec3;
 
 import dev.error404.Error404;
-import dev.error404.ModEntities;
+import dev.error404.entity.ModEntities;
 import dev.error404.ModSounds;
 import dev.error404.anomaly.AnomalyManager;
 import dev.error404.deletion.WorldBackup;
