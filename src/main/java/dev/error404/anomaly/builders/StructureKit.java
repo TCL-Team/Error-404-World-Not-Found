@@ -119,7 +119,9 @@ public final class StructureKit {
 				net.minecraft.server.network.Filterable.passThrough(title),
 				"error404",
 				0,
-				pages.stream().map(p -> net.minecraft.server.network.Filterable.passThrough(Component.literal(p))).toList(),
+				pages.stream()
+						.<net.minecraft.server.network.Filterable<Component>>map(p -> net.minecraft.server.network.Filterable.passThrough(Component.literal(p)))
+						.toList(),
 				true
 		);
 		book.set(net.minecraft.core.component.DataComponents.WRITTEN_BOOK_CONTENT, content);
