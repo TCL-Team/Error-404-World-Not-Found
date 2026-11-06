@@ -407,7 +407,7 @@ public class Error422Entity extends Mob {
 			serverLevel.playSound(null, blockPosition(), ModSounds.STATIC_BURST, SoundSource.HOSTILE, 1.0f, 0.8f);
 
 			// Leaving behind a shard is the only reward the player gets for surviving it.
-			spawnAtLocation(new net.minecraft.world.item.ItemStack(dev.error404.ModItems.CORRUPT_SHARD, 1 + random.nextInt(2)));
+			spawnAtLocation(serverLevel, new net.minecraft.world.item.ItemStack(dev.error404.ModItems.CORRUPT_SHARD, 1 + random.nextInt(2)));
 		}
 
 		discard();
@@ -467,7 +467,7 @@ public class Error422Entity extends Mob {
 	@Override
 	protected void readAdditionalSaveData(ValueInput input) {
 		super.readAdditionalSaveData(input);
-		dormant = input.getBoolean("dormant").orElse(false);
-		despawnTimer = input.getInt("despawn_timer").orElse(20 * 90);
+		dormant = input.getBooleanOr("dormant", false);
+		despawnTimer = input.getIntOr("despawn_timer", 20 * 90);
 	}
 }

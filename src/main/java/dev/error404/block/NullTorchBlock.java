@@ -10,7 +10,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
@@ -19,7 +19,8 @@ import net.minecraft.world.phys.shapes.VoxelShape;
  * darkness. Placing a few of these is the low-tech way to make a room feel safe.
  */
 public class NullTorchBlock extends Block {
-	public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
+	/** 1.21.11 removed {@code DirectionProperty}; horizontal facing is a plain EnumProperty. */
+	public static final EnumProperty<Direction> FACING = BlockStateProperties.HORIZONTAL_FACING;
 	private static final VoxelShape SHAPE = Block.box(6.0, 0.0, 6.0, 10.0, 10.0, 10.0);
 
 	public NullTorchBlock(Properties properties) {

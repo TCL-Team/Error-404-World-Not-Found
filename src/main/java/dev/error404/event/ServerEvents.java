@@ -82,7 +82,10 @@ public final class ServerEvents {
 		PlayerBlockBreakEvents.AFTER.register((level, player, pos, state, blockEntity) -> {
 			if (state.is(ModBlocks.ANCHOR_CORE) && level instanceof ServerLevel serverLevel) {
 				IntegrityState.get(serverLevel.getServer()).removeAnchor(pos);
-				player.sendSystemMessage(Component.literal("ERR_404: stability zone lost").withStyle(ChatFormatting.RED));
+
+				if (player instanceof ServerPlayer serverPlayer) {
+					serverPlayer.sendSystemMessage(Component.literal("ERR_404: stability zone lost").withStyle(ChatFormatting.RED));
+				}
 			}
 		});
 	}

@@ -1,6 +1,6 @@
 package dev.error404.anomaly;
 
-import java.util.function.Function;
+import java.util.function.Supplier;
 
 import dev.error404.anomaly.builders.ArchiveAnomaly;
 import dev.error404.anomaly.builders.ChunkSeamAnomaly;
@@ -36,9 +36,9 @@ public enum AnomalyType {
 
 	private final String code;
 	private final int minimumPhase;
-	private final Function<AnomalyType, Anomaly> factory;
+	private final Supplier<Anomaly> factory;
 
-	AnomalyType(String code, int minimumPhase, Function<AnomalyType, Anomaly> factory) {
+	AnomalyType(String code, int minimumPhase, Supplier<Anomaly> factory) {
 		this.code = code;
 		this.minimumPhase = minimumPhase;
 		this.factory = factory;
@@ -53,7 +53,7 @@ public enum AnomalyType {
 	}
 
 	public Anomaly create() {
-		return factory.apply(this);
+		return factory.get();
 	}
 
 	public static AnomalyType byCode(String code) {
