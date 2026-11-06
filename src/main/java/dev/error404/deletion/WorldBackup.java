@@ -31,15 +31,39 @@ public final class WorldBackup {
 	private WorldBackup() {
 	}
 
+	/**
+	 * Runs the backup off the server thread.
+	 *
+	 * <p>Zipping a region folder is tens of seconds of disk and CPU. Doing that inside
+	 * {@code SERVER_STARTED} froze the first join for the whole time, on every start, which for
+	 * a large world is a minute of "server not responding" before anyone has seen the mod.</p>
+	 */
+	public static void backupAsync(MinecraftServer server) {
+		Thread thread = new Thread(() -> backup(server, false), "error404-backup");
+		thread.setDaemon(true);
+		thread.setPriority(Thread.MIN_PRIORITY);
+		thread.start();
+	}
+
 	public static Path backup(MinecraftServer server, boolean force) {
 		if (!Error404Config.get().backupOnStart && !force) {
 			return null;
 		}
 
 		Path worldRoot = server.getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT);
-		Path region = worldRoot.resolve("region");
+		// overworld, Nether and End each have their own region folder. Backing up only "region"
+		// silently left every Nether cut out of the safety net.
+		java.util.List<Path> regions = new java.util.ArrayList<>();
 
-		if (!Files.isDirectory(region)) {
+		for (String candidate : new String[] {"region", "DIM-1/region", "DIM1/region"}) {
+			Path path = worldRoot.resolve(candidate);
+
+			if (Files.isDirectory(path)) {
+				regions.add(path);
+			}
+		}
+
+		if (regions.isEmpty()) {
 			return null;
 		}
 
@@ -56,25 +80,30 @@ public final class WorldBackup {
 			Path out = backupDir.resolve(STAMP.format(Instant.now()) + ".zip");
 
 			try (OutputStream fos = Files.newOutputStream(out);
-				 ZipOutputStream zip = new ZipOutputStream(fos);
-				 Stream<Path> files = Files.walk(region)) {
+					ZipOutputStream zip = new ZipOutputStream(fos)) {
 
 				long[] written = {0L};
-				files.filter(Files::isRegularFile).forEach(file -> {
-					try {
-						if (written[0] > MAX_BYTES) {
-							return;
-						}
 
-						byte[] data = Files.readAllBytes(file);
-						written[0] += data.length;
-						zip.putNextEntry(new ZipEntry(region.relativize(file).toString().replace('\\', '/')));
-						zip.write(data);
-						zip.closeEntry();
-					} catch (IOException e) {
-						Error404.LOGGER.warn("[error404] backup skipped file {}", file, e);
+				for (Path region : regions) {
+					try (Stream<Path> files = Files.walk(region)) {
+						files.filter(Files::isRegularFile).forEach(file -> {
+							try {
+								if (written[0] > MAX_BYTES) {
+									return;
+								}
+
+								byte[] data = Files.readAllBytes(file);
+								written[0] += data.length;
+								zip.putNextEntry(new ZipEntry(
+										worldRoot.relativize(file).toString().replace('\', '/')));
+								zip.write(data);
+								zip.closeEntry();
+							} catch (IOException e) {
+								Error404.LOGGER.warn("[error404] backup skipped file {}", file, e);
+							}
+						});
 					}
-				});
+				}
 			}
 
 			Error404.LOGGER.info("[error404] world backup written to {}", out);

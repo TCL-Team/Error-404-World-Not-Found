@@ -159,8 +159,9 @@ public final class ServerEvents {
 			return;
 		}
 
-		// Safety first: back the world up before anything gets deleted.
-		WorldBackup.backup(server, false);
+		// Safety first, but never on the server thread: zipping a region folder blocks the first
+		// join for as long as it takes.
+		WorldBackup.backupAsync(server);
 		Error404.LOGGER.info("[error404] server ready (backupOnStart={}, realBlockDeletion={})",
 				Error404Config.get().backupOnStart, Error404Config.get().realBlockDeletion);
 	}

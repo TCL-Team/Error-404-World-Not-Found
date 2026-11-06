@@ -1023,6 +1023,8 @@ public class Error422Entity extends Mob {
 		output.putBoolean("dormant", dormant);
 		output.putInt("despawn_timer", despawnTimer);
 		output.putInt("feasts", feasts);
+		output.putInt("watched_ticks", watchedTicks);
+		output.putInt("mode", mode().ordinal());
 	}
 
 	@Override
@@ -1031,5 +1033,13 @@ public class Error422Entity extends Mob {
 		dormant = input.getBooleanOr("dormant", false);
 		despawnTimer = input.getIntOr("despawn_timer", 20 * 90);
 		feasts = input.getIntOr("feasts", 0);
+		watchedTicks = input.getIntOr("watched_ticks", 0);
+
+		// mode is re-derived every tick from the phase, so only the restore matters here
+		int storedMode = input.getIntOr("mode", 0);
+
+		if (storedMode >= 0 && storedMode < Mode.values().length) {
+			setMode(Mode.values()[storedMode]);
+		}
 	}
 }
