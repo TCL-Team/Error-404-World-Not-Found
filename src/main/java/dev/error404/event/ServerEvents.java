@@ -47,6 +47,7 @@ public final class ServerEvents {
 		ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
 			AnomalyManager.clear();
 			dev.error404.haunt.PhantomServer.reset();
+			dev.error404.haunt.HomeInvasion.reset();
 		});
 
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> onJoin(server, handler.getPlayer()));
@@ -167,6 +168,7 @@ public final class ServerEvents {
 			DeletionFront.tick(server);
 			AnomalyManager.tick(server);
 			dev.error404.haunt.PhantomServer.tick(server);
+			dev.error404.haunt.HomeInvasion.tick(server.overworld());
 			tickExplorationCost(server, state, cfg);
 			tickAnchorRecovery(server, state, cfg);
 		}
