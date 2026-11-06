@@ -11,8 +11,11 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.permissions.Permissions;
 
 import dev.error404.integrity.Error404Director;
@@ -43,6 +46,18 @@ public final class Error404Commands {
 				.then(Commands.literal("stop").executes(Error404Commands::stop))
 				.then(Commands.literal("restore").executes(Error404Commands::restore))
 				.then(Commands.literal("demo").executes(Error404Commands::demo))
+				.then(Commands.literal("summon").executes(Error404Commands::summon))
+				.then(Commands.literal("backup").executes(Error404Commands::backup))
+				.then(Commands.literal("anomaly")
+						.then(Commands.argument("code", StringArgumentType.word())
+								.suggests((context, builder) -> {
+									for (dev.error404.anomaly.AnomalyType type : dev.error404.anomaly.AnomalyType.values()) {
+										builder.suggest(type.code().toLowerCase(Locale.ROOT));
+									}
+
+									return builder.buildFuture();
+								})
+								.executes(Error404Commands::forceAnomaly)))
 				.then(Commands.literal("ending")
 						.then(Commands.argument("ending", StringArgumentType.word())
 								.suggests((context, builder) -> {
@@ -97,6 +112,10 @@ public final class Error404Commands {
 		reply(source, "/error404 phase <signal|desync|deletion|cascade|annexation>", ChatFormatting.GRAY);
 		reply(source, "/error404 setintegrity <0-100>", ChatFormatting.GRAY);
 		reply(source, "/error404 demo - 15x faster pacing for testing", ChatFormatting.GRAY);
+		reply(source, "/error404 ending <salvage|delete|null> - trigger an ending now", ChatFormatting.GRAY);
+		reply(source, "/error404 summon - spawn 422 next to you", ChatFormatting.GRAY);
+		reply(source, "/error404 anomaly <code> - force one structure", ChatFormatting.GRAY);
+		reply(source, "/error404 backup - write a world zip right now", ChatFormatting.GRAY);
 		reply(source, "/error404 reload - reload config/error404.json", ChatFormatting.GRAY);
 		return 1;
 	}
@@ -179,6 +198,66 @@ public final class Error404Commands {
 
 		dev.error404.ending.EndingManager.force(server, type);
 		reply(context.getSource(), "ending triggered: " + type.title(), ChatFormatting.YELLOW);
+		return 1;
+	}
+
+	private static int summon(CommandContext<CommandSourceStack> context) {
+		MinecraftServer server = context.getSource().getServer();
+		ServerPlayer player = context.getSource().getPlayer();
+
+		if (player == null) {
+			reply(context.getSource(), "run this as a player", ChatFormatting.RED);
+			return 0;
+		}
+
+		BlockPos target = player.blockPosition().offset(player.getDirection().getStepX() * 6, 0,
+				player.getDirection().getStepZ() * 6);
+		ServerLevel level = player.level() instanceof ServerLevel serverLevel ? serverLevel : server.overworld();
+
+		if (level == null) {
+			return 0;
+		}
+
+		dev.error404.entity.ModEntities.ERROR_422.spawn(level, target,
+				net.minecraft.world.entity.EntitySpawnReason.COMMAND);
+		reply(context.getSource(), "422 spawned at " + target.toShortString(), ChatFormatting.DARK_RED);
+		return 1;
+	}
+
+	private static int backup(CommandContext<CommandSourceStack> context) {
+		MinecraftServer server = context.getSource().getServer();
+		var path = dev.error404.deletion.WorldBackup.backup(server, true);
+
+		if (path == null) {
+			reply(context.getSource(), "backup failed or skipped - check the server log", ChatFormatting.RED);
+			return 0;
+		}
+
+		reply(context.getSource(), "backup written: " + path.getFileName(), ChatFormatting.GREEN);
+		return 1;
+	}
+
+	private static int forceAnomaly(CommandContext<CommandSourceStack> context) {
+		String code = StringArgumentType.getString(context, "code");
+		var type = dev.error404.anomaly.AnomalyType.byCode(code);
+
+		if (type == null) {
+			reply(context.getSource(), "unknown anomaly \"" + code + "\"", ChatFormatting.RED);
+			return 0;
+		}
+
+		ServerPlayer player = context.getSource().getPlayer();
+
+		if (player == null || !(player.level() instanceof ServerLevel level)) {
+			reply(context.getSource(), "run this as a player", ChatFormatting.RED);
+			return 0;
+		}
+
+		BlockPos centre = player.blockPosition().offset(player.getDirection().getStepX() * 14, 0,
+				player.getDirection().getStepZ() * 14);
+		dev.error404.anomaly.AnomalyManager.spawnAt(level, type, centre);
+		reply(context.getSource(), type.name() + " (" + type.code() + ") placed at " + centre.toShortString(),
+				ChatFormatting.YELLOW);
 		return 1;
 	}
 
