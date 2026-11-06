@@ -7,7 +7,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.minecraft.client.Minecraft;
 
-import dev.error404.ModEntities;
+import dev.error404.entity.ModEntities;
 import dev.error404.client.render.Error422Renderer;
 import dev.error404.client.render.HudGlitchRenderer;
 import dev.error404.client.render.ModModelLayers;
