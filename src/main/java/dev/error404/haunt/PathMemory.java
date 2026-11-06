@@ -31,7 +31,7 @@ public final class PathMemory {
 	private static final Map<String, Deque<Vec3>> PATHS = new HashMap<>();
 
 	private static String key(ServerPlayer player) {
-		return player.level().dimension().location() + "/" + player.getUUID();
+		return player.level().dimension().identifier() + "/" + player.getUUID();
 	}
 
 	private PathMemory() {
