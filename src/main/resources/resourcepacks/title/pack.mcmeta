@@ -4,6 +4,7 @@
       "translate": "pack.error404.title",
       "fallback": "Error 404: World Not Found - title screen"
     },
-    "pack_format": 63
+    "min_format": 75,
+    "max_format": 75
   }
 }

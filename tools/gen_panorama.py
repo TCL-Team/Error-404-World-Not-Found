@@ -18,7 +18,10 @@ import random
 from PIL import Image, ImageDraw, ImageFilter
 
 RES = os.path.join("src", "main", "resources")
-OUT = os.path.join(RES, "assets", "error404", "textures", "gui", "title", "background")
+# the panorama is shipped as a built-in resource pack that overrides vanilla's
+# minecraft namespace, so it has to live under resourcepacks/title/assets/minecraft
+OUT = os.path.join(RES, "resourcepacks", "title", "assets", "minecraft",
+                   "textures", "gui", "title", "background")
 
 W, H = 1024, 512          # 2:1, what vanilla uses for panorama tiles
 TILES = 6
@@ -141,12 +144,20 @@ def main():
         artefacts(img)
         img.convert("RGB").save(os.path.join(OUT, f"panorama_{tile}.png"), optimize=True)
 
-    # the overlay vanilla tints/creates a vignette with; ours adds scanlines instead
-    overlay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    # the overlay vanilla blends over the panorama. Vanilla's is 16x128 and the renderer
+    # samples the whole of it with a fixed 16x128 quad, so anything bigger shows only its
+    # top-left corner - keep the exact vanilla size and paint a vertical falloff into it.
+    # Pixel-accurate scanlines are drawn by TitleScreenGlitch instead.
+    overlay = Image.new("RGBA", (16, 128), (0, 0, 0, 0))
     od = ImageDraw.Draw(overlay)
 
-    for y in range(0, H, 3):
-        od.line([(0, y), (W, y)], fill=(0, 0, 0, 40))
+    for y in range(128):
+        t = y / 127.0
+        od.line([(0, y), (15, y)], fill=(0, 0, 0, int(20 + 70 * (t ** 1.5))))
+
+    # a faint red stain along the bottom, like a warning that was painted over
+    for y in range(120, 128):
+        od.line([(0, y), (15, y)], fill=(38, 0, 0, 90))
 
     overlay.save(os.path.join(OUT, "panorama_overlay.png"), optimize=True)
     print("panorama written to", OUT)
