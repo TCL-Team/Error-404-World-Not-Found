@@ -103,7 +103,7 @@ public final class DeletionJournal {
 	 * out of materials that came from somewhere the player has never been. */
 	public static java.util.List<Entry> peek(net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> dimension) {
 		java.util.List<Entry> entries = new java.util.ArrayList<>();
-		long dimensionHash = dimension.location().hashCode();
+		long dimensionHash = dimension.identifier().hashCode();
 
 		for (Map.Entry<Long, Deque<Entry>> chunk : JOURNAL.entrySet()) {
 			if ((int) (chunk.getKey() >> 40) == dimensionHash) {
@@ -131,7 +131,7 @@ public final class DeletionJournal {
 	 * coordinate, which is exactly the old behaviour and no worse. */
 	private static long key(net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> dimension,
 			int chunkX, int chunkZ) {
-		return ((long) (dimension.location().hashCode() & 0xFFFFFF) << 40)
+		return ((long) (dimension.identifier().hashCode() & 0xFFFFFF) << 40)
 				| ((long) (chunkX & 0xFFFFFFL) << 16)
 				| (chunkZ & 0xFFFFL);
 	}

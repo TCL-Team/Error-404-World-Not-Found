@@ -366,7 +366,7 @@ public final class DeletionFront {
 			ServerLevel target = level;
 
 			for (ServerLevel candidate : server.getAllLevels()) {
-				if ((candidate.dimension().location().hashCode() & 0xFFFFFF) == DeletionJournal.dimensionHash(key)) {
+				if ((candidate.dimension().identifier().hashCode() & 0xFFFFFF) == DeletionJournal.dimensionHash(key)) {
 					target = candidate;
 					break;
 				}
