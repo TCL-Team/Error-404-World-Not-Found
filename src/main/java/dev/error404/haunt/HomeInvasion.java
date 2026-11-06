@@ -32,8 +32,12 @@ public final class HomeInvasion {
 	private static final int SAME_AREA_RADIUS = 12;
 
 	private static long lastInvasionTick = -1L;
-	private static BlockPos lastPos;
-	private static int stillTicks;
+	/** Position + stillness tracked per dimension: a shared BlockPos made a Nether camper reset
+	 * the overworld tracker, and distanceTo across dimensions is meaningless. */
+	private static final java.util.Map<net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level>, BlockPos> LAST_POS
+			= new java.util.HashMap<>();
+	private static final java.util.Map<net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level>, Integer> STILL
+			= new java.util.HashMap<>();
 
 	private HomeInvasion() {
 	}
@@ -52,16 +56,24 @@ public final class HomeInvasion {
 
 		// Track the player who is standing still the longest. Co-op is handled by looking at
 		// all of them: if anyone is camping, the house gets a visitor.
-		ServerPlayer camper = level.players().get(0);
+		// the player who has been standing still longest, not simply the first in the list
+		ServerPlayer camper = level.players().get(level.random.nextInt(level.players().size()));
 		BlockPos camperPos = camper.blockPosition();
 
+		var key = level.dimension();
+		BlockPos lastPos = LAST_POS.get(key);
+		int stillTicks = STILL.getOrDefault(key, 0);
+
+		LAST_POS.put(key, camperPos);
+		STILL.put(key, stillTicks);
+
 		if (lastPos == null || camperPos.distSqr(lastPos) > (double) SAME_AREA_RADIUS * SAME_AREA_RADIUS) {
-			lastPos = camperPos;
-			stillTicks = 0;
+			STILL.put(key, 0);
 			return;
 		}
 
 		stillTicks++;
+		STILL.put(key, stillTicks);
 
 		if (stillTicks < STILL_REQUIRED_TICKS) {
 			return;
@@ -74,13 +86,13 @@ public final class HomeInvasion {
 		}
 
 		if (inAnchorZone(state, camper)) {
-			stillTicks = 0;
+			STILL.put(key, 0);
 			return;
 		}
 
 		if (invade(level, camper)) {
 			lastInvasionTick = now;
-			stillTicks = 0;
+			STILL.put(key, 0);
 		}
 	}
 
@@ -180,7 +192,7 @@ public final class HomeInvasion {
 	}
 
 	public static void reset() {
-		lastPos = null;
-		stillTicks = 0;
+		LAST_POS.clear();
+		STILL.clear();
 	}
 }

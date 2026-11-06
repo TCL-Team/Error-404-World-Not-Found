@@ -50,6 +50,12 @@ public final class JumpscareOverlay {
 	/** Whether the face is drawn centred and huge, or slightly off-centre (more unsettling). */
 	private static boolean offCentre;
 
+	/** Disconnect / world switch: the overlay must not carry into the next world. */
+	public static void reset() {
+		ticks = 0;
+		cooldown = 0;
+	}
+
 	public static void trigger(int style, boolean photosensitive) {
 		if (cooldown > 0 || ticks > 0) {
 			return;

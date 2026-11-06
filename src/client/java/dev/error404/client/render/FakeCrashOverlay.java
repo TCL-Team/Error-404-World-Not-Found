@@ -46,6 +46,11 @@ public final class FakeCrashOverlay {
 	private static String[] lines = TRACE;
 	private static long seed;
 
+	/** Disconnect / world switch: never leave a crash screen armed into the next world. */
+	public static void reset() {
+		ticks = 0;
+	}
+
 	public static void show() {
 		ticks = DURATION_TICKS;
 		seed = System.nanoTime();

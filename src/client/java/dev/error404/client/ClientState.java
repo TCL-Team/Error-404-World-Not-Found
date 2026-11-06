@@ -21,6 +21,9 @@ public final class ClientState {
 	private static boolean hudReadout = false;
 
 	// one-shot effects
+	private static boolean seeded = false;
+	/** How long the dread overlay (tunnel vision, desaturation, intruder) stays up. */
+	private static int dreadTicks = 0;
 	private static int staticTicks = 0;
 	private static int desaturateTicks = 0;
 	private static int phaseFlashTicks = 0;
@@ -35,6 +38,27 @@ public final class ClientState {
 		ended = newEnded;
 		photosensitive = (flags & 1) != 0;
 		hudReadout = (flags & 2) != 0;
+
+		// Only arm the dread clock on the first sync and when the world gets worse. Re-arming it
+		// on every 5 s keep-alive packet would keep the tunnel vision up for the whole session,
+		// which is the opposite of a scare.
+		if (!seeded || newPhase > phase) {
+			seeded = true;
+			dreadTicks = Math.max(dreadTicks, 20 * 25);
+		}
+	}
+
+	public static boolean dreadActive() {
+		return dreadTicks > 0;
+	}
+
+	/** 0..1, fading out over the last 8 seconds. */
+	public static float dreadStrength() {
+		return dreadTicks <= 0 ? 0.0f : Math.min(1.0f, dreadTicks / (20.0f * 8.0f));
+	}
+
+	public static void addDread(int ticks) {
+		dreadTicks = Math.max(dreadTicks, ticks);
 	}
 
 	public static boolean photosensitive() {
@@ -88,6 +112,28 @@ public final class ClientState {
 		if (messageTicks > 0) {
 			messageTicks--;
 		}
+
+		if (dreadTicks > 0) {
+			dreadTicks--;
+		}
+	}
+
+	/** A new world (or a disconnect) must not inherit the last world's overlays. */
+	public static void reset() {
+		integrity = 100;
+		phase = 0;
+		seed = 0L;
+		fragments = 0;
+		ended = false;
+		seeded = false;
+		dreadTicks = 0;
+		staticTicks = 0;
+		desaturateTicks = 0;
+		phaseFlashTicks = 0;
+		message = "";
+		messageTicks = 0;
+		dev.error404.client.render.JumpscareOverlay.reset();
+		dev.error404.client.render.FakeCrashOverlay.reset();
 	}
 
 	public static int integrity() {

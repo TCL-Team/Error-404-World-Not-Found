@@ -35,7 +35,15 @@ public final class DreadOverlay {
 	private static final RandomSource RANDOM = RandomSource.create();
 
 	public static void tick(Minecraft client) {
-		if (client.player == null || client.level == null || ClientState.photosensitive()) {
+		if (client.player == null || client.level == null) {
+			return;
+		}
+
+		// The timer must keep running even for a photosensitive player: skipping the whole tick
+		// froze nextIntruder, so turning the switch off mid-session dumped a queued intruder
+		// on screen immediately.
+		if (ClientState.photosensitive()) {
+			nextIntruder = Math.max(nextIntruder, 20 * 120);
 			return;
 		}
 

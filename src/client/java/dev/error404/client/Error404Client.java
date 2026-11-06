@@ -38,9 +38,19 @@ public class Error404Client implements ClientModInitializer {
 				ClientState.trigger(payload.kind(), payload.message(), payload.durationTicks()));
 
 		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
-			ClientState.apply(100, 0, 0L, 0, false, 0);
+			// full reset, not apply(100, ...): apply() re-arms the dread clock and leaves the
+			// scare cooldown running on a fresh world
+			ClientState.reset();
 			dev.error404.client.SentientChat.reset();
 		});
+
+		// Joining a world is the other half: a crash overlay or a scare armed by the previous
+		// world must be gone before the player's first frame, not after their first tick.
+		net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register(
+				(client, level) -> {
+					dev.error404.client.render.JumpscareOverlay.reset();
+					dev.error404.client.render.FakeCrashOverlay.reset();
+				});
 
 		// Overlay clocks run on ticks, never on frames: a render-pass counter makes a 9 tick
 		// jumpscare last 0.04 s at 240 fps and 0.3 s at 30 fps.
