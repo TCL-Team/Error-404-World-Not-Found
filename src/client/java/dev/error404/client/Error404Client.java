@@ -42,6 +42,14 @@ public class Error404Client implements ClientModInitializer {
 			dev.error404.client.SentientChat.reset();
 		});
 
+		// Overlay clocks run on ticks, never on frames: a render-pass counter makes a 9 tick
+		// jumpscare last 0.04 s at 240 fps and 0.3 s at 30 fps.
+		ClientTickEvents.END_CLIENT_TICK.register(client -> {
+			dev.error404.client.render.JumpscareOverlay.tick();
+			dev.error404.client.render.FakeCrashOverlay.tick();
+			dev.error404.client.render.DreadOverlay.tick(client);
+		});
+
 		// Cold open: the title-screen drone, only when the mod is present and enabled.
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
 			if (client.screen != null && client.level == null && client.getSoundManager() != null) {

@@ -37,7 +37,12 @@ public final class DeletionRules {
 			return true;
 		}
 
+		// dragon eggs, ender chests, beacons: deleting these breaks progression or spawn points
 		if (state.is(Blocks.BEDROCK) || state.is(Blocks.BARRIER) || state.is(Blocks.COMMAND_BLOCK)
+				|| state.is(Blocks.STRUCTURE_BLOCK) || state.is(Blocks.JIGSAW)
+				|| state.is(Blocks.END_GATEWAY) || state.is(Blocks.DRAGON_EGG)
+				|| state.is(Blocks.RESPAWN_ANCHOR)
+				|| state.is(Blocks.VAULT) || state.is(Blocks.TRIAL_SPAWNER)
 				|| state.is(Blocks.END_PORTAL_FRAME) || state.is(Blocks.END_PORTAL)
 				|| state.is(Blocks.NETHER_PORTAL) || state.is(Blocks.SPAWNER)
 				|| state.is(dev.error404.ModBlocks.ANCHOR_CORE)) {

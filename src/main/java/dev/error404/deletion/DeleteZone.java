@@ -55,6 +55,21 @@ public final class DeleteZone {
 	private static final Deque<Zone> ACTIVE = new ArrayDeque<>();
 	private static final Deque<Zone> QUEUED = new ArrayDeque<>();
 
+	/** Both queues, for overlap checks. */
+	private static final java.util.Collection<Zone> ALL = new java.util.AbstractCollection<>() {
+		@Override
+		public java.util.Iterator<Zone> iterator() {
+			java.util.List<Zone> copy = new java.util.ArrayList<>(ACTIVE);
+			copy.addAll(QUEUED);
+			return copy.iterator();
+		}
+
+		@Override
+		public int size() {
+			return ACTIVE.size() + QUEUED.size();
+		}
+	};
+
 	private DeleteZone() {
 	}
 
@@ -64,6 +79,8 @@ public final class DeleteZone {
 		private final int originZ;
 		private final int minY;
 		private final int topY;
+		/** The dimension this zone belongs to, so a Nether seed never eats overworld blocks. */
+		private final net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> dimension;
 		private final int nest;
 		private int column;
 		private int wait;
@@ -72,12 +89,14 @@ public final class DeleteZone {
 		private int cursorY;
 		private boolean columnDone = true;
 
-		private Zone(int originX, int originZ, int minY, int topY, int nest) {
+		private Zone(int originX, int originZ, int minY, int topY, int nest,
+				net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> dimension) {
 			this.originX = originX;
 			this.originZ = originZ;
 			this.minY = minY;
 			this.topY = topY;
 			this.nest = nest;
+			this.dimension = dimension;
 			this.cursorY = topY;
 		}
 
@@ -121,8 +140,10 @@ public final class DeleteZone {
 			return false; // would swallow a player, an anchor, spawn, or a protected block
 		}
 
+		// Never start below the highest solid block in the zone, or the first wave spends its
+		// entire budget eating empty sky and the player sees nothing happen.
 		Zone zone = new Zone(x, z, level.getMinY() + 1,
-				Math.min(level.getMaxY(), level.getMinY() + 320), nest);
+				topOf(level, x, z), nest, level.dimension());
 
 		if (ACTIVE.size() < MAX_ACTIVE) {
 			ACTIVE.addLast(zone);
@@ -139,21 +160,37 @@ public final class DeleteZone {
 	public static boolean seedAtPlayer(ServerLevel level, ServerPlayer player) {
 		int x = player.getBlockX() - SIZE / 2;
 		int z = player.getBlockZ() - SIZE / 2;
-		Zone zone = new Zone(x, z, level.getMinY() + 1,
-				Math.min(level.getMaxY(), level.getMinY() + 320), 0);
 
-		for (Zone other : ACTIVE) {
+		for (Zone other : ALL) {
 			if (overlaps(level, x, z, x + SIZE - 1, z + SIZE - 1, other)) {
 				return false;
 			}
 		}
 
-		ACTIVE.addLast(zone);
+		ACTIVE.addLast(new Zone(x, z, level.getMinY() + 1, topOf(level, x, z), 0, level.dimension()));
 		return true;
+	}
+
+	/** Highest solid block in a zone's footprint, so the first wave is never empty sky. */
+	private static int topOf(ServerLevel level, int minX, int minZ) {
+		int top = level.getMinY() + 32;
+
+		for (int i = 0; i < 6; i++) {
+			int x = minX + level.random.nextInt(SIZE);
+			int z = minZ + level.random.nextInt(SIZE);
+			top = Math.max(top, level.getHeight(
+					net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z));
+		}
+
+		return Math.min(level.getMaxY(), top + 2);
 	}
 
 	/** Advances every active zone by one wave. Called from the server tick. */
 	public static void tick(ServerLevel level) {
+		if (paused || !level.dimension().equals(net.minecraft.world.level.Level.OVERWORLD)) {
+			return; // zones are per-dimension state; the overworld call owns the clock
+		}
+
 		if (ACTIVE.isEmpty()) {
 			// promote whatever is waiting; one at a time, so the front keeps its shape
 			if (!QUEUED.isEmpty()) {
@@ -172,7 +209,14 @@ public final class DeleteZone {
 			}
 
 			zone.wait = WAVE_INTERVAL;
-			int removed = eat(level, zone);
+			ServerLevel target = level.getServer().getLevel(zone.dimension);
+
+			if (target == null) {
+				iterator.remove();
+				continue;
+			}
+
+			int removed = eat(target, zone);
 
 			if (zone.finished()) {
 				iterator.remove();
@@ -182,7 +226,7 @@ public final class DeleteZone {
 			}
 
 			if (removed > 0) {
-				announce(level, zone);
+				announce(target, zone);
 			}
 		}
 	}
@@ -224,11 +268,19 @@ public final class DeleteZone {
 				budget--;
 			}
 
-			zone.columnDone = true;
-			zone.column++;
-			columns++;
+			// Only advance the column when it was actually finished. Advancing after a budget
+			// cut-off left vertical slivers of world standing inside a hole.
+			if (zone.cursorY < zone.minY) {
+				zone.columnDone = true;
+				zone.column++;
+				columns++;
+			} else {
+				zone.columnDone = false;
+				columns = WAVE_COLUMNS; // finish this column next wave before starting another
+			}
 
-			// one chunk resync per wave, for the chunk the wave just finished in
+			// The chunk the wave is inside. Worth resyncing at the end of the wave: block
+			// updates alone leave the client's light and section mesh stale for a moment.
 			ChunkPos touched = new ChunkPos(x >> 4, z >> 4);
 
 			if (chunkPos == null || !chunkPos.equals(touched)) {
@@ -249,7 +301,10 @@ public final class DeleteZone {
 	private static void announce(ServerLevel level, Zone zone) {
 		double x = zone.nextX() + 0.5;
 		double z = zone.nextZ() + 0.5;
-		double y = level.getSeaLevel();
+		// the advancing edge's own height, not sea level: in the Nether sea level is above the
+		// ceiling and in the End it is empty-space noise the player never hears
+		double y = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types
+				.MOTION_BLOCKING_NO_LEAVES, zone.nextX(), zone.nextZ());
 
 		level.playSound(null, x, y, z, ModSounds.CHUNK_DELETE, SoundSource.AMBIENT, 1.1f, 0.62f);
 		level.sendParticles(ParticleTypes.PORTAL, x, y + 1.5, z, 60, 2.2, 2.4, 2.2, 0.25);
@@ -282,7 +337,7 @@ public final class DeleteZone {
 				continue;
 			}
 
-			Zone next = new Zone(nx, nz, zone.minY, zone.topY, zone.nest - 1);
+			Zone next = new Zone(nx, nz, zone.minY, zone.topY, zone.nest - 1, zone.dimension);
 			(QUEUED.size() < MAX_QUEUED ? QUEUED : ACTIVE).addLast(next);
 		}
 	}
@@ -339,6 +394,17 @@ public final class DeleteZone {
 	public static void reset() {
 		ACTIVE.clear();
 		QUEUED.clear();
+	}
+
+	/** Frozen while a restore runs: a zone that keeps eating during a restore writes garbage back. */
+	private static boolean paused;
+
+	public static void pause() {
+		paused = true;
+	}
+
+	public static void resume() {
+		paused = false;
 	}
 
 	/** Debug view for {@code /error404 status}: origin + progress of each live zone. */

@@ -50,19 +50,14 @@ public final class HudGlitchRenderer {
 		// its own countdown so it disappears whether or not the player touches anything
 		HudElementRegistry.attachElementAfter(VanillaHudElements.MISC_OVERLAYS, LAYER_CRASH,
 				(context, delta) -> {
-					FakeCrashOverlay.tick();
+					// clocks are advanced by ClientTickEvents; these only draw
 					FakeCrashOverlay.render(context, context.guiWidth(), context.guiHeight());
-
-					JumpscareOverlay.tick();
 					JumpscareOverlay.render(context, context.guiWidth(), context.guiHeight());
 				});
 
 		// the slow layer goes under the HUD, so chat and health stay readable
 		HudElementRegistry.attachElementBefore(VanillaHudElements.HOTBAR, LAYER_DREAD,
-				(context, delta) -> {
-					DreadOverlay.tick(net.minecraft.client.Minecraft.getInstance());
-					DreadOverlay.render(context, context.guiWidth(), context.guiHeight());
-				});
+				(context, delta) -> DreadOverlay.render(context, context.guiWidth(), context.guiHeight()));
 	}
 
 	/**
