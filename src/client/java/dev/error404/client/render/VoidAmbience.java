@@ -88,6 +88,13 @@ public final class VoidAmbience {
 			playerHeartbeat(client, phase);
 		}
 
+		// A small, constant lie in the sound position: the whisper and the error tone sit two
+		// blocks to the player's left instead of on top of them. Nothing is visibly wrong, but
+		// the mix is subtly off-axis, and players report it as "someone standing next to me"
+		// without being able to name why.
+		double sideX = -Math.sin(Math.toRadians(client.player.getYRot() + 90)) * 2.0;
+		double sideZ = Math.cos(Math.toRadians(client.player.getYRot() + 90)) * 2.0;
+
 		if (phase >= 2 && level.getGameTime() % 1200 == 0) {
 			client.level.playLocalSound(client.player.getX(), client.player.getY(), client.player.getZ(),
 					ModSounds.ERROR_TONE, SoundSource.AMBIENT, 0.25f, 0.45f, false);
@@ -113,8 +120,9 @@ public final class VoidAmbience {
 		}
 
 		if (phase >= 2 && client.level.getGameTime() % 600 == 0 && !isDay(level)) {
-			client.level.playLocalSound(client.player.getX(), client.player.getY(), client.player.getZ(),
-					ModSounds.WHISPER, SoundSource.AMBIENT, 0.3f, 0.75f, false);
+			// from just behind the shoulder, not from inside the player's head
+			client.level.playLocalSound(client.player.getX() + sideX, client.player.getY(),
+					client.player.getZ() + sideZ, ModSounds.WHISPER, SoundSource.AMBIENT, 0.34f, 0.75f, false);
 		}
 	}
 
