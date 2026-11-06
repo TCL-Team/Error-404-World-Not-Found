@@ -36,9 +36,22 @@ jobs:
           {
             echo "## Build failed"
             echo '```'
-            grep -nE "error:|error\.|FAILURE:|Caused by:|Could not|Unresolved|Execution failed" build.log | head -80 || tail -60 build.log
+            grep -nE "error:|error\.|FAILURE:|Caused by:|Could not|Unresolved|Execution failed|What went wrong" build.log | head -80 || tail -60 build.log
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
+
+          # Also surface the failure as check-run annotations, so a remote agent can read it
+          # through the GitHub API without downloading artifacts.
+          mapfile -t lines < <(grep -nE "error:|FAILURE:|Caused by:|Could not|Unresolved|Execution failed|What went wrong|A problem occurred" build.log | head -40)
+          if [ ${#lines[@]} -eq 0 ]; then
+            mapfile -t lines < <(tail -40 build.log)
+          fi
+          i=0
+          for line in "${lines[@]}"; do
+            i=$((i+1))
+            safe=$(printf '%s' "$line" | tr '%' '_' | tr '\n' ' ')
+            echo "::error title=gradle-${i}::${safe:0:900}"
+          done
 
       - name: Upload build log
         if: always()
