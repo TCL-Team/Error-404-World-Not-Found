@@ -1,0 +1,73 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # A release build must fail loudly: no --continue, no partial jar.
+      - name: Build
+        run: ./gradlew build --no-daemon --console=plain
+
+      - name: Collect jars
+        id: jars
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          cp build/libs/*.jar dist/
+          rm -f dist/*-sources.jar
+          ls -la dist
+          echo "version=$(grep '^mod_version=' gradle.properties | cut -d= -f2)" >> "$GITHUB_OUTPUT"
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || format('v{0}', steps.jars.outputs.version) }}
+          name: Error 404: World Not Found ${{ steps.jars.outputs.version }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          body: |
+            **Error 404: World Not Found** - a slow-burn horror mod for Minecraft 1.21.11 (Fabric).
+
+            Drop `error404-*.jar` into `.minecraft/mods` together with
+            [Fabric Loader 0.20.1+](https://fabricmc.net/use/installer/) and
+            [Fabric API 0.141.6+1.21.11](https://modrinth.com/mod/fabric-api).
+
+            First run, in game:
+
+            ```
+            /error404 status      # what the world thinks its integrity is
+            /error404 demo        # 15x pacing, a full session in ~5 minutes
+            /error404 stop        # freeze everything
+            /error404 restore     # put every deleted block back
+            ```
+
+            Everything the mod adds is generated from scratch: 19 sounds, all textures,
+            all structures. No assets are taken from other mods.
+          files: dist/*.jar
+
+      - name: Upload jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: error404-jar
+          path: dist/*.jar
+          if-no-files-found: error
