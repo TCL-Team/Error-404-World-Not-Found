@@ -116,7 +116,7 @@ public final class StructureKit {
 	public static ItemStack writtenBook(String title, List<String> pages) {
 		ItemStack book = new ItemStack(Items.WRITTEN_BOOK);
 		net.minecraft.world.item.component.WrittenBookContent content = new net.minecraft.world.item.component.WrittenBookContent(
-				title,
+				net.minecraft.server.network.Filterable.passThrough(title),
 				"error404",
 				0,
 				pages.stream().map(p -> Component.literal(p)).toList(),

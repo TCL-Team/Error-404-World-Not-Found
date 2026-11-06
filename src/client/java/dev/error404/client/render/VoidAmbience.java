@@ -2,12 +2,11 @@ package dev.error404.client.render;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLevelEvents;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents;
 
 import dev.error404.Error404;
 import dev.error404.ModSounds;
@@ -30,7 +29,7 @@ public final class VoidAmbience {
 
 	public static void register() {
 		ClientTickEvents.END_CLIENT_TICK.register(VoidAmbience::tick);
-		ClientLevelEvents.AFTER_CLIENT_LEVEL_CHANGE.register((client, level) -> {
+		ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register((client, level) -> {
 			ambienceTimer = 0;
 			deletedAmbience = false;
 		});
@@ -54,10 +53,12 @@ public final class VoidAmbience {
 
 			if (shouldBeDeleted != deletedAmbience) {
 				deletedAmbience = shouldBeDeleted;
-				client.getSoundManager().stop(Identifier.fromNamespaceAndPath(Error404.MOD_ID, deletedAmbience ? "ambience_calm" : "ambience_deleted"),
+				// stop() takes the *sound event id*, not the sound-sheet path.
+				client.getSoundManager().stop(
+						(deletedAmbience ? ModSounds.AMBIENCE_CALM : ModSounds.AMBIENCE_DELETED).location(),
 						SoundSource.AMBIENT);
 				client.getSoundManager().play(net.minecraft.client.resources.sounds.SimpleSoundInstance.forLocalAmbience(
-						deletedAmbience ? ModSounds.AMBIENCE_DELETED : ModSounds.AMBIENCE_CALM, 0.55f, 1.0f));
+						deletedAmbience ? ModSounds.AMBIENCE_DELETED : ModSounds.AMBIENCE_CALM, 1.0f, 0.55f));
 			}
 		}
 

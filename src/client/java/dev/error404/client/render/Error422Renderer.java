@@ -46,9 +46,9 @@ public class Error422Renderer extends MobRenderer<Error422Entity, Error422Render
 	}
 
 	@Override
-	protected void setupRotations(Error422RenderState state, com.mojang.blaze3d.vertex.PoseStack poseStack, float bob, float yBodyRot) {
+	protected void setupRotations(Error422RenderState state, com.mojang.blaze3d.vertex.PoseStack poseStack, float bodyRot, float entityScale) {
 		// No death animation, no damage tilt: it is always exactly upright.
-		poseStack.mulPose(com.mojang.math.Axis.YP.rotationDegrees(180.0f - yBodyRot));
+		poseStack.mulPose(com.mojang.math.Axis.YP.rotationDegrees(180.0f - bodyRot));
 
 		// Sub-pixel corruption: the body drifts a fraction of a block off its own hitbox.
 		float drift = state.textureVariant == 1 ? 0.04f : 0.008f;

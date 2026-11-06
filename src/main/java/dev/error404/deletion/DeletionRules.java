@@ -48,7 +48,7 @@ public final class DeletionRules {
 			return true;
 		}
 
-		if (pos.distSqr(level.getSharedSpawnPos()) < 48 * 48) {
+		if (pos.distSqr(level.getRespawnData().globalPos().pos()) < 48 * 48) {
 			return true;
 		}
 

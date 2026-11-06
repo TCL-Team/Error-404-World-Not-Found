@@ -38,8 +38,10 @@ public class ErrorLogItem extends Item {
 		((ServerLevel) level).sendParticles(net.minecraft.core.particles.ParticleTypes.ENCHANT,
 				player.getX(), player.getY() + 1.2, player.getZ(), 20, 0.4, 0.5, 0.4, 0.02);
 
-		for (Component line : buildReport(state)) {
-			player.sendSystemMessage(line);
+		if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+			for (Component line : buildReport(state)) {
+				serverPlayer.sendSystemMessage(line);
+			}
 		}
 
 		return InteractionResult.CONSUME;
