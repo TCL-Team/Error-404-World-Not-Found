@@ -63,6 +63,7 @@ public final class ClientState {
 				message = "";
 			}
 			case 4 -> desaturateTicks = Math.max(desaturateTicks, Math.max(10, ticks));
+			case 5 -> dev.error404.client.render.FakeCrashOverlay.show();
 			default -> {
 			}
 		}

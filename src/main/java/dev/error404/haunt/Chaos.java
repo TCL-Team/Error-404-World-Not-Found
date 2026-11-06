@@ -125,6 +125,7 @@ public final class Chaos {
 			case "night" -> eventNight(level, player);
 			case "hunger" -> eventHunger(level, player);
 			case "silence" -> eventSilence(level, player);
+			case "crash" -> eventCrash(server, player);
 			default -> {
 				return null;
 			}
@@ -136,7 +137,7 @@ public final class Chaos {
 
 	public static java.util.List<String> events() {
 		return java.util.List.of("chunk", "inventory", "death", "doors", "sound", "lightning", "mobs",
-				"teleport", "message", "night", "hunger", "silence");
+				"teleport", "message", "night", "hunger", "silence", "crash");
 	}
 
 	private static void fire(MinecraftServer server, ServerLevel level, ServerPlayer player, IntegrityState state) {
@@ -162,8 +163,10 @@ public final class Chaos {
 			eventNight(level, player);
 		} else if (roll < 95) {
 			eventHunger(level, player);
-		} else if (roll < 98) {
+		} else if (roll < 96) {
 			eventSilence(level, player);
+		} else if (roll < 99) {
+			eventCrash(server, player);
 		} else {
 			eventMessage(server, level, player, state);
 		}
@@ -404,6 +407,22 @@ public final class Chaos {
 		}
 
 		LOG.add("silence");
+	}
+
+	/**
+	 * The game appears to crash.
+	 *
+	 * <p>Nothing crashes. The client is told to draw a Java stack trace for four and a half
+	 * seconds, naming this mod's own deletion code, and then it wipes itself and play continues.
+	 * It is the cheapest scare in the mod and probably the cruellest, which is why it is one of
+	 * the rarest rolls and why the photosensitivity switch turns it off.</p>
+	 */
+	private static void eventCrash(MinecraftServer server, ServerPlayer player) {
+		dev.error404.network.ModNetworking.sendEffect(player,
+				dev.error404.network.ModNetworking.EFFECT_CRASH, "ERR_404", 90);
+
+		// no damage, no world change: the joke is that the world is completely fine
+		LOG.add("crash");
 	}
 
 	/** A bolt out of a clear sky, on the block the player is about to walk onto. */

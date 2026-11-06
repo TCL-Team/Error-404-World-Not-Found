@@ -40,6 +40,14 @@ public final class HudGlitchRenderer {
 
 	public static void register() {
 		HudElementRegistry.attachElementBefore(VanillaHudElements.CHAT, LAYER, HudGlitchRenderer::render);
+
+		// the fake crash sits above everything else, including chat and the hotbar, and ticks on
+		// its own countdown so it disappears whether or not the player touches anything
+		HudElementRegistry.attachElementAfter(VanillaHudElements.MISC_OVERLAYS, LAYER_CRASH,
+				(context, delta) -> {
+					FakeCrashOverlay.tick();
+					FakeCrashOverlay.render(context, context.guiWidth(), context.guiHeight());
+				});
 	}
 
 	/**

@@ -19,6 +19,8 @@ public final class ModNetworking {
 	public static final int EFFECT_MESSAGE = 2;
 	public static final int EFFECT_CLEAR = 3;
 	public static final int EFFECT_DESATURATE = 4;
+	/** The fake crash screen. Client-side only - nothing on the server actually fails. */
+	public static final int EFFECT_CRASH = 5;
 
 	private ModNetworking() {
 	}
@@ -60,6 +62,11 @@ public final class ModNetworking {
 		for (net.minecraft.server.level.ServerPlayer player : server.getPlayerList().getPlayers()) {
 			sendState(player, server);
 		}
+	}
+
+	/** Sends a one-shot visual effect to one player. */
+	public static void sendEffect(net.minecraft.server.level.ServerPlayer player, int kind, String message, int ticks) {
+		ServerPlayNetworking.send(player, new EffectPayload(kind, message == null ? "" : message, ticks));
 	}
 
 	/** Sends a one-shot visual effect to everyone. */
