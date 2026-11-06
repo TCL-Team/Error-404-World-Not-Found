@@ -1,39 +1,45 @@
 {
-	"schemaVersion": 1,
-	"id": "error404",
-	"version": "${version}",
-	"name": "Error 404: World Not Found",
-	"description": "A slow-burn horror mod. Your world is being deleted chunk by chunk, impossible structures grow out of the seams, and 422 - The Unprocessable - is the one doing it.",
-	"authors": [
-		"TCL-Team"
-	],
-	"contact": {
-		"homepage": "https://github.com/TCL-Team/Error-404-World-Not-Found",
-		"sources": "https://github.com/TCL-Team/Error-404-World-Not-Found",
-		"issues": "https://github.com/TCL-Team/Error-404-World-Not-Found/issues"
-	},
-	"license": "MIT",
-	"icon": "assets/error404/icon.png",
-	"environment": "*",
-	"entrypoints": {
-		"main": [
-			"dev.error404.Error404"
-		],
-		"client": [
-			"dev.error404.client.Error404Client"
-		]
-	},
-	"mixins": [
-		"error404.mixins.json",
-		{
-			"config": "error404.client.mixins.json",
-			"environment": "client"
-		}
-	],
-	"depends": {
-		"fabricloader": ">=0.20.1",
-		"minecraft": "~1.21.11",
-		"java": ">=21",
-		"fabric-api": "*"
-	}
+  "schemaVersion": 1,
+  "id": "error404",
+  "version": "${version}",
+  "name": "Error 404: World Not Found",
+  "description": "A slow-burn horror mod. Your world is being deleted chunk by chunk, impossible structures grow out of the seams, and 422 - The Unprocessable - is the one doing it.",
+  "authors": [
+    "TCL-Team"
+  ],
+  "contact": {
+    "homepage": "https://github.com/TCL-Team/Error-404-World-Not-Found",
+    "sources": "https://github.com/TCL-Team/Error-404-World-Not-Found",
+    "issues": "https://github.com/TCL-Team/Error-404-World-Not-Found/issues"
+  },
+  "license": "MIT",
+  "icon": "assets/error404/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "dev.error404.Error404"
+    ],
+    "client": [
+      "dev.error404.client.Error404Client"
+    ],
+    "modmenu": [
+      "dev.error404.client.Error404ModMenu"
+    ]
+  },
+  "mixins": [
+    "error404.mixins.json",
+    {
+      "config": "error404.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=0.20.1",
+    "minecraft": "~1.21.11",
+    "java": ">=21",
+    "fabric-api": "*"
+  },
+  "suggests": {
+    "modmenu": "*"
+  }
 }

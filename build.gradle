@@ -11,7 +11,13 @@ base {
 }
 
 repositories {
-	// Loom already adds Minecraft + Fabric maven repos. Add third-party repos here if needed.
+	// Loom already adds Minecraft + Fabric maven repos.
+	// Mod Menu's config-screen API, compile-only: the mod runs fine without Mod Menu
+	// installed, and the same screen is reachable through /error404 config.
+	maven {
+		name = "TerraformersMC"
+		url = "https://maven.terraformersmc.com/releases/"
+	}
 }
 
 loom {
@@ -30,6 +36,7 @@ dependencies {
 	mappings loom.officialMojangMappings()
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+	modCompileOnly "com.terraformersmc:modmenu:${project.modmenu_version}"
 }
 
 def modVersion = project.version
