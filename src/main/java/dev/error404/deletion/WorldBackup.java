@@ -95,7 +95,7 @@ public final class WorldBackup {
 								byte[] data = Files.readAllBytes(file);
 								written[0] += data.length;
 								zip.putNextEntry(new ZipEntry(
-										worldRoot.relativize(file).toString().replace('\', '/')));
+										worldRoot.relativize(file).toString().replace(Character.toString(92), "/")));
 								zip.write(data);
 								zip.closeEntry();
 							} catch (IOException e) {
