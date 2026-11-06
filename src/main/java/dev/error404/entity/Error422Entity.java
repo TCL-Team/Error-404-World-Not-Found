@@ -60,7 +60,13 @@ public class Error422Entity extends Mob {
 
 	private int stareTicks;
 	private int abilityCooldown;
-	private int despawnTimer = 20 * 90;
+	/**
+	 * It does not wander off. Ten minutes is a floor, and it only counts down when nobody is
+	 * within {@link #LEASH_RADIUS} - so in practice it is present for the whole session.
+	 */
+	private int despawnTimer = 20 * 600;
+	/** It is never allowed to be further than this from the nearest player. */
+	private static final double LEASH_RADIUS = 40.0;
 	/** Ticks until it may hit on contact again. */
 	private int contactCooldown;
 	/** How many player deaths this session has fed it. */
@@ -184,8 +190,30 @@ public class Error422Entity extends Mob {
 			case DORMANT -> tickDormant();
 		}
 
-		if (mode() != Mode.DORMANT && --despawnTimer <= 0) {
-			vanish();
+		// Leash first: if it has ended up far away (chased someone into a cave, got left
+		// behind, pathfinding gave up), it repositions instead of quietly disappearing.
+		if (mode() != Mode.DORMANT && tickCount % 40 == 0) {
+			Player nearest = nearestPlayer();
+
+			if (nearest != null && distanceTo(nearest) > LEASH_RADIUS) {
+				teleportToRing(nearest, 18.0 + random.nextInt(10));
+				level().playSound(null, blockPosition(), ModSounds.PHASE_SHIFT, SoundSource.HOSTILE, 0.7f, 0.5f);
+			}
+		}
+
+		if (mode() != Mode.DORMANT) {
+			Player nearest = nearestPlayer();
+
+			// Only starts counting while nobody is near: a watched 422 never leaves.
+			if (nearest == null || distanceTo(nearest) > LEASH_RADIUS) {
+				despawnTimer--;
+			} else {
+				despawnTimer = 20 * 600;
+			}
+
+			if (despawnTimer <= 0) {
+				vanish();
+			}
 		}
 	}
 
