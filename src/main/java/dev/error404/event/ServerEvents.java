@@ -72,6 +72,7 @@ public final class ServerEvents {
 
 				state.addAnchor(target);
 				AnchorCoreBlock.onPlacedBy(serverPlayer, target);
+				dev.error404.Achievements.grant(serverPlayer, dev.error404.Achievements.ANCHOR_DOWN);
 				level.playSound(null, target, ModSounds.ANCHOR_HUM, net.minecraft.sounds.SoundSource.BLOCKS, 0.9f, 1.0f);
 				serverPlayer.sendSystemMessage(Component.literal("ERR_404: stability zone created (r=" + AnchorCoreBlock.PROTECTED_RADIUS + ")").withStyle(ChatFormatting.AQUA));
 			}

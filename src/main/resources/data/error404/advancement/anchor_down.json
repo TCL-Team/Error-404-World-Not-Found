@@ -1,9 +1,15 @@
 {
   "parent": "error404:first_fragment",
   "display": {
-    "icon": { "id": "error404:anchor_core" },
-    "title": { "translate": "advancements.error404.anchor_down.title" },
-    "description": { "translate": "advancements.error404.anchor_down.description" },
+    "icon": {
+      "id": "error404:anchor_core"
+    },
+    "title": {
+      "translate": "advancements.error404.anchor_down.title"
+    },
+    "description": {
+      "translate": "advancements.error404.anchor_down.description"
+    },
     "frame": "goal",
     "show_toast": true,
     "announce_to_chat": true,
@@ -11,17 +17,7 @@
   },
   "criteria": {
     "placed_anchor": {
-      "trigger": "minecraft:item_used_on_block",
-      "conditions": {
-        "location": [
-          {
-            "condition": "minecraft:location_check",
-            "predicate": {
-              "block": { "blocks": "error404:anchor_core" }
-            }
-          }
-        ]
-      }
+      "trigger": "minecraft:impossible"
     }
   }
 }

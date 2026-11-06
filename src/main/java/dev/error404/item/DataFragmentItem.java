@@ -38,6 +38,10 @@ public class DataFragmentItem extends Item {
 		state.restore(INTEGRITY_PER_USE);
 		state.addFragment();
 
+		if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+			dev.error404.Achievements.grant(serverPlayer, dev.error404.Achievements.FIRST_FRAGMENT);
+		}
+
 		level.playSound(null, player.blockPosition(), ModSounds.FRAGMENT_PICKUP, SoundSource.PLAYERS, 0.9f, 1.0f);
 		player.displayClientMessage(
 				Component.literal("ERR_404: fragment committed - integrity " + state.integrity() + "% (" + state.dataFragments() + "/8)")

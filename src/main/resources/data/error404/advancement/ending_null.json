@@ -17,10 +17,7 @@
   },
   "criteria": {
     "stood_in_void": {
-      "trigger": "minecraft:enter_block",
-      "conditions": {
-        "block": "error404:void_stone"
-      }
+      "trigger": "minecraft:impossible"
     }
   }
 }

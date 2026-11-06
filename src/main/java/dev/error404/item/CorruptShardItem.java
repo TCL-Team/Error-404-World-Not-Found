@@ -43,11 +43,56 @@ public class CorruptShardItem extends Item {
 				true
 		);
 
+		if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+			hintWhere422Is(serverPlayer);
+			dev.error404.Achievements.grant(serverPlayer, dev.error404.Achievements.FIRST_SIGNAL);
+		}
+
 		if (!player.getAbilities().instabuild) {
 			player.getItemInHand(hand).shrink(1);
 		}
 
 		return InteractionResult.CONSUME;
+	}
+
+	/**
+	 * The shard's whole purpose: a bearing, not a map marker. It tells you the direction and
+	 * roughly how far away the thing is - which is worse than not knowing.
+	 */
+	private static void hintWhere422Is(net.minecraft.server.level.ServerPlayer player) {
+		net.minecraft.server.level.ServerLevel level = (net.minecraft.server.level.ServerLevel) player.level();
+		dev.error404.entity.Error422Entity nearest = null;
+		double best = Double.MAX_VALUE;
+
+		for (dev.error404.entity.Error422Entity entity : level.getEntitiesOfClass(dev.error404.entity.Error422Entity.class,
+				player.getBoundingBox().inflate(160.0))) {
+			double d = entity.distanceToSqr(player);
+
+			if (d < best) {
+				best = d;
+				nearest = entity;
+			}
+		}
+
+		if (nearest == null) {
+			player.sendSystemMessage(Component.literal("ERR_422: no entity in range. it is not gone, you are early.")
+					.withStyle(ChatFormatting.DARK_GRAY));
+			return;
+		}
+
+		// Vanilla north is -Z, so the bearing is atan2(x, -z) - no Level constant needed.
+		net.minecraft.world.phys.Vec3 to = nearest.position().subtract(player.position());
+		String bearing = directionName(Math.atan2(to.x, -to.z));
+
+		player.sendSystemMessage(Component.literal("ERR_422: ~" + (int) Math.sqrt(best)
+				+ " blocks " + bearing).withStyle(ChatFormatting.DARK_RED));
+	}
+
+	/** Eight-wind compass name from an atan2(x, -z) bearing, clockwise from north. */
+	private static String directionName(double radians) {
+		String[] names = {"north", "north-east", "east", "south-east", "south", "south-west", "west", "north-west"};
+		double turns = (radians / (Math.PI * 2) + 1.0) % 1.0;
+		return names[(int) Math.round(turns * 8) % 8];
 	}
 
 	@Override

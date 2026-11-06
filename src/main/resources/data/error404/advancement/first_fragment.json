@@ -1,9 +1,15 @@
 {
   "parent": "error404:first_signal",
   "display": {
-    "icon": { "id": "error404:data_fragment" },
-    "title": { "translate": "advancements.error404.first_fragment.title" },
-    "description": { "translate": "advancements.error404.first_fragment.description" },
+    "icon": {
+      "id": "error404:data_fragment"
+    },
+    "title": {
+      "translate": "advancements.error404.first_fragment.title"
+    },
+    "description": {
+      "translate": "advancements.error404.first_fragment.description"
+    },
     "frame": "task",
     "show_toast": true,
     "announce_to_chat": true,
@@ -11,10 +17,7 @@
   },
   "criteria": {
     "has_fragment": {
-      "trigger": "minecraft:inventory_changed",
-      "conditions": {
-        "items": [ { "items": "error404:data_fragment" } ]
-      }
+      "trigger": "minecraft:impossible"
     }
   }
 }

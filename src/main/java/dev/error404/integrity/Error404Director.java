@@ -47,6 +47,8 @@ public final class Error404Director {
 			return;
 		}
 
+		dev.error404.Achievements.grant(player, dev.error404.Achievements.ROOT);
+
 		if (!state.active()) {
 			state.start(newSessionSeed(server), IntegrityState.MAX_INTEGRITY);
 

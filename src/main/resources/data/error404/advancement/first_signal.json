@@ -1,9 +1,15 @@
 {
   "parent": "error404:root",
   "display": {
-    "icon": { "id": "error404:null_torch" },
-    "title": { "translate": "advancements.error404.first_signal.title" },
-    "description": { "translate": "advancements.error404.first_signal.description" },
+    "icon": {
+      "id": "error404:null_torch"
+    },
+    "title": {
+      "translate": "advancements.error404.first_signal.title"
+    },
+    "description": {
+      "translate": "advancements.error404.first_signal.description"
+    },
     "frame": "task",
     "show_toast": true,
     "announce_to_chat": true,
@@ -11,10 +17,7 @@
   },
   "criteria": {
     "picked_shard": {
-      "trigger": "minecraft:inventory_changed",
-      "conditions": {
-        "items": [ { "items": "error404:corrupt_shard" } ]
-      }
+      "trigger": "minecraft:impossible"
     }
   }
 }
