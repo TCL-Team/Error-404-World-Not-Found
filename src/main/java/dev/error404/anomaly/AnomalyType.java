@@ -6,6 +6,7 @@ import dev.error404.anomaly.builders.ArchiveAnomaly;
 import dev.error404.anomaly.builders.ChunkSeamAnomaly;
 import dev.error404.anomaly.builders.DoorToRoomAnomaly;
 import dev.error404.anomaly.builders.HalfHouseAnomaly;
+import dev.error404.anomaly.builders.HeartbeatVaultAnomaly;
 import dev.error404.anomaly.builders.InvertedTreeAnomaly;
 import dev.error404.anomaly.builders.LastChunkAnomaly;
 import dev.error404.anomaly.builders.LoadBarWallAnomaly;
@@ -32,7 +33,7 @@ public enum AnomalyType {
 	INVERTED_TREE("ERR_404_I", 3, InvertedTreeAnomaly::new),
 	MEMORY_OF_HOME("ERR_404_J", 4, MemoryOfHomeAnomaly::new),
 	THE_LAST_CHUNK("ERR_404_K", 4, LastChunkAnomaly::new),
-	REVOKE("ERR_404_X", 4, HalfHouseAnomaly::new);
+	HEARTBEAT_VAULT("ERR_404_X", 4, HeartbeatVaultAnomaly::new);
 
 	private final String code;
 	private final int minimumPhase;
