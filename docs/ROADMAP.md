@@ -1,6 +1,8 @@
 # ERROR 404: WORLD NOT FOUND — Technical Roadmap
 
-Target: **Minecraft Java 1.21.11 + Fabric**. Yahi document code phase ka blueprint hai.
+Target: **Minecraft Java 1.21.11 + Fabric** · Loader: **Fabric** · Preset: **Hardcore** · 422 AI: **Mix (stalker → signature)**
+
+Yeh document code phase ka blueprint hai.
 
 ---
 
@@ -139,10 +141,11 @@ Har milestone ke baad jar CI par build hona chahiye.
 - `data_fragment` item anomaly chests me.
 - **AC:** P2 ke baad ek-ek karke structures spawn hote hain, 100+ blocks par tiled nahi dikhte.
 
-### v0.4 — THE ENTITY
+### v0.4 — THE ENTITY (Mix AI)
 - `Error422Entity` + model + 3 textures + renderer (missing-texture checker pattern original).
 - Goals: OBSERVE (freeze on look), APPROACH (out of frame), PRESENCE, HUNT.
-- Look-rule: 3s se zyada dekhna = damage event. Ignore = safe.
+- **Mix AI (locked):** P1–P3 me classic stalker (koi look-rule nahi, sirf presence), P4 me look-rule unlock:
+  3s se zyada dekhna = damage event, ignore = safe. (Unlock ke saath ek ek hi chat cue aata hai: `ERR_422: it can see that you can see it.`)
 - Sounds: whisper, dial-up chirp, sub hit, delayed footsteps.
 - **AC:** entity player ko stalk karti hai, dekhne par freeze hoti hai, ignore karne par gayab.
 
@@ -182,9 +185,9 @@ BlockPos anchorPos       // Last Chunk
 config/error404.json
 {
   "enabled": true,
-  "destructiveEnding": false,      // false => rename + backup only
+  "destructiveEnding": false,      // HARDCORE preset + safety: false => rename + backup only (set true for the "save is gone" experience)
   "backupOnStart": true,
-  "realBlockDeletion": true,       // false => sirf render layer (safe mode)
+  "realBlockDeletion": true,       // HARDCORE: on. false => sirf render layer (safe mode)
   "playerSafeRadius": 8,
   "maxChunksPerSecond": 2,
   "protectBlockEntities": true,    // chests, spawners, beds...

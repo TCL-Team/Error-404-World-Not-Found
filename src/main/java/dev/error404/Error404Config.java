@@ -1,0 +1,98 @@
+package dev.error404;
+
+import java.io.IOException;
+import java.io.Reader;
+import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import net.fabricmc.loader.api.FabricLoader;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * Plain JSON config, written to {@code config/error404.json} on first launch.
+ *
+ * <p>Defaults follow the "hardcore" preset chosen for this mod, but every destructive
+ * behaviour still has an explicit off switch and a backup path.</p>
+ */
+public final class Error404Config {
+	private static final Logger LOGGER = LoggerFactory.getLogger(Error404.MOD_ID + "/config");
+	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+	private static final String FILE_NAME = "error404.json";
+
+	private static Error404Config instance = new Error404Config();
+
+	// --- master switches -------------------------------------------------------
+	/** Master switch. When false the mod registers its command but never touches the world. */
+	public boolean enabled = true;
+	/** Keep a region backup of the world before a session starts. */
+	public boolean backupOnStart = true;
+	/** Real block deletion. Set to false for the "render only" safe mode described in the docs. */
+	public boolean realBlockDeletion = true;
+	/** Allows the DELETE ending to rename the world folder (never deletes it). */
+	public boolean destructiveEnding = false;
+	/** Reduces full-screen flashing for photosensitive players. */
+	public boolean photosensitivity = false;
+
+	// --- integrity pacing ------------------------------------------------------
+	/** Seconds of survival per 1% of integrity lost (hardcore preset = 45). */
+	public int secondsPerIntegrityPoint = 45;
+	/** Extra integrity lost per brand new chunk the player uncovers, in hundredths of a point. */
+	public int newChunkDrainHundredths = 2;
+	/** Integrity regained per 30s inside an anchor zone. */
+	public int anchorRecoveryPer30s = 1;
+
+	// --- deletion rules --------------------------------------------------------
+	/** Never delete blocks within this many blocks of a player. */
+	public int playerSafeRadius = 8;
+	/** Chunk budget per second for the deletion front. */
+	public int maxChunksPerSecond = 2;
+	/** Protect chests, beds, spawners and other block entities. */
+	public boolean protectBlockEntities = true;
+
+	// --- feedback --------------------------------------------------------------
+	/** Show the integrity line on the HUD (off by default: horror needs a clean screen). */
+	public boolean hud = false;
+
+	public static Error404Config get() {
+		return instance;
+	}
+
+	public static Path path() {
+		return FabricLoader.getInstance().getConfigDir().resolve(FILE_NAME);
+	}
+
+	public static void load() {
+		Path file = path();
+		if (!Files.exists(file)) {
+			save();
+			return;
+		}
+
+		try (Reader reader = Files.newBufferedReader(file)) {
+			Error404Config loaded = GSON.fromJson(reader, Error404Config.class);
+			if (loaded != null) {
+				instance = loaded;
+			}
+		} catch (IOException | RuntimeException e) {
+			LOGGER.warn("could not read {} - keeping defaults", file, e);
+		}
+	}
+
+	public static void save() {
+		Path file = path();
+		try {
+			Files.createDirectories(file.getParent());
+			try (Writer writer = Files.newBufferedWriter(file)) {
+				GSON.toJson(instance, writer);
+			}
+		} catch (IOException e) {
+			LOGGER.warn("could not write {}", file, e);
+		}
+	}
+}

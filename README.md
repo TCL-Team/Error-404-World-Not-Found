@@ -38,12 +38,15 @@ Player ka goal: **8 Data Fragments + Anchor Core** bana ke *The Last Chunk* par 
 | P3 | **CASCADE** | Deletion tez, structures khud mit-te hain, light khaa rahi hai |
 | P4 | **ANNEXATION** | Duniya floating fragments, 422 hunt, sirf Last Chunk bacha |
 
-### Mod ka signature rule
+### 422 ka do-faced AI (locked design)
+
+**P1–P3 tk woh classic stalker hai:** fog me khadi rehti hai, out-of-frame move karti hai, tumhare paas aakar rukti hai.
+**P4 (endgame) me signature rule unlock hota hai:**
 
 > **422 ko dekhna = damage. Nazar hatana = safe.**
 
-3 second se zyada dekha → static, item "unprocessable", chunk ko nuksaan.
-Ignore kiya → woh chali jaati hai. Usko harana nahi hai, usse **bachna** hai.
+3 second se zyada dekha → static, item "unprocessable", chunk ko nuksaan. Ignore kiya → woh chali jaati hai.
+Usse ladna nahi hai — pehle usse **bachna** hai, endgame me usse **dekhna seekhna** hai (ya na dekhna).
 
 ### Anomaly structures
 
@@ -67,6 +70,15 @@ Prebuilt nahi — ek ruleset se ad-hoc bante hain, isliye har playthrough alag:
 
 ---
 
+## Difficulty preset: HARDCORE (locked)
+
+- Chunks sach me delete hote hain, structures khud mit-te hain (revoke), 422 light aur blocks khaati hai.
+- **Lekin** hardcore ka matlab ye nahi ki tumhara save mar jaaye: session start par **world backup** (region zip),
+  aur DELETE ending default me sirf **rename + backup** karta hai (`destructiveEnding=false`).
+  Chaho to config me `destructiveEnding=true` karke poora "save gaya" wala experience le sakte ho.
+- Fairness ke non-negotiable rules (hardcore me bhi): player ke 8 block ke andar deletion nahi,
+  chests/beds/spawn protect, creative/spectator skip, `/error404 stop` + `/error404 restore` hamesha on.
+
 ## Safety (pehle se soch liya)
 
 - Session start par **world backup**, default ending me **rename + backup** (real delete nahi).
@@ -83,9 +95,32 @@ Prebuilt nahi — ek ruleset se ad-hoc bante hain, isliye har playthrough alag:
 - 🛠 **[ROADMAP.md](docs/ROADMAP.md)** — 1.21.11 Fabric technical plan, milestones v0.1→v1.0, risks, CI
 - 🎨 **[docs/concept/](docs/concept/)** — concept art (logo, entity, anomalies, void)
 
+## Build / run (local)
+
+```bash
+# Java 21 chahiye
+./gradlew build        # jar -> build/libs/error404-1.21.11-<version>.jar
+./gradlew runClient    # mod ke saath Minecraft launch
+```
+
+CI har push par GitHub Actions se build hota hai (`.github/workflows/build.yml`).
+
 ## Status
 
-**Concept locked (v0.1 design).** Code next hai — Fabric 1.21.11 skeleton se shuru (Milestone v0.1 in ROADMAP).
+**v0.1 skeleton in progress** — Gradle project + `/error404` commands + integrity state machine + config shipped.
+Next: v0.2 chunk deletion (see ROADMAP). Playable milestones tab hi honge jab visuals aa jayenge.
+
+## In-game commands (v0.1, operator only)
+
+```
+/error404 status                 integrity, phase, session seed
+/error404 start | stop           session control
+/error404 restore                integrity 100%, world un-ended
+/error404 phase <name>           force a phase (testing)
+/error404 setintegrity <0-100>   jump to a value
+/error404 demo                   15x pacing for a ~5 min full run
+/error404 reload                 reload config/error404.json
+```
 
 ## License
 
