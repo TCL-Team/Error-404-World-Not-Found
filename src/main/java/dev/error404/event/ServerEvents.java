@@ -104,6 +104,18 @@ public final class ServerEvents {
 			state.drain(3);
 			state.registerDeath();
 			ModNetworking.broadcastEffect(server, ModNetworking.EFFECT_DESATURATE, "ERR_422", 60);
+
+			// It fed, it left. Five minutes of not being hunted, so the player can go and be
+			// sad about their stuff instead of dying again at their own death point.
+			AnomalyManager.withdrawFor(server, 20L * 300L);
+
+			for (dev.error404.entity.Error422Entity error422 : level.getEntitiesOfClass(
+					dev.error404.entity.Error422Entity.class, player.getBoundingBox().inflate(48.0))) {
+				error422.vanish();
+			}
+
+			player.sendSystemMessage(Component.literal("ERR_422: acknowledged. it has what it came for.")
+					.withStyle(ChatFormatting.DARK_GRAY));
 		});
 
 		PlayerBlockBreakEvents.AFTER.register((level, player, pos, state, blockEntity) -> {

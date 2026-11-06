@@ -264,7 +264,7 @@ public final class AnomalyManager {
 			return;
 		}
 
-		if (lastSpawnTick != 0 && now - lastSpawnTick < SPAWN_COOLDOWN_TICKS) {
+		if (lastSpawnTick != 0 && now < lastSpawnTick + SPAWN_COOLDOWN_TICKS) {
 			return;
 		}
 
@@ -313,6 +313,14 @@ public final class AnomalyManager {
 		ACTIVE.add(new Instance(type, pos, IntegrityState.get(level.getServer()).ageTicks(), false, 0));
 		IntegrityState.get(level.getServer()).registerAnomaly(type.name(), pos);
 		level.playSound(null, pos, ModSounds.STRUCTURE_APPEAR, SoundSource.AMBIENT, 1.0f, 1.0f);
+	}
+
+	/**
+	 * Called after a player death. Being killed by something invulnerable and having it
+	 * respawn-camp the death site is not horror, it is a broken game. It withdraws.
+	 */
+	public static void withdrawFor(MinecraftServer server, long ticks) {
+		lastSpawnTick = IntegrityState.get(server).ageTicks() + ticks;
 	}
 
 	public static void clear() {
