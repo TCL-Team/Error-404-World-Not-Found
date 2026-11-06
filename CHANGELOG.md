@@ -2,6 +2,39 @@
 
 Sab notable changes. Format [Keep a Changelog](https://keepachangelog.com/), versioning [SemVer](https://semver.org/).
 
+## [0.9.1] - 2026-11-06
+
+**"Woh chup-chaap tumhara naam likh raha hai."** 20x20 deletion, jumpscares, aur ek layer jo darata
+nahi — rok deta hai.
+
+### Added
+
+- **Jumpscares.** Static plate → face → corrupted frame → gone, 0.45 s total. Three original textures
+  (`scare_face`, `scare_face_err`, `scare_glitch`, sab `tools/gen_scare_faces.py` se) aur teen naye
+  original sounds (`scare_sting`, `scare_breath`, `scare_whisper_name`). Sirf **justified** triggers:
+  422 ka window rule, personal collapse ka warning, quarter-health hit, paas me structure appear,
+  aur ANNEXATION me contact. 2 min cooldown per player, DELETION se pehle nahi, anchor zone me nahi,
+  `chill` me nahi, pehle minute me nahi.
+- **Disturbing layer** — darr nahi, galat-pan:
+  - naam ki sign jahan tum ek ghante pehle khade the, jise tumne kabhi nahi banaya
+  - tumhare tode hue block types se bani 3x3 hut, andar bed, koi darwaza nahi
+  - tumhara hi item, tumhare naam se renamed, pairon me gira hua
+  - obsidian pillars, ek har death ke liye
+- **Dread overlay** — tunnel vision + desaturation integrity ke saath, aur kabhi-kabhi screen ke kone se
+  ek kaala silhouette guzarta hai jo entity nahi hai (koi hitbox nahi, koi sound nahi).
+
+### Changed
+
+- **Deletion ab 20x20 blocks ka zone hai, 16x16 chunk nahi.** Ek saath gayab nahi hota: 4-column waves
+  me khud ko khaata hai (~2 s), phir 20 block offset par padosi zone seed karta hai — to woh ek
+  **chalti hui front** lagti hai, alag-alag gaddhe nahi. Har block journal me jaata hai, `restore` waisa
+  hi kaam karta hai. `DeletionJournal.PER_CHUNK` 1024 → 4096 (ek poora zone per chunk recoverable).
+- **Commands default me chhupe hain.** Poora `/error404` tree register hota hai par dikhta nahi — sirf
+  operator, cheats-on host, ya `/error404 enable` ke baad. `/error404 disable` se dobara chhupa do.
+  Mod khud chalta rehta hai; commands sirf testing ke liye.
+- Zones ab har tick advance hoti hain (pehle deletion front ke throttle par latak rahi thin, jo unhone
+  ko dheema kar diya tha).
+
 ## [0.9.0] - 2026-11-06
 
 **"Woh dekh raha hai — aur dekhne nahi deta."** 422 ka window rule, teen naye chaos events, in-game settings.

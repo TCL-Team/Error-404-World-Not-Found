@@ -44,7 +44,7 @@ DELETION phase ke baad, har 1–3 minute me duniya kuch aisa karti hai jo nahi h
 
 | Event | Kya hota hai |
 |---|---|
-| `chunk` | ek poora chunk **tumhare saamne** gir jaata hai — block-by-block, sound + particles ke saath |
+| `chunk` | ek **20x20 block region** tumhare paas, wave-by-wave girta hua (sound + particles) |
 | `inventory` | hotbar ka saaman apni jagah badal leta hai (kuch delete nahi hota) |
 | `death` | bina toofan ke bijli, aur death screen: *"this player is not in the save file"* |
 | `doors` | 20 block ke andar saare darwaze ek saath khul jaate hain |
@@ -56,6 +56,48 @@ DELETION phase ke baad, har 1–3 minute me duniya kuch aisa karti hai jo nahi h
 | `night` | dopahar me hi raat — sun hilta nahi, duniya hilti hai |
 | `hunger` | bhookh turant gir jaati hai, koi reason nahi (aakhri 2 point nahi jaate) |
 | `silence` | 24 block ke andar **saari awaazein** 8 second ke liye band |
+
+### Commands chhupe hue hain (v0.9.1)
+
+Koi bhi horror mod apni command list dikha deta hai — `/summon`, `/chaos`, `/phase`. Woh list padhna
+hi aadha darr khatam kar deta hai. Isliye poora `/error404` tree **register hota hai par dikhta nahi**:
+
+- server operator (permission 2) ko hamesha dikhta hai
+- singleplayer host (cheats on) ko dikhta hai
+- **koi bhi player `/error404 enable` chala kar khol sakta hai** — sirf yahi ek command gate ke bahar hai,
+  warna jis server ka woh admin nahi hai uske liye koi raasta hi nahi
+- `/error404 disable` se dobara chhupa do; gate session-based hai, server restart par khud reset
+
+Mod khud chalta rehta hai — kisi command ki zaroorat nahi. Commands sirf testing ke liye hain.
+
+### Jumpscares (v0.9.1)
+
+Ek jumpscare sirf tab aata hai jab duniya me uski **wajah** ho — timer par kabhi nahi. Paanch triggers:
+
+1. 422 tumhe dekh kar mudta hai (window rule)
+2. tumhare neeche chunk collapse ka countdown shuru hota hai
+3. koi hit tumhe quarter health par chhod deta hai
+4. 15 block ke andar koi structure appear hota hai
+5. ANNEXATION me 422 tumhe chhoo leta hai
+
+Rules: ek player ke liye 2 minute me ek, DELETION se pehle kabhi nahi, anchor zone me kabhi nahi,
+`chill` me kabhi nahi, aur session ke pehle minute me kabhi nahi. Photosensitivity mode static plate
+aur flash hata deta hai — chehra rehta hai, strobe nahi.
+
+### Deranged (disturbing) layer (v0.9.1)
+
+Jumpscare chhalaang deta hai. Yeh layer **rok deta hai**:
+
+- **Tunnel vision + desaturation** — integrity girti hai to screen kinaron se band hota jaata hai aur
+  rang nikalta jaata hai. Koi event nahi, koi sound nahi — bas duniya dheere dheere galat hoti jaati hai.
+- **Intruder** — bahut kabhi-kabhi, screen ke neeche wale kone se ek kaala silhouette guzarta hai,
+  0.6 second me. Woh entity nahi hai, uski hitbox nahi hai, aur woh jaane se pehle tum sure nahi ho paoge.
+- **Naam ki sign** — ek sign jispar **tumhara naam** likha hai, wahin rakha hua jahan tum ek ghante pehle
+  khade the, aur jise tumne kabhi banaya nahi.
+- **Tumhare tode hue blocks ka ghar** — wahi block types jo tumne toda, unse bani 3x3 hut, andar ek bed,
+  aur koi darwaza nahi.
+- **Renamed drop** — tumhara hi item, tumhare hi naam se, tumhare pairon me.
+- **Death markers** — obsidian ke pillars, ek tumhari har death ke liye, 100 block door.
 
 Anchor zone me chaos **kabhi** nahi hota. `/error404 chaos off` se poora band, `chaos fire <event>` se ek test.
 
@@ -211,6 +253,7 @@ CI har push par GitHub Actions se build hota hai (`.github/workflows/build.yml`)
 | **v0.6 polish** | HUD glitch layer, fog/void horizon, ambience cross-fade, photosensitivity mode | ✅ in game |
 | **v0.7 entity AI** | path replay, prediction, habit model, home invasion, wall break, sleep haunting, darkness aura | ✅ in game |
 | **v0.8 chaos** | chaos layer, proximity drone, death sting, all-English text, visible collapse front | ✅ [v0.8.0](https://github.com/TCL-Team/Error-404-World-Not-Found/releases/tag/v0.8.0) |
+| **v0.9.1** | 20x20 staged deletion zones, hidden command tree, jumpscares (5 justified triggers), disturbing layer (intruder, name signs, shrines, dread overlay) | ✅ in game |
 | **v0.8.1** | personal collapse, creepy title screen + original wordmark, 422 leash + early spawns | ✅ [v0.8.1](https://github.com/TCL-Team/Error-404-World-Not-Found/releases/tag/v0.8.1) |
 | **v0.6.0 release** | release workflow (tag → jar + notes), deletion journal (`restore` sach me wapas deta hai), natural 422 spawner, anchor ritual, 5 languages | ✅ [v0.6.0](https://github.com/TCL-Team/Error-404-World-Not-Found/releases/tag/v0.6.0) |
 
