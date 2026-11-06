@@ -274,7 +274,7 @@ public final class AnomalyManager {
 			}
 		}
 
-		if (alive.size() >= dev.error404.Difficulty.current().maxAlive) {
+		if (alive.size() >= Math.max(2, dev.error404.Difficulty.current().maxAlive + 1)) {
 			return;
 		}
 
