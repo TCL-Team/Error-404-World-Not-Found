@@ -38,6 +38,24 @@ Player ka goal: **8 Data Fragments + Anchor Core** bana ke *The Last Chunk* par 
 | P3 | **CASCADE** | Deletion tez, structures khud mit-te hain, light khaa rahi hai |
 | P4 | **ANNEXATION** | Duniya floating fragments, 422 hunt, sirf Last Chunk bacha |
 
+### Chaos: "kuch bhi ho sakta hai" (v0.8)
+
+DELETION phase ke baad, har 1–3 minute me duniya kuch aisa karti hai jo nahi hona chahiye:
+
+| Event | Kya hota hai |
+|---|---|
+| `chunk` | ek poora chunk player ke paas se **gayab** — jaise load hi nahi hua ho |
+| `inventory` | hotbar ka saaman apni jagah badal leta hai (kuch delete nahi hota) |
+| `death` | bina toofan ke bijli, aur death screen: *"this player is not in the save file"* |
+| `doors` | 20 block ke andar saare darwaze ek saath khul jaate hain |
+| `sound` | tumhare theek peeche full volume awaaz — mudo to kuch nahi |
+| `lightning` | jis block par tum abhi kadam rakhne wale the, wahan bijli |
+| `mobs` | tumhare peeche zombie/skeleton/enderman/**warden** spawn, pehle se tumhe target karke |
+| `teleport` | 8–18 block door phenk diya (deewar ya lava me nahi) |
+| `message` | tumhare hi naam se ek fake diagnostic chat line |
+
+Anchor zone me chaos **kabhi** nahi hota. `/error404 chaos off` se poora band, `chaos fire <event>` se ek test.
+
 ### 422 kitni khatarnak hai (v0.7)
 
 Ye ek "boss" nahi hai, ye ek **cheez** hai jo tumhe process nahi kar pa rahi. Isliye uske paas health bar
@@ -54,6 +72,9 @@ nahi hai — uske paas **rules** hain:
 | **Feeding** | har player death usse tez karta hai | — |
 | **Mercy** | tumhe maarne ke baad woh 5 minute ke liye chali jaati hai | apna saanp samet lo |
 | **Anchor** | anchor zone me woh **kabhi** nahi aati | yahi ek safe jagah hai |
+| **Path memory** | CASCADE ke baad woh tumhara **ek minute purana raasta** chalti hai, block by block | raasta seedha rakho, chakkar mat kato |
+| **Prediction** | woh wahan jaati hai jahan tum **2 second baad** hoge | rukna sabse kharab option hai |
+| **Habits** | woh seekhti hai: tum zameen ke neeche chhupte ho? khade rehte ho? torch rakhte ho? | behaviour badlo |
 
 Screen bhi jhooth bolta hai: uske paas hone par vignette sikudta hai, red/cyan seam aata hai, aur
 screen tear hoti hai. `photosensitivity` on karne par ye sab 70% kam ho jaata hai.
@@ -175,12 +196,20 @@ Latest verified jar: **error404-0.6.0.jar, 753 KB** (release `v0.6.0`).
 /error404 setintegrity <0-100>   jump to a value
 /error404 demo                   15x pacing for a ~5 min full run
 /error404 difficulty <preset>    chill | standard | nightmare — live, no restart
+/error404 chaos on|off           random events layer
+/error404 chaos fire <event>     trigger one event right now
 /error404 summon                 spawn 422 six blocks in front of you
 /error404 anomaly <code>         force one structure (ERR_404_A ... ERR_404_X)
 /error404 ending <s|d|null>      trigger SALVAGE / DELETE / 0x00
 /error404 backup                 write a world zip immediately
 /error404 reload | config save   config file round-trip
 ```
+
+## Language
+
+**Poora in-game content English me hai** — books, signs, whispers, chat, death messages, advancements.
+`en_us` complete hai; `de_de` aur `ja_jp` sirf UI keys translate karte hain (item/block/advancement names),
+taaki koi bhi locale chunne par text English hi rahe.
 
 ## Content
 

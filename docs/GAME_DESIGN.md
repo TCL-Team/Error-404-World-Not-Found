@@ -322,3 +322,39 @@ Switched live with `/error404 difficulty <preset>`; persisted in `config/error40
 Anchor cores create a 32-block stability zone. 422 cannot enter it, cannot teleport into it, and will
 pace the edge instead. That is the mechanical reason the anchor ritual exists: it is not a score, it is
 the only place in the world the entity has been told "already processed".
+
+---
+
+## 12. Chaos layer (v0.8)
+
+The design question was: how do you beat ERROR 422's reputation for "it does anything" without shipping
+a broken mod? Answer: a **named, bounded pool** of events with a visible cooldown, all recoverable.
+
+- Gate: DELETION phase or later, config `chaos = true`, never inside an anchor zone.
+- Cadence: first event at 90 s, then one every 60-180 s. Expected ~14 events in a 100% -> 0% run.
+- Every world change is journaled: `/error404 restore` puts the chunk back exactly as it was.
+- Every event is logged in the player's Error Log, so a player can see the mod was deliberate, not a bug.
+
+| Event | Weight | Destructive | Recoverable |
+|---|---|---|---|
+| chunk gone | 22% | yes (1 chunk) | yes (journal) |
+| inventory scramble | 12% | no | yes (it is shuffled, not deleted) |
+| sudden death | 12% | kills at low health | no, but mercy rules apply |
+| doors open | 10% | no | yes |
+| sound behind you | 10% | no | n/a |
+| lightning ahead | 10% | no (visual only) | n/a |
+| mobs behind you | 10% | yes (fights) | yes (kill them) |
+| displacement | 8% | no | yes (walk back) |
+| fake message | 6% | no | n/a |
+
+### AI: what makes it different from a stalker
+
+| Layer | Behaviour |
+|---|---|
+| Path memory | replays the player's own last 60 s of movement from CASCADE onward |
+| Prediction | targets `position + velocity * 40 ticks` instead of the player |
+| Habit model | counts stillness, depth, torch use, door use; changes where it appears |
+| Pressure timer | if it has not been seen for 45 s, it relocates into the blind spot (20-28 blocks) |
+| Sleep haunting | wakes sleepers, destroys the bed, stands next to it in ANNEXATION |
+| Wall breaking | chews through anything between it and the player |
+| Sanctuary | cannot enter, cannot teleport into a 32-block anchor zone |

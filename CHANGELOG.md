@@ -2,6 +2,39 @@
 
 Sab notable changes. Format [Keep a Changelog](https://keepachangelog.com/), versioning [SemVer](https://semver.org/).
 
+## [0.8.0] - 2026-11-06
+
+**"Anything can happen."** Chaos layer + an AI that learns you. Everything in-game is English now.
+
+### Added
+
+- **Chaos layer** (`config.chaos`, default on) — from DELETION onwards, one named event every 60-180 s:
+  - `chunk` — an entire chunk near the player is removed at once, the way an unloaded chunk looks
+  - `inventory` — hotbar contents reshuffled, nothing lost
+  - `death` — a real lightning bolt with no storm, plus "this player is not in the save file"
+  - `doors` — every door and trapdoor within 20 blocks opens at once
+  - `sound` — full-volume audio directly behind the player, nothing there when you turn
+  - `lightning` — a visual-only bolt on the block you were about to walk onto
+  - `mobs` — a zombie/skeleton/enderman/warden spawns behind you, already targeting you
+  - `teleport` — displaced 8-18 blocks, never into a wall or lava
+  - `message` — a fake diagnostic in another player's name
+- **Path memory** — from CASCADE, 422 stops chasing you and replays your own route from 60 s ago,
+  block for block, at walking speed.
+- **Predictive approach** — it aims at where you will be in two seconds, not where you are.
+- **Player model** — it learns whether you hide underground, whether you stand still, whether you carry
+  a torch, and adjusts where it appears.
+- **Proximity drone** — a 19 s dissonant sub-bass loop (33 Hz vs 34.1 Hz beating) while 422 is close.
+- **Death sting** — the sudden-death impact, also played when the player is nearly dead.
+- **`/error404 chaos on|off|fire <event>`** — the whole chaos pool, testable in one command.
+- **Error log** now reports deaths, lost chunks, threat level and an incident log of everything
+  the world did to the player this session.
+
+### Changed
+
+- **All in-game text is English** — structure books, signs, whispers, chat. `hi_in` now mirrors
+  `en_us`; `de_de` / `ja_jp` keep translated UI keys only.
+- Chaos respects the anchor zone and never fires before DELETION.
+
 ## [0.7.0] - 2026-11-06
 
 **"Ab woh khatarnak hai."** 422 ab sirf ek silhouette nahi hai.
