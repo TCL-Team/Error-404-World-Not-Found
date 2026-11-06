@@ -51,6 +51,10 @@ public final class Error404Commands {
 				.then(Commands.literal("start").executes(Error404Commands::start))
 				.then(Commands.literal("stop").executes(Error404Commands::stop))
 				.then(Commands.literal("restore").executes(Error404Commands::restore))
+				.then(Commands.literal("banlayer")
+						.executes(Error404Commands::banLayerStatus)
+						.then(Commands.literal("on").executes(ctx -> setBanLayer(ctx, true)))
+						.then(Commands.literal("off").executes(ctx -> setBanLayer(ctx, false))))
 				.then(Commands.literal("demo").executes(Error404Commands::demo))
 				.then(Commands.literal("chaos")
 						.then(Commands.literal("on").executes(context -> setChaos(context, true)))
@@ -190,6 +194,9 @@ public final class Error404Commands {
 
 		// The full undo: integrity back to 100, the ended flag cleared, every block the front
 		// removed put back from the journal, and the anomaly bookkeeping wiped.
+		// stop the bleeding first: a zone that keeps eating while the journal is being replayed
+		// writes blocks back into a hole that is still being dug
+		dev.error404.deletion.DeleteZone.pause();
 		int blocks = dev.error404.deletion.DeletionFront.restore(server);
 		state.reopen();
 		state.setIntegrity(IntegrityState.MAX_INTEGRITY);
@@ -197,6 +204,13 @@ public final class Error404Commands {
 		dev.error404.ending.EndingManager.resetStareCount();
 		dev.error404.haunt.Chaos.reset();
 		dev.error404.haunt.HomeInvasion.reset();
+		dev.error404.haunt.Malicious.reset();
+
+		// names taken by the ban layer come back immediately, not on the next tick
+		server.getPlayerList().getPlayers().forEach(player -> {
+			player.setCustomName(null);
+			player.setCustomNameVisible(false);
+		});
 		dev.error404.event.ServerEvents.pushState(server);
 
 		reply(context.getSource(), "integrity restored to 100%", ChatFormatting.GREEN);
@@ -209,6 +223,42 @@ public final class Error404Commands {
 	 * Switches the threat preset live. Deliberately instant: a player who discovered they
 	 * cannot handle NIGHTMARE should not have to edit a json and restart the server.
 	 */
+	/**
+	 * The anti-player layer. Off by default; turning it on is a deliberate act by whoever owns the
+	 * server, and the warning is printed every single time, including in status.
+	 */
+	private static int setBanLayer(CommandContext<CommandSourceStack> context, boolean on) {
+		dev.error404.Error404Config.get().banLayer = on;
+		dev.error404.Error404Config.save();
+		dev.error404.haunt.Malicious.reset();
+
+		reply(context.getSource(), "ban layer " + (on ? "ENABLED" : "disabled"),
+				on ? ChatFormatting.DARK_RED : ChatFormatting.GREEN);
+
+		if (on) {
+			reply(context.getSource(), "this removes spawn beds, player names, inventory items and doorways.",
+					ChatFormatting.RED);
+			reply(context.getSource(), "it is deliberately hostile. /error404 banlayer off undoes it.",
+					ChatFormatting.GRAY);
+		}
+
+		return 1;
+	}
+
+	private static int banLayerStatus(CommandContext<CommandSourceStack> context) {
+		boolean on = dev.error404.Error404Config.get().banLayer;
+		reply(context.getSource(), "ban layer: " + (on ? "ON" : "OFF"),
+				on ? ChatFormatting.DARK_RED : ChatFormatting.GRAY);
+
+		if (on) {
+			for (String entry : dev.error404.haunt.Malicious.Error404Log.entries()) {
+				reply(context.getSource(), "  " + entry, ChatFormatting.DARK_GRAY);
+			}
+		}
+
+		return 1;
+	}
+
 	/** Turns the "the mod does things to you" layer on or off, live. */
 	private static int setChaos(CommandContext<CommandSourceStack> context, boolean on) {
 		dev.error404.Error404Config.get().chaos = on;

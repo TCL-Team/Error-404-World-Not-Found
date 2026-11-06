@@ -54,6 +54,13 @@ public final class Error404Config {
 	 */
 	public boolean chaos = true;
 
+	/**
+	 * The anti-player layer: takes your spawn point, your name, your items and the door behind you.
+	 * Off by default because it is genuinely hostile - a server that turns this on is choosing to
+	 * be a bad place to live, which is exactly the reaction this layer is designed to provoke.
+	 */
+	public boolean banLayer = false;
+
 	// --- integrity pacing ------------------------------------------------------
 	/** Seconds of survival per 1% of integrity lost (hardcore preset = 45). */
 	public int secondsPerIntegrityPoint = 45;
