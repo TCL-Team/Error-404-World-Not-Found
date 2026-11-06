@@ -74,6 +74,12 @@ public final class Scares {
 			return false;
 		}
 
+		// The early cue never shows the face. A face in the first hour is a party trick; a
+		// whisper that stops mid word is a thing the player will think about at work.
+		if (IntegrityState.get(server).phase().ordinal() < Phase.DELETION.ordinal()) {
+			style = 2;
+		}
+
 		ModNetworking.sendEffect(player, ModNetworking.EFFECT_SCARE, Integer.toString(style), 9);
 
 		long now = level.getGameTime();
@@ -90,8 +96,12 @@ public final class Scares {
 			return false;
 		}
 
+		// Below DELETION there is no jumpscare, but there is something worse: a tick where the
+		// mod does nothing at all. DESYNC gets the cheap version - the static burst and the
+		// whisper that arrives half a second too late - so a player who never lets their world
+		// rot still finds out, in the first hour, what they installed.
 		if (state.phase().ordinal() < Phase.DELETION.ordinal()) {
-			return false;
+			return state.phase().ordinal() >= Phase.DESYNC.ordinal() && cheapOk(level, player);
 		}
 
 		if (player.isCreative() || player.isSpectator() || player.isDeadOrDying()) {
@@ -123,6 +133,19 @@ public final class Scares {
 		Long aftershock = AFTERSHOCK.get(player.getUUID());
 
 		return aftershock == null || now > aftershock;
+	}
+
+	/** The restrained early-phase scare: no face, no flash, just the noise of the world slipping. */
+	private static boolean cheapOk(ServerLevel level, ServerPlayer player) {
+		long now = level.getGameTime();
+		Long last = LAST_SCARE.get(player.getUUID());
+		Long aftershock = AFTERSHOCK.get(player.getUUID());
+
+		if (last != null || aftershock != null) {
+			return false; // the early cue happens once per session, and only after the cooldown
+		}
+
+		return now > 0;
 	}
 
 	private static boolean insideAnchor(IntegrityState state, ServerPlayer player) {
