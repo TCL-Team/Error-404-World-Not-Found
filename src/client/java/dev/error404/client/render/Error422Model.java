@@ -15,9 +15,10 @@ import net.minecraft.util.Mth;
  * 422's body: vanilla humanoid proportions but 3 blocks tall, arms that reach past the
  * knees, no legs below mid-shin, and a head that is a hollow box.
  *
- * <p>Texture layout follows the classic player sheet (64x64 UV space scaled to 128x128 in
- * {@code tools/gen_textures.py}): head at (0,0) 32x16, body at (0,32), arms at (64,32),
- * legs at (0,80) - so the generated sheet lines up without custom UV maths.</p>
+ * <p>UV layout is generated and painted by {@code tools/gen_textures.py} from the same box
+ * sizes used here: head texOffs(0,0), body (0,32), arms (32,0), legs (48,0) on a 128x128
+ * sheet. Box-UV order is west|north|east|south over the side strip, with up/down above it,
+ * so the face the player looks at is the {@code north} rectangle of each box.</p>
  */
 public class Error422Model extends EntityModel<LivingEntityRenderState> {
 	private final ModelPart head;
@@ -53,18 +54,18 @@ public class Error422Model extends EntityModel<LivingEntityRenderState> {
 
 		// arms: 26 units long, hanging past the knees
 		root.addOrReplaceChild(PartNames.RIGHT_ARM,
-				CubeListBuilder.create().texOffs(64, 32).mirror().addBox(-2.0f, 0.0f, -2.0f, 4.0f, 26.0f, 4.0f),
+				CubeListBuilder.create().texOffs(32, 0).mirror().addBox(-2.0f, 0.0f, -2.0f, 4.0f, 26.0f, 4.0f),
 				PartPose.offsetAndRotation(-3.0f, 1.0f, 0.0f, 0.15f, 0.0f, 0.12f));
 		root.addOrReplaceChild(PartNames.LEFT_ARM,
-				CubeListBuilder.create().texOffs(64, 32).addBox(-2.0f, 0.0f, -2.0f, 4.0f, 26.0f, 4.0f),
+				CubeListBuilder.create().texOffs(32, 0).addBox(-2.0f, 0.0f, -2.0f, 4.0f, 26.0f, 4.0f),
 				PartPose.offsetAndRotation(3.0f, 1.0f, 0.0f, -0.15f, 0.0f, -0.12f));
 
 		// legs: short, ending in nothing
 		root.addOrReplaceChild(PartNames.RIGHT_LEG,
-				CubeListBuilder.create().texOffs(0, 80).mirror().addBox(-2.0f, 0.0f, -2.0f, 4.0f, 14.0f, 4.0f),
+				CubeListBuilder.create().texOffs(48, 0).mirror().addBox(-2.0f, 0.0f, -2.0f, 4.0f, 14.0f, 4.0f),
 				PartPose.offset(-1.6f, 18.0f, 0.0f));
 		root.addOrReplaceChild(PartNames.LEFT_LEG,
-				CubeListBuilder.create().texOffs(0, 80).addBox(-2.0f, 0.0f, -2.0f, 4.0f, 14.0f, 4.0f),
+				CubeListBuilder.create().texOffs(48, 0).addBox(-2.0f, 0.0f, -2.0f, 4.0f, 14.0f, 4.0f),
 				PartPose.offset(1.6f, 18.0f, 0.0f));
 
 		return LayerDefinition.create(mesh, 128, 128);

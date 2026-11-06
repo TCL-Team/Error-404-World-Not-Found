@@ -194,90 +194,217 @@ def tex_anchor_core_top():
 
 
 # ------------------------------------------------------------- entity textures
-def error_text_lines(size, count, color, seed):
-    """Fake terminal error lines, drawn as 1px dashes so they read as corrupted text."""
+#
+# UV layout is derived from the model in Error422Model, not copied from the player sheet.
+# Blockbench box-UV order for a box, from texOffs(u, v):
+#
+#     +-------+-------+-------+-------+
+#     | north | east  | south | west  |   <- v .. v+depth   (side strip)
+#     +-------+-------+-------+-------+
+#     | up    | down  | (free)        |   <- v+depth .. v+depth+height
+#     +-------+-------+-------+-------+
+#      u   u+d   u+d+w u+2d+w   u+2d+2w
+#
+# so the face a player looks at (-Z / north) lives at (u, v) and is `depth` wide.
+
+HEAD_UV = (0, 0)          # 8x8x8  -> 28 wide, 16 tall
+BODY_UV = (0, 32)         # 6x18x4 -> 16 wide, 22 tall
+ARM_UV = (32, 0)          # 4x26x4 -> 12 wide, 30 tall
+LEG_UV = (48, 0)          # 4x14x4 -> 12 wide, 18 tall
+
+SHEET = (128, 128)
+
+
+def box_rect(uv, w, h, d):
+    """Exact face rectangles as ModelPart.Cube samples them.
+
+    Verified against net.minecraft.client.model.geom.ModelPart.Cube:
+    the side strip uses v..v+d for up/down and v+d..v+d+h for the four sides, and the
+    horizontal order is west | north | east | south, so the north (front) face starts at u+d.
+    """
+    u, v = uv
+    return {
+        "west": (u, v + d, u + d, v + d + h),
+        "north": (u + d, v + d, u + d + w, v + d + h),
+        "east": (u + d + w, v + d, u + 2 * d + w, v + d + h),
+        "south": (u + 2 * d + w, v + d, u + 2 * d + 2 * w, v + d + h),
+        "up": (u + d + w, v, u + 2 * d + w, v + d),
+        "down": (u + d, v, u + d + w, v + d),
+    }
+
+
+def fill_rect(img, rect, color):
+    ImageDraw.Draw(img).rectangle([rect[0], rect[1], rect[2] - 1, rect[3] - 1], fill=color)
+
+
+def noise_rect(img, rect, color, amount=0.5, seed=0):
+    """Speckle a rectangle with 1px noise so flat fills do not read as plastic."""
     r = random.Random(seed)
-    img = Image.new("RGBA", size, (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
-    for _ in range(count):
-        y = r.randrange(0, size[1])
-        x = r.randrange(0, size[0] - 10)
-        length = r.randrange(6, min(26, size[0] - x))
-        for i in range(0, length, 2):
-            if r.random() < 0.72:
-                c = color if r.random() < 0.75 else (color[0], color[1], color[2], 140)
-                d.point((x + i, y), fill=c)
-                if r.random() < 0.3:
-                    d.point((x + i, y + 1), fill=c)
-    return img
+    for y in range(rect[1], rect[3]):
+        for x in range(rect[0], rect[2]):
+            if r.random() < amount:
+                d.point((x, y), fill=color)
+
+
+def checker_rect(img, rect, cell, c1, c2, offset=(0, 0)):
+    d = ImageDraw.Draw(img)
+    for y in range(rect[1], rect[3]):
+        for x in range(rect[0], rect[2]):
+            gx = (x - rect[0] + offset[0]) // cell
+            gy = (y - rect[1] + offset[1]) // cell
+            d.point((x, y), fill=c1 if (gx + gy) % 2 == 0 else c2)
+
+
+def paint_face(img, rect, style, seed):
+    """Paints one flat cube face with an intentional look (no uniform noise soup)."""
+    r = random.Random(seed)
+    w = rect[2] - rect[0]
+    h = rect[3] - rect[1]
+    d = ImageDraw.Draw(img)
+
+    if style == "dark":
+        # flat near-black with a 1px lighter rim so the silhouette still reads at distance
+        fill_rect(img, rect, (22, 21, 27, 255))
+        d.rectangle([rect[0], rect[1], rect[2] - 1, rect[3] - 1], outline=(44, 42, 54, 255))
+    elif style == "text":
+        # torso front: terminal output that never finished printing
+        fill_rect(img, rect, (18, 18, 23, 255))
+        y = rect[1] + 1
+
+        while y < rect[3] - 1:
+            length = r.randrange(0, w + 1)
+            x = rect[0]
+
+            while x < rect[0] + length:
+                if r.random() < 0.7:
+                    d.point((x, y), fill=BONE if r.random() < 0.8 else (140, 146, 152, 255))
+
+                x += 1
+
+            y += 2
+    elif style == "band":
+        # a strip of missing-texture magenta across the middle of the face
+        fill_rect(img, rect, (18, 18, 23, 255))
+        top = rect[1] + max(1, h // 3)
+        bottom = rect[1] + max(2, (2 * h) // 3)
+        checker_rect(img, (rect[0], top, rect[2], bottom), 2, (232, 0, 236, 255), (14, 14, 18, 255))
+    elif style == "checker":
+        checker_rect(img, rect, 2, (228, 0, 232, 255), (12, 12, 16, 255))
+    elif style == "silent":
+        fill_rect(img, rect, (12, 12, 15, 255))
+
+
+def head_layout(img, style, seed, face=None):
+    """Paints the head box: dark hollow box, optional ring or face on the north side."""
+    rects = box_rect(HEAD_UV, 8, 8, 8)
+
+    for name in ("north", "east", "south", "west"):
+        fill_rect(img, rects[name], (10, 10, 13, 255))
+        noise_rect(img, rects[name], (20, 20, 26, 255), 0.12, seed)
+
+    fill_rect(img, rects["up"], (14, 14, 18, 255))
+    fill_rect(img, rects["down"], (7, 7, 9, 255))
+
+    fx, fy, fx2, fy2 = rects["north"]
+    fill_rect(img, rects["north"], (6, 6, 8, 255))
+    d = ImageDraw.Draw(img)
+
+    if face == "ring":
+        # the loading ring, centred on the 8x8 face
+        cx = (fx + fx2) / 2.0 - 0.5
+        cy = (fy + fy2) / 2.0 - 0.5
+        radius = 2.6
+        for step in range(0, 320, 16):
+            ang = math.radians(step)
+            d.point((round(cx + radius * math.cos(ang)), round(cy + radius * math.sin(ang))),
+                    fill=(226, 232, 238, 255))
+        d.point((round(cx + radius), round(cy)), fill=(255, 255, 255, 255))
+        d.point((round(cx), round(cy)), fill=(120, 24, 34, 255))
+    elif face == "human":
+        # a smear that reads as a face at a glance, never more than that
+        fill_rect(img, (fx + 1, fy + 1, fx2 - 1, fy2 - 1), (26, 24, 26, 255))
+        d.point((fx + 2, fy + 2), fill=(240, 240, 240, 255))
+        d.point((fx + 5, fy + 2), fill=(240, 240, 240, 255))
+        d.point((fx + 2, fy + 3), fill=(120, 20, 28, 255))
+        d.point((fx + 5, fy + 3), fill=(120, 20, 28, 255))
+        d.line([(fx + 2, fy + 5), (fx + 5, fy + 5)], fill=(176, 24, 38, 255))
+        d.point((fx + 3, fy + 4), fill=(60, 60, 64, 255))
+        d.point((fx + 4, fy + 4), fill=(60, 60, 64, 255))
+
+
+def box_paint(img, uv, w, h, d, styles, seed):
+    """Paint every face of one box. `styles` maps face name -> style (default 'skin')."""
+    rects = box_rect(uv, w, h, d)
+
+    for i, name in enumerate(("north", "east", "south", "west", "up", "down")):
+        paint_face(img, rects[name], styles.get(name, styles.get("default", "skin")), seed + i * 17)
 
 
 def tex_error_422():
-    """128x128 skin sheet for the 422 model. Layout is documented in Error422Model."""
-    size = (128, 128)
-    base = Image.new("RGBA", size, (14, 14, 18, 255))
+    """128x128 sheet for Error422Model. Base variant: dark body, magenta band, ring head."""
+    img = Image.new("RGBA", SHEET, (0, 0, 0, 0))
 
-    # torso / arm areas get a faint checker corruption
-    patch = checker((128, 128), cell=4, c1=(228, 0, 232, 255), c2=(10, 10, 14, 255))
-    mask = Image.new("L", size, 0)
-    md = ImageDraw.Draw(mask)
-    md.rectangle([0, 34, 40, 96], fill=255)     # body area
-    md.rectangle([40, 34, 64, 96], fill=110)    # arms area
-    md.rectangle([0, 96, 32, 128], fill=70)     # glitch cubes area
-    base = Image.composite(Image.blend(base, patch, 0.85), base, mask)
+    head_layout(img, "skin", 11, face="ring")
 
-    # error text belongs to the body only - the head stays clean so the loading ring reads
-    text_layer = error_text_lines(size, 220, BONE, seed=21)
-    text_mask = Image.new("L", size, 0)
-    ImageDraw.Draw(text_mask).rectangle([0, 32, 127, 127], fill=255)
-    text_layer.putalpha(Image.composite(text_layer.getchannel("A"), Image.new("L", size, 0), text_mask))
-    base = Image.alpha_composite(base, text_layer)
-    blood_layer = error_text_lines(size, 60, BLOOD, seed=22)
-    blood_layer.putalpha(Image.composite(blood_layer.getchannel("A"), Image.new("L", size, 0), text_mask))
-    base = Image.alpha_composite(base, blood_layer)
+    body = box_rect(BODY_UV, 6, 18, 4)
+    paint_face(img, body["north"], "text", 301)     # what the player sees
+    paint_face(img, body["south"], "band", 302)     # back: one corrupted strip
+    paint_face(img, body["east"], "dark", 303)
+    paint_face(img, body["west"], "dark", 304)
+    paint_face(img, body["up"], "silent", 305)
+    paint_face(img, body["down"], "dark", 306)
 
-    d = ImageDraw.Draw(base)
-    # head box: 8x8x8 at texOffs(64,0) -> occupies 32x16
-    d.rectangle([64, 0, 95, 15], fill=(10, 10, 12, 255))
-    # face is the -Z side: in vanilla head layout that's the middle 8x8 block of the top row
-    fx, fy = 72, 8
-    d.rectangle([fx, fy, fx + 7, fy + 7], fill=(6, 6, 8, 255))
-    # loading ring
-    cx, cy, rad = fx + 3.5, fy + 3.5, 2.5
-    for a in range(0, 300, 18):
-        x = cx + rad * math.cos(math.radians(a))
-        y = cy + rad * math.sin(math.radians(a))
-        d.point((int(x), int(y)), fill=(214, 220, 226, 255))
-    d.point((int(cx + rad), int(cy)), fill=(255, 255, 255, 255))
+    arms = box_rect(ARM_UV, 4, 26, 4)
 
-    # thin red error seam along the body
-    d.line([(0, 33), (63, 33)], fill=(176, 24, 38, 255))
-    return Image.alpha_composite(base, noise_layer(size, 18, seed=31))
+    for i, name in enumerate(("north", "south")):
+        paint_face(img, arms[name], "band" if i == 0 else "dark", 510 + i)
+
+    for i, name in enumerate(("east", "west")):
+        paint_face(img, arms[name], "dark", 520 + i)
+
+    paint_face(img, arms["up"], "dark", 530)
+    paint_face(img, arms["down"], "silent", 531)
+
+    legs = box_rect(LEG_UV, 4, 14, 4)
+
+    for i, name in enumerate(("north", "south", "east", "west")):
+        paint_face(img, legs[name], "dark", 700 + i)
+
+    paint_face(img, legs["up"], "band", 710)
+    paint_face(img, legs["down"], "silent", 711)
+
+    # one red seam where the torso meets the legs
+    nx, ny, nx2, ny2 = body["north"]
+    ImageDraw.Draw(img).line([(nx, ny2 - 1), (nx2 - 1, ny2 - 1)], fill=(176, 24, 38, 255))
+
+    return img
 
 
 def tex_error_422_missing():
-    """Variant used when the entity is 'failing to load': harsher checker, no face."""
-    size = (128, 128)
-    img = checker(size, cell=8, c1=(255, 0, 255, 255), c2=(0, 0, 0, 255))
+    """'Failed to load': full missing-texture checker with the alpha keyed out in bands."""
+    img = Image.new("RGBA", SHEET, (0, 0, 0, 0))
+
+    for uv, w, h, d in ((HEAD_UV, 8, 8, 8), (BODY_UV, 6, 18, 4), (ARM_UV, 4, 26, 4), (LEG_UV, 4, 14, 4)):
+        rects = box_rect(uv, w, h, d)
+
+        for name, rect in rects.items():
+            checker_rect(img, rect, 2, (255, 0, 255, 255), (0, 0, 0, 255))
+
+    head_layout(img, "checker", 91, face="ring")
+
+    # a horizontal tear: 3 rows of the torso are simply not there
     d = ImageDraw.Draw(img)
-    d.rectangle([64, 0, 95, 15], fill=(255, 0, 255, 255))
-    d.rectangle([72, 8, 79, 15], fill=(0, 0, 0, 255))
-    return Image.alpha_composite(img, error_text_lines(size, 180, (255, 255, 255, 235), seed=41))
+    _, by, _, by2 = box_rect(BODY_UV, 6, 18, 4)["north"]
+    d.rectangle([0, by + 9, 127, by + 11], fill=(0, 0, 0, 0))
+
+    return img
 
 
 def tex_error_422_face():
-    """Final-phase face: the loading ring has finished and something is looking back."""
-    size = (128, 128)
-    img = tex_error_422().copy()
-    d = ImageDraw.Draw(img)
-    d.rectangle([64, 0, 95, 15], fill=(8, 8, 10, 255))
-    fx, fy = 72, 8
-    # a smeared human-ish face made of dashes (deliberately unreadable)
-    d.rectangle([fx + 1, fy + 1, fx + 6, fy + 6], fill=(30, 28, 30, 255))
-    d.point((fx + 2, fy + 2), fill=(240, 240, 240, 255))
-    d.point((fx + 5, fy + 2), fill=(240, 240, 240, 255))
-    d.line([(fx + 2, fy + 5), (fx + 5, fy + 5)], fill=(176, 24, 38, 255))
-    d.line([(fx + 3, fy + 3), (fx + 4, fy + 4)], fill=(90, 90, 94, 255))
+    """Final phase: same body, but the head is a face and the body has gone quiet."""
+    img = tex_error_422()
+    head_layout(img, "skin", 11, face="human")
     return img
 
 
