@@ -1,0 +1,173 @@
+{
+  "static_burst": {
+    "subtitle": "subtitles.error404.static",
+    "sounds": [
+      {
+        "name": "error404:static_burst",
+        "stream": false
+      }
+    ]
+  },
+  "error_blip": {
+    "subtitle": "subtitles.error404.error_blip",
+    "sounds": [
+      {
+        "name": "error404:error_blip",
+        "stream": false
+      }
+    ]
+  },
+  "whisper": {
+    "subtitle": "subtitles.error404.whisper",
+    "sounds": [
+      {
+        "name": "error404:whisper",
+        "stream": false
+      }
+    ]
+  },
+  "heartbeat": {
+    "subtitle": "subtitles.error404.heartbeat",
+    "sounds": [
+      {
+        "name": "error404:heartbeat",
+        "stream": false
+      }
+    ]
+  },
+  "data_chirp": {
+    "subtitle": "subtitles.error404.data_chirp",
+    "sounds": [
+      {
+        "name": "error404:data_chirp",
+        "stream": false
+      }
+    ]
+  },
+  "sub_hit": {
+    "subtitle": "subtitles.error404.sub_hit",
+    "sounds": [
+      {
+        "name": "error404:sub_hit",
+        "stream": false
+      }
+    ]
+  },
+  "phase_shift": {
+    "subtitle": "subtitles.error404.phase_shift",
+    "sounds": [
+      {
+        "name": "error404:phase_shift",
+        "stream": false
+      }
+    ]
+  },
+  "anchor_hum": {
+    "subtitle": "subtitles.error404.anchor_hum",
+    "sounds": [
+      {
+        "name": "error404:anchor_hum",
+        "stream": false
+      }
+    ]
+  },
+  "fragment_pickup": {
+    "subtitle": "subtitles.error404.fragment_pickup",
+    "sounds": [
+      {
+        "name": "error404:fragment_pickup",
+        "stream": false
+      }
+    ]
+  },
+  "entity_ambient": {
+    "subtitle": "subtitles.error404.entity_ambient",
+    "sounds": [
+      {
+        "name": "error404:entity_ambient",
+        "stream": false
+      }
+    ]
+  },
+  "entity_attack": {
+    "subtitle": "subtitles.error404.entity_attack",
+    "sounds": [
+      {
+        "name": "error404:entity_attack",
+        "stream": false
+      }
+    ]
+  },
+  "structure_appear": {
+    "subtitle": "subtitles.error404.structure_appear",
+    "sounds": [
+      {
+        "name": "error404:structure_appear",
+        "stream": false
+      }
+    ]
+  },
+  "structure_revoke": {
+    "subtitle": "subtitles.error404.structure_revoke",
+    "sounds": [
+      {
+        "name": "error404:structure_revoke",
+        "stream": false
+      }
+    ]
+  },
+  "chunk_delete": {
+    "subtitle": "subtitles.error404.chunk_delete",
+    "sounds": [
+      {
+        "name": "error404:chunk_delete",
+        "stream": false
+      }
+    ]
+  },
+  "footstep_echo": {
+    "subtitle": "subtitles.error404.footstep_echo",
+    "sounds": [
+      {
+        "name": "error404:footstep_echo",
+        "stream": false
+      }
+    ]
+  },
+  "error_tone": {
+    "subtitle": "subtitles.error404.error_tone",
+    "sounds": [
+      {
+        "name": "error404:error_tone",
+        "stream": false
+      }
+    ]
+  },
+  "title_drone": {
+    "subtitle": "subtitles.error404.title_drone",
+    "sounds": [
+      {
+        "name": "error404:title_drone",
+        "stream": true
+      }
+    ]
+  },
+  "ambience_calm": {
+    "subtitle": "subtitles.error404.ambience_calm",
+    "sounds": [
+      {
+        "name": "error404:ambience_calm",
+        "stream": true
+      }
+    ]
+  },
+  "ambience_deleted": {
+    "subtitle": "subtitles.error404.ambience_deleted",
+    "sounds": [
+      {
+        "name": "error404:ambience_deleted",
+        "stream": true
+      }
+    ]
+  }
+}

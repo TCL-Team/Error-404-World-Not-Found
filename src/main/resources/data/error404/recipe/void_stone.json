@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "building",
+  "ingredients": [
+    "error404:corrupt_shard",
+    "minecraft:blackstone",
+    "minecraft:blackstone",
+    "minecraft:obsidian"
+  ],
+  "result": {
+    "id": "error404:void_stone",
+    "count": 2
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:ender_pearl",
+    "error404:corrupt_shard",
+    "minecraft:gunpowder"
+  ],
+  "result": {
+    "id": "error404:void_pearl",
+    "count": 2
+  }
+}

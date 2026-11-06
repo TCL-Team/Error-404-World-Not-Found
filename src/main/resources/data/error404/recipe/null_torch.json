@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "C",
+    "S"
+  ],
+  "key": {
+    "C": "minecraft:coal",
+    "S": "minecraft:stick"
+  },
+  "result": {
+    "id": "error404:null_torch",
+    "count": 2
+  }
+}

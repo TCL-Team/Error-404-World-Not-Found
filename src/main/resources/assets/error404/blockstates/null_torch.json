@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "error404:block/null_torch"
+    },
+    "facing=south": {
+      "model": "error404:block/null_torch",
+      "y": 180
+    },
+    "facing=east": {
+      "model": "error404:block/null_torch",
+      "y": 90
+    },
+    "facing=west": {
+      "model": "error404:block/null_torch",
+      "y": 270
+    }
+  }
+}

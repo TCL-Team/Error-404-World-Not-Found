@@ -3,7 +3,10 @@ package dev.error404;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.resources.Identifier;
 
+import dev.error404.entity.ModEntities;
+import dev.error404.event.ServerEvents;
 import dev.error404.integrity.Error404Director;
+import dev.error404.network.ModNetworking;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,9 +14,9 @@ import org.slf4j.LoggerFactory;
 /**
  * ERROR 404: WORLD NOT FOUND — main (common/server) entrypoint.
  *
- * <p>v0.1 scope: configuration, the world-integrity state machine and the {@code /error404}
- * command surface. Chunk deletion, anomalies and the 422 entity land in later milestones
- * (see {@code docs/ROADMAP.md}).</p>
+ * <p>Registration order matters: registries first (blocks, items, sounds, entities), then
+ * content that references them (creative tab), then the runtime systems (networking,
+ * director, events, commands).</p>
  */
 public class Error404 implements ModInitializer {
 	public static final String MOD_ID = "error404";
@@ -22,10 +25,23 @@ public class Error404 implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		Error404Config.load();
+
+		// 1. registries
+		ModSounds.initialize();
+		ModBlocks.initialize();
+		ModItems.initialize();
+		ModEntities.initialize();
+		Error404Tabs.initialize();
+
+		// 2. networking
+		ModNetworking.initialize();
+
+		// 3. runtime systems
 		Error404Commands.register();
 		Error404Director.register();
+		ServerEvents.register();
 
-		LOGGER.info("[error404] initialized - integrity {}", Error404Config.get().enabled ? "armed" : "disabled by config");
+		LOGGER.info("[error404] loaded - world integrity {}", Error404Config.get().enabled ? "armed" : "disabled by config");
 	}
 
 	public static Identifier id(String path) {

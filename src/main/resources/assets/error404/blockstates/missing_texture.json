@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "error404:block/missing_texture"
+    }
+  }
+}

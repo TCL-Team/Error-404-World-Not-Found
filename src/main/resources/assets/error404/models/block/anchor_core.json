@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "error404:block/anchor_core_top",
+    "bottom": "error404:block/anchor_core_side",
+    "side": "error404:block/anchor_core_side"
+  }
+}

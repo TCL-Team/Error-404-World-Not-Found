@@ -1,8 +1,14 @@
 package dev.error404.integrity;
 
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
@@ -11,7 +17,7 @@ import net.minecraft.world.level.saveddata.SavedDataType;
 /**
  * Persistent, server-authoritative state of the dying world.
  *
- * <p>Everything the mod does is derived from this: the phase, the deletion budget, which
+ * <p>Everything the mod does is derived from this: the phase, the deletion radius, which
  * anomalies already fired, and the per-world seed that keeps client effects in sync.</p>
  */
 public class IntegrityState extends SavedData {
@@ -22,10 +28,15 @@ public class IntegrityState extends SavedData {
 			Codec.INT.fieldOf("integrity").forGetter(state -> state.integrity),
 			Codec.BOOL.fieldOf("active").forGetter(state -> state.active),
 			Codec.BOOL.fieldOf("ended").forGetter(state -> state.ended),
+			Codec.INT.fieldOf("ending").forGetter(state -> state.ending),
 			Codec.INT.fieldOf("phase").forGetter(state -> state.phase.ordinal()),
 			Codec.LONG.fieldOf("session_seed").forGetter(state -> state.sessionSeed),
 			Codec.INT.fieldOf("fragments").forGetter(state -> state.dataFragments),
-			Codec.LONG.fieldOf("age_ticks").forGetter(state -> state.ageTicks)
+			Codec.LONG.fieldOf("age_ticks").forGetter(state -> state.ageTicks),
+			Codec.INT.fieldOf("front_radius").forGetter(state -> state.frontRadius),
+			Codec.LONG.listOf().fieldOf("deleted_chunks").forGetter(state -> new ArrayList<>(state.deletedChunks)),
+			Codec.LONG.listOf().fieldOf("anchors").forGetter(state -> new ArrayList<>(state.anchors)),
+			Codec.STRING.listOf().fieldOf("found_anomalies").forGetter(state -> new ArrayList<>(state.foundAnomalies))
 	).apply(instance, IntegrityState::new));
 
 	private static final SavedDataType<IntegrityState> TYPE = new SavedDataType<>(
@@ -37,18 +48,25 @@ public class IntegrityState extends SavedData {
 
 	/** 100 = healthy world, 0 = "world not found". */
 	private int integrity = MAX_INTEGRITY;
-	/** Has the session been started (either manually or automatically)? */
 	private boolean active = false;
-	/** Set once an ending has been reached so the director stops. */
 	private boolean ended = false;
+	/** 0 = still running, 1 = SALVAGE, 2 = DELETE, 3 = 0x00. */
+	private int ending = 0;
 	/** Monotonic phase: never goes backwards, even if integrity is restored. */
 	private Phase phase = Phase.SIGNAL;
-	/** Deterministic seed shared with clients for visual effects. */
 	private long sessionSeed = 0L;
-	/** Data fragments the player(s) collected, 0..8. */
 	private int dataFragments = 0;
-	/** How long this world has been "alive" under the mod, in ticks. */
 	private long ageTicks = 0L;
+	/** How far (in chunks) from the player the deletion front is currently working. */
+	private int frontRadius = 4;
+	/** Chunk keys (x << 32 | z) touched by the front, for /error404 restore. */
+	private final Set<Long> deletedChunks = new LinkedHashSet<>();
+	/** Packed anchor-core positions. */
+	private final Set<Long> anchors = new LinkedHashSet<>();
+	/** Error codes of anomalies the player has run into. */
+	private final Set<String> foundAnomalies = new LinkedHashSet<>();
+	/** Live structures (name -> centre). Runtime copy mirrored from AnomalyManager. */
+	private final java.util.Map<String, BlockPos> activeAnomalies = new java.util.LinkedHashMap<>();
 
 	/** Runtime-only pacing accumulator, deliberately not persisted. */
 	private long tickAccumulator = 0L;
@@ -56,16 +74,22 @@ public class IntegrityState extends SavedData {
 	public IntegrityState() {
 	}
 
-	private IntegrityState(int integrity, boolean active, boolean ended, int phaseOrdinal, long sessionSeed, int dataFragments, long ageTicks) {
+	private IntegrityState(int integrity, boolean active, boolean ended, int ending, int phaseOrdinal, long sessionSeed,
+			int dataFragments, long ageTicks, int frontRadius, List<Long> deletedChunks, List<Long> anchors,
+			List<String> foundAnomalies) {
 		this.integrity = clamp(integrity);
 		this.active = active;
 		this.ended = ended;
+		this.ending = ending;
 		this.sessionSeed = sessionSeed;
 		this.dataFragments = dataFragments;
 		this.ageTicks = ageTicks;
+		this.frontRadius = Math.max(1, frontRadius);
+		this.deletedChunks.addAll(deletedChunks);
+		this.anchors.addAll(anchors);
+		this.foundAnomalies.addAll(foundAnomalies);
 
-		int ordinal = Math.max(0, Math.min(Phase.values().length - 1, phaseOrdinal));
-		Phase stored = Phase.values()[ordinal];
+		Phase stored = Phase.values()[Math.max(0, Math.min(Phase.values().length - 1, phaseOrdinal))];
 		Phase derived = Phase.fromIntegrity(this.integrity);
 		this.phase = stored.ordinal() > derived.ordinal() ? stored : derived;
 	}
@@ -79,6 +103,8 @@ public class IntegrityState extends SavedData {
 		return overworld.getDataStorage().computeIfAbsent(TYPE);
 	}
 
+	// ------------------------------------------------------------------ getters
+
 	public int integrity() {
 		return integrity;
 	}
@@ -89,6 +115,10 @@ public class IntegrityState extends SavedData {
 
 	public boolean ended() {
 		return ended;
+	}
+
+	public int ending() {
+		return ending;
 	}
 
 	public Phase phase() {
@@ -107,12 +137,20 @@ public class IntegrityState extends SavedData {
 		return ageTicks;
 	}
 
-	/** True when the world got worse than the phase we already announced. */
+	public int frontRadius() {
+		return frontRadius;
+	}
+
+	public Set<Long> deletedChunks() {
+		return deletedChunks;
+	}
+
+	// ------------------------------------------------------------------ mutators
+
 	public boolean shouldAdvancePhase() {
 		return !ended && Phase.fromIntegrity(integrity).ordinal() > phase.ordinal();
 	}
 
-	/** Advance the phase from integrity and return the resulting phase. */
 	public Phase advancePhase() {
 		if (shouldAdvancePhase()) {
 			phase = Phase.fromIntegrity(integrity);
@@ -122,7 +160,6 @@ public class IntegrityState extends SavedData {
 		return phase;
 	}
 
-	/** Force a phase (debug command); never moves the phase backwards. */
 	public void forcePhase(Phase newPhase) {
 		if (newPhase != null && newPhase.ordinal() > phase.ordinal()) {
 			phase = newPhase;
@@ -133,6 +170,7 @@ public class IntegrityState extends SavedData {
 	public void start(long seed, int startingIntegrity) {
 		active = true;
 		ended = false;
+		ending = 0;
 		sessionSeed = seed;
 		integrity = clamp(startingIntegrity);
 		phase = Phase.SIGNAL;
@@ -146,10 +184,15 @@ public class IntegrityState extends SavedData {
 		setDirty();
 	}
 
-	public void end() {
+	public void end(int endingCode) {
 		ended = true;
 		active = false;
+		ending = endingCode;
 		setDirty();
+	}
+
+	public void end() {
+		end(2);
 	}
 
 	public void setIntegrity(int value) {
@@ -161,8 +204,8 @@ public class IntegrityState extends SavedData {
 		integrity = clamped;
 		setDirty();
 
-		if (integrity <= MIN_INTEGRITY) {
-			end();
+		if (integrity <= MIN_INTEGRITY && !ended) {
+			end(2);
 		}
 	}
 
@@ -189,13 +232,85 @@ public class IntegrityState extends SavedData {
 		}
 	}
 
-	/** Add ticks to the pacing accumulator and return the total. */
+	public void setFrontRadius(int radius) {
+		frontRadius = Math.max(1, radius);
+		setDirty();
+	}
+
+	public void markDeletedChunk(int chunkX, int chunkZ) {
+		if (deletedChunks.size() < 200_000 && deletedChunks.add(((long) chunkX << 32) | (chunkZ & 0xFFFFFFFFL))) {
+			setDirty();
+		}
+	}
+
+	public void clearDeletedChunks() {
+		deletedChunks.clear();
+		setDirty();
+	}
+
+	/** Anchor cores as block positions, using vanilla's own long packing. */
+	public List<BlockPos> anchorPositions() {
+		List<BlockPos> positions = new ArrayList<>();
+		for (long packed : anchors) {
+			positions.add(BlockPos.of(packed));
+		}
+
+		return positions;
+	}
+
+	public void addAnchor(BlockPos pos) {
+		if (anchors.add(pos.asLong())) {
+			setDirty();
+		}
+	}
+
+	public void removeAnchor(BlockPos pos) {
+		if (anchors.remove(pos.asLong())) {
+			setDirty();
+		}
+	}
+
+	// ------------------------------------------------------------------ anomalies
+
+	public void registerAnomaly(String name, BlockPos centre) {
+		activeAnomalies.put(name, centre);
+		setDirty();
+	}
+
+	public void unregisterAnomaly(String name) {
+		activeAnomalies.remove(name);
+		setDirty();
+	}
+
+	public java.util.Map<String, BlockPos> activeAnomalies() {
+		return java.util.Collections.unmodifiableMap(activeAnomalies);
+	}
+
+	public void clearAnomalies() {
+		activeAnomalies.clear();
+		foundAnomalies.clear();
+		setDirty();
+	}
+
+	public boolean hasFoundAnomaly(String code) {
+		return foundAnomalies.contains(code);
+	}
+
+	public void markAnomalyFound(String code) {
+		if (foundAnomalies.add(code)) {
+			setDirty();
+		}
+	}
+
+	public Set<String> foundAnomalies() {
+		return new LinkedHashSet<>(foundAnomalies);
+	}
+
 	public long addTicks(long ticks) {
 		tickAccumulator += ticks;
 		return tickAccumulator;
 	}
 
-	/** Consume {@code ticks} from the pacing accumulator (keeps the remainder). */
 	public void consumeTicks(long ticks) {
 		tickAccumulator = Math.max(0L, tickAccumulator - ticks);
 	}

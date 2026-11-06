@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:book",
+    "minecraft:ink_sac",
+    "error404:corrupt_shard"
+  ],
+  "result": {
+    "id": "error404:error_log",
+    "count": 1
+  }
+}

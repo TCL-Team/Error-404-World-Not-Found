@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "QSQ",
+    "SQS",
+    "QSQ"
+  ],
+  "key": {
+    "Q": "minecraft:quartz_block",
+    "S": "error404:corrupt_shard"
+  },
+  "result": {
+    "id": "error404:missing_texture",
+    "count": 4
+  }
+}
