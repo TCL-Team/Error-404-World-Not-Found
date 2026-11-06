@@ -173,6 +173,9 @@ public final class ServerEvents {
 		IntegrityState state = IntegrityState.get(server);
 
 		if (state.active() && !state.ended()) {
+			// Zones advance every tick: their own wave timer paces the blocks, and calling them
+			// from the (throttled) deletion front would slow the front down to a crawl.
+			dev.error404.deletion.DeleteZone.tick(server.overworld());
 			DeletionFront.tick(server);
 			AnomalyManager.tick(server);
 			dev.error404.haunt.PhantomServer.tick(server);

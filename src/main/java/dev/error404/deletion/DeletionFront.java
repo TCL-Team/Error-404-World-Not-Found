@@ -82,8 +82,6 @@ public final class DeletionFront {
 		// The 20x20 advancing zone is the experience now: it eats the world in waves the
 		// player can watch, tile by tile, instead of a 16x16 chunk blinking out between two
 		// frames. Zones are seeded into the view cone and continue on their own from there.
-		DeleteZone.tick(level);
-
 		if (cfg.maxChunksPerSecond >= 2) {
 			seedVisibleZone(level, state, anchorPlayer);
 		} else {

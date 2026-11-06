@@ -163,6 +163,8 @@ public final class Error404Commands {
 		reply(source, "/error404 backup - write a world zip right now", ChatFormatting.GRAY);
 		reply(source, "/error404 reload - reload config/error404.json", ChatFormatting.GRAY);
 		reply(source, "/error404 disable - hide the whole tree again", ChatFormatting.GRAY);
+		reply(source, "deletion zones live: " + dev.error404.deletion.DeleteZone.activeCount()
+				+ " (20x20 blocks each, staged in waves)", ChatFormatting.DARK_GRAY);
 		reply(source, "note: commands stay hidden to players until they run /error404 enable", ChatFormatting.DARK_GRAY);
 		return 1;
 	}
