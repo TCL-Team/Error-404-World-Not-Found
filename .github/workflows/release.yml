@@ -65,7 +65,14 @@ jobs:
 
             422 is not killable. It deals contact damage, it hunts you while your back is turned,
             it breaks through walls, it wakes you up, and staring at it is what hurts *you*.
-            The only ground it will not cross is an active Anchor Core.
+            From the third phase it stops chasing you and starts walking **your own route from a
+            minute ago**. The only ground it will not cross is an active Anchor Core.
+
+            And the world itself takes turns: chunks vanish whole, your hotbar rearranges, doors
+            open behind you, a lightning bolt lands with no storm, and now and then the game
+            says you were never in the save file.
+
+            All in-game text is English, in every locale.
 
             Everything the mod adds is generated from scratch: 19 sounds, all textures,
             all structures, all code. No assets are taken from other mods.
