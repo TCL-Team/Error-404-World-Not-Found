@@ -14,7 +14,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "21"
@@ -23,22 +23,37 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Build (compile + jar)
-        run: ./gradlew build --stacktrace --no-daemon
+        id: gradle
+        shell: bash
+        run: |
+          set -o pipefail
+          ./gradlew build --stacktrace --no-daemon --console=plain 2>&1 | tee build.log
+
+      - name: Summarize errors
+        if: failure()
+        shell: bash
+        run: |
+          {
+            echo "## Build failed"
+            echo '```'
+            grep -nE "error:|error\.|FAILURE:|Caused by:|Could not|Unresolved|Execution failed" build.log | head -80 || tail -60 build.log
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log
+          if-no-files-found: ignore
+          retention-days: 14
 
       - name: Upload jar
-        if: always()
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: error404-jar
           path: build/libs/*.jar
           if-no-files-found: warn
           retention-days: 14
-
-      - name: Upload build reports
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: error404-build-report
-          path: build/reports/
-          if-no-files-found: ignore
-          retention-days: 7
