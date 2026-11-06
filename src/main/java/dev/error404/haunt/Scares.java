@@ -120,7 +120,11 @@ public final class Scares {
 	}
 
 	private static boolean insideAnchor(IntegrityState state, ServerPlayer player) {
-		for (var anchor : state.anchorPositions(level.dimension())) {
+		// the player's own dimension: a Nether anchor must not mute a scare in the overworld
+		net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> dimension =
+				player.level().dimension();
+
+		for (var anchor : state.anchorPositions(dimension)) {
 			if (dev.error404.block.AnchorCoreBlock.protects(anchor, player.blockPosition())) {
 				return true;
 			}

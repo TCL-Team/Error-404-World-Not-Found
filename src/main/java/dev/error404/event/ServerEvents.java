@@ -84,7 +84,7 @@ public final class ServerEvents {
 					return InteractionResult.FAIL;
 				}
 
-				state.addAnchor(serverLevel.dimension(), target);
+				state.addAnchor(((ServerLevel) level).dimension(), target);
 				AnchorCoreBlock.onPlacedBy(serverPlayer, target);
 				dev.error404.Achievements.grant(serverPlayer, dev.error404.Achievements.ANCHOR_DOWN);
 				level.playSound(null, target, ModSounds.ANCHOR_HUM, net.minecraft.sounds.SoundSource.BLOCKS, 0.9f, 1.0f);
@@ -329,8 +329,16 @@ public final class ServerEvents {
 
 		if (units > 0) {
 			state.restore(units * cfg.anchorRecoveryPer30s);
-			level.playSound(null, level.players().getFirst().blockPosition(), ModSounds.ANCHOR_HUM,
-					net.minecraft.sounds.SoundSource.BLOCKS, 0.6f, 1.2f);
+			// the hum plays at the anchor that is doing the recovering, so it is always audible
+			for (ServerLevel dimension : server.getAllLevels()) {
+				for (BlockPos anchor : state.anchorPositions(dimension.dimension())) {
+					if (!dimension.players().isEmpty()
+							&& dimension.players().stream().anyMatch(p -> AnchorCoreBlock.protects(anchor, p.blockPosition()))) {
+						dimension.playSound(null, anchor, ModSounds.ANCHOR_HUM,
+								net.minecraft.sounds.SoundSource.BLOCKS, 0.6f, 1.2f);
+					}
+				}
+			}
 		}
 	}
 
