@@ -55,6 +55,21 @@ public final class TitleScreenGlitch {
 			"[error404] ERR_0x00: nothing to process",
 	};
 
+	public static void register() {
+		ScreenEvents.AFTER_INIT.register((client, screen, scaledWidth, scaledHeight) -> {
+			if (!(screen instanceof TitleScreen titleScreen)) {
+				return;
+			}
+
+			// a stack trace printed where the joke should be, refreshed for every new screen
+			splashLine = Component.literal(SPLASHES[(int) (Math.random() * SPLASHES.length)])
+					.withStyle(ChatFormatting.RED);
+
+			ScreenEvents.afterRender(titleScreen).register((rendered, graphics, mouseX, mouseY, tickDelta) ->
+					render(graphics, rendered.width, rendered.height));
+		});
+	}
+
 	private static void render(GuiGraphics graphics, int width, int height) {
 		Minecraft client = Minecraft.getInstance();
 		long time = client.level == null ? System.currentTimeMillis() / 50L : client.level.getGameTime();
