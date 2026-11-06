@@ -35,6 +35,9 @@ public final class HudGlitchRenderer {
 	};
 	private static final RandomSource RANDOM = RandomSource.create();
 
+	private static final net.minecraft.resources.Identifier LAYER_CRASH =
+			dev.error404.Error404.id("hud_fake_crash");
+
 	private HudGlitchRenderer() {
 	}
 
