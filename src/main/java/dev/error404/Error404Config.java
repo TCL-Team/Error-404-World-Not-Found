@@ -58,6 +58,11 @@ public final class Error404Config {
 	// --- feedback --------------------------------------------------------------
 	/** Show the integrity line on the HUD (off by default: horror needs a clean screen). */
 	public boolean hud = false;
+	/**
+	 * Announce the mod in chat when a session starts. Off by default: on a horror server the
+	 * players are not supposed to be told that the world is being deleted.
+	 */
+	public boolean announceOnJoin = false;
 
 	public static Error404Config get() {
 		return instance;

@@ -49,7 +49,11 @@ public final class Error404Director {
 
 		if (!state.active()) {
 			state.start(newSessionSeed(server), IntegrityState.MAX_INTEGRITY);
-			broadcast(server, "ERR_404: integrity monitoring armed. backups are recommended.", ChatFormatting.GRAY);
+
+			if (cfg.announceOnJoin) {
+				broadcast(server, "ERR_404: integrity monitoring armed. backups are recommended.", ChatFormatting.GRAY);
+			}
+
 			Error404.LOGGER.info("[error404] session started (seed {})", state.sessionSeed());
 		}
 	}

@@ -104,7 +104,7 @@ public final class ServerEvents {
 	private static void onJoin(MinecraftServer server, ServerPlayer player) {
 		IntegrityState state = IntegrityState.get(server);
 
-		if (Error404Config.get().enabled) {
+		if (Error404Config.get().enabled && Error404Config.get().announceOnJoin) {
 			player.sendSystemMessage(Component.literal("[Server] error404 loaded. /error404 status, /error404 stop, /error404 restore")
 					.withStyle(ChatFormatting.DARK_GRAY));
 		}
