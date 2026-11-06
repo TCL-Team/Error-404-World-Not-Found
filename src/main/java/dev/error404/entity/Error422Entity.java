@@ -579,7 +579,7 @@ public class Error422Entity extends Mob {
 	}
 
 	@Override
-	public void setTarget(@javax.annotation.Nullable LivingEntity target) {
+	public void setTarget(LivingEntity target) {
 		super.setTarget(target);
 
 		if (target instanceof Player player) {
