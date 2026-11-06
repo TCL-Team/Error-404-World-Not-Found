@@ -45,6 +45,30 @@ public class Error404 implements ModInitializer {
 		LOGGER.info("[error404] loaded - world integrity {}", Error404Config.get().enabled ? "armed" : "disabled by config");
 	}
 
+	/**
+	 * Ships the creepy title panorama as a built-in resource pack (DEFAULT_ENABLED), not by
+	 * overwriting vanilla files: a player who wants the normal menu can switch it off in
+	 * Resource Packs, and a player who never opens that menu gets the horror version.
+	 */
+	private static void registerTitlePack() {
+		var container = net.fabricmc.loader.api.FabricLoader.getInstance()
+				.getModContainer(MOD_ID).orElse(null);
+
+		if (container == null) {
+			return;
+		}
+
+		boolean ok = net.fabricmc.fabric.api.resource.v1.ResourceLoader.registerBuiltinPack(
+				id("title"),
+				container,
+				net.minecraft.network.chat.Component.translatable("pack.error404.title"),
+				net.fabricmc.fabric.api.resource.v1.pack.PackActivationType.DEFAULT_ENABLED);
+
+		if (!ok) {
+			LOGGER.warn("[error404] could not register the title resource pack");
+		}
+	}
+
 	public static Identifier id(String path) {
 		return Identifier.fromNamespaceAndPath(MOD_ID, path);
 	}
