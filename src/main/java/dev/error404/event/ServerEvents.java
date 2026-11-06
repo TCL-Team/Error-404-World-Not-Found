@@ -44,7 +44,10 @@ public final class ServerEvents {
 
 	public static void register() {
 		ServerLifecycleEvents.SERVER_STARTED.register(ServerEvents::onServerStarted);
-		ServerLifecycleEvents.SERVER_STOPPING.register(server -> AnomalyManager.clear());
+		ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+			AnomalyManager.clear();
+			dev.error404.haunt.PhantomServer.reset();
+		});
 
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> onJoin(server, handler.getPlayer()));
 
@@ -163,6 +166,7 @@ public final class ServerEvents {
 		if (state.active() && !state.ended()) {
 			DeletionFront.tick(server);
 			AnomalyManager.tick(server);
+			dev.error404.haunt.PhantomServer.tick(server);
 			tickExplorationCost(server, state, cfg);
 			tickAnchorRecovery(server, state, cfg);
 		}
