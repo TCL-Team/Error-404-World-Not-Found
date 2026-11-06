@@ -80,6 +80,32 @@ public final class ServerEvents {
 			return InteractionResult.PASS;
 		});
 
+		// A death in the session is not a setback, it is a meal: every 422 in the world gets
+		// faster, and the player is told - in the death message - that it noticed.
+		net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
+			if (!(entity instanceof ServerPlayer player)) {
+				return;
+			}
+
+			MinecraftServer server = player.level().getServer();
+
+			if (server == null || !Error404Config.get().enabled) {
+				return;
+			}
+
+			ServerLevel level = player.level() instanceof ServerLevel sl ? sl : server.overworld();
+
+			for (dev.error404.entity.Error422Entity error422 : level.getEntitiesOfClass(
+					dev.error404.entity.Error422Entity.class, player.getBoundingBox().inflate(256.0))) {
+				error422.feedOnDeath();
+			}
+
+			IntegrityState state = IntegrityState.get(server);
+			state.drain(3);
+			state.registerDeath();
+			ModNetworking.broadcastEffect(server, ModNetworking.EFFECT_DESATURATE, "ERR_422", 60);
+		});
+
 		PlayerBlockBreakEvents.AFTER.register((level, player, pos, state, blockEntity) -> {
 			if (state.is(ModBlocks.ANCHOR_CORE) && level instanceof ServerLevel serverLevel) {
 				IntegrityState.get(serverLevel.getServer()).removeAnchor(pos);

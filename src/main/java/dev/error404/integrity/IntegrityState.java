@@ -37,7 +37,8 @@ public class IntegrityState extends SavedData {
 			Codec.INT.fieldOf("front_radius").forGetter(state -> state.frontRadius),
 			Codec.LONG.listOf().fieldOf("deleted_chunks").forGetter(state -> new ArrayList<>(state.deletedChunks)),
 			Codec.LONG.listOf().fieldOf("anchors").forGetter(state -> new ArrayList<>(state.anchors)),
-			Codec.STRING.listOf().fieldOf("found_anomalies").forGetter(state -> new ArrayList<>(state.foundAnomalies))
+			Codec.STRING.listOf().fieldOf("found_anomalies").forGetter(state -> new ArrayList<>(state.foundAnomalies)),
+			Codec.INT.fieldOf("deaths").forGetter(state -> state.deaths)
 	).apply(instance, IntegrityState::new));
 
 	private static final SavedDataType<IntegrityState> TYPE = new SavedDataType<>(
@@ -77,13 +78,15 @@ public class IntegrityState extends SavedData {
 	private long anchorAccumulator = 0L;
 	/** Sub-point drain (hundredths of a point), runtime only. */
 	private int fractionalDrain = 0;
+	/** Player deaths in this session. 422 feeds on them; the log shows them at the end. */
+	private int deaths = 0;
 
 	public IntegrityState() {
 	}
 
 	private IntegrityState(int integrity, boolean active, boolean ended, int ending, int phaseOrdinal, long sessionSeed,
 			int dataFragments, long ageTicks, int frontRadius, List<Long> deletedChunks, List<Long> anchors,
-			List<String> foundAnomalies) {
+			List<String> foundAnomalies, int deaths) {
 		this.integrity = clamp(integrity);
 		this.active = active;
 		this.ended = ended;
@@ -95,6 +98,7 @@ public class IntegrityState extends SavedData {
 		this.deletedChunks.addAll(deletedChunks);
 		this.anchors.addAll(anchors);
 		this.foundAnomalies.addAll(foundAnomalies);
+		this.deaths = deaths;
 
 		Phase stored = Phase.values()[Math.max(0, Math.min(Phase.values().length - 1, phaseOrdinal))];
 		Phase derived = Phase.fromIntegrity(this.integrity);
@@ -269,6 +273,15 @@ public class IntegrityState extends SavedData {
 	public void setFrontRadius(int radius) {
 		frontRadius = Math.max(1, radius);
 		setDirty();
+	}
+
+	public void registerDeath() {
+		deaths++;
+		setDirty();
+	}
+
+	public int deaths() {
+		return deaths;
 	}
 
 	public boolean hasDeletedChunk(int chunkX, int chunkZ) {

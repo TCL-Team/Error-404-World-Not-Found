@@ -60,6 +60,8 @@ public class Error422Entity extends Mob {
 	private int stareTicks;
 	private int abilityCooldown;
 	private int despawnTimer = 20 * 90;
+	/** How many player deaths this session has fed it. */
+	private int feasts;
 	private boolean dormant;
 
 	public Error422Entity(EntityType<? extends Error422Entity> type, Level level) {
@@ -217,15 +219,29 @@ public class Error422Entity extends Mob {
 			return;
 		}
 
-		getLookControl().setLookAt(player, 60f, 60f);
+		setTarget(player);
 		setDeltaMovement(Vec3.ZERO);
+		double distance = distanceTo(player);
 
-		if (tickCount % 40 == 0 && distanceTo(player) < 9.0) {
-			level().playSound(null, blockPosition(), ModSounds.HEARTBEAT, SoundSource.AMBIENT, 0.7f, 0.85f);
+		// Close enough to touch. In ANNEXATION it does.
+		if (distance < 2.8) {
+			contactAttack(player);
 		}
 
-		if (tickCount % 100 == 0 && distanceTo(player) < 10.0) {
+		if (tickCount % 40 == 0 && distance < 9.0) {
+			level().playSound(null, blockPosition(), ModSounds.HEARTBEAT, SoundSource.AMBIENT, 0.9f, 0.85f);
+		}
+
+		if (tickCount % 100 == 0 && distance < 10.0) {
 			drainWorldAround(player);
+		}
+
+		// Every few seconds of standing next to you it takes a step closer, without moving.
+		if (currentPhase().ordinal() >= Phase.CASCADE.ordinal() && distance > 2.6 && tickCount % 60 == 0) {
+			Vec3 toward = player.position().subtract(position()).normalize().scale(0.7);
+			teleportTo(getX() + toward.x, getY(), getZ() + toward.z);
+			level().playSound(null, blockPosition(), ModSounds.STATIC_BURST, SoundSource.HOSTILE, 0.8f, 0.6f);
+			dev.error404.event.ServerEvents.flashGlitch(level().getServer(), "ERR_422");
 		}
 	}
 
@@ -235,17 +251,31 @@ public class Error422Entity extends Mob {
 			return;
 		}
 
-		getLookControl().setLookAt(player, 90f, 90f);
-		getNavigation().moveTo(player, 1.15);
+		setTarget(player);
+		getNavigation().moveTo(player, 1.35);
+		double distance = distanceTo(player);
+
+		// Reach. If it is within arm's length, it takes a piece.
+		if (distance < 3.0) {
+			contactAttack(player);
+		}
 
 		if (tickCount % 10 == 0) {
 			deleteLightAround();
 		}
 
-		if (abilityCooldown == 0 && random.nextInt(90) == 0 && distanceTo(player) > 16.0) {
-			teleportToRing(player, 8 + random.nextInt(4));
+		// The stare rule: looking at a hunting 422 is the only thing that hurts it back.
+		if (distance < 24.0 && isObserved(player)) {
+			return;
+		}
+
+		// If you cannot see it, it is already somewhere else - always closer.
+		if (abilityCooldown == 0 && random.nextInt(40) == 0) {
+			double step = distance > 12.0 ? 10.0 : (distance > 6.0 ? 5.0 : 2.5);
+			teleportToRing(player, Math.max(2.2, distance - step));
 			playData(1.0f);
-			abilityCooldown = 60;
+			dev.error404.event.ServerEvents.flashGlitch(level().getServer(), "ERR_422");
+			abilityCooldown = 50;
 		}
 	}
 
@@ -298,21 +328,55 @@ public class Error422Entity extends Mob {
 		}
 	}
 
+	/**
+	 * The stare rule, made real. Holding eye contact costs health every second and the
+	 * damage ramps: three seconds of staring is survivable, six is not.
+	 */
 	private void punish(Player player) {
-		player.hurtServer((ServerLevel) level(), damageSources().magic(), 2.0f);
+		if (!(level() instanceof ServerLevel serverLevel)) {
+			return;
+		}
+
+		int stage = Math.min(4, stareTicks / STARE_LIMIT_TICKS);
+		float damage = 3.0f + stage * 1.5f;
+
+		player.hurtServer(serverLevel, Damage.unprocessable(level(), this), damage);
 		player.displayClientMessage(net.minecraft.network.chat.Component
 				.literal("ERR_422: unprocessable entity in range")
 				.withStyle(net.minecraft.ChatFormatting.DARK_RED), true);
-		level().playSound(null, blockPosition(), ModSounds.ENTITY_ATTACK, SoundSource.HOSTILE, 1.2f, 0.9f);
+		level().playSound(null, blockPosition(), ModSounds.ENTITY_ATTACK, SoundSource.HOSTILE, 1.4f, 0.85f);
 		dev.error404.event.ServerEvents.flashGlitch(level().getServer(), "ERR_422");
 
-		if (level() instanceof ServerLevel serverLevel) {
-			serverLevel.sendParticles(ParticleTypes.SCULK_SOUL, getX(), getY() + 2.2, getZ(), 30, 0.5, 0.6, 0.5, 0.02);
+		// The screen stops working for a second: blindness gives the player a reason to
+		// break eye contact instead of just eating the damage.
+		player.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+				net.minecraft.world.effect.MobEffects.BLINDNESS, 40, 0));
+		player.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+				net.minecraft.world.effect.MobEffects.NAUSEA, 100, 0));
+
+		serverLevel.sendParticles(ParticleTypes.SCULK_SOUL, getX(), getY() + 2.2, getZ(), 40, 0.6, 0.8, 0.6, 0.03);
+
+		IntegrityState.get(level().getServer()).drain(2);
+	}
+
+	/**
+	 * Touch damage. Not a melee swing - it happens on contact, silently, and it is enough to
+	 * kill a player who stands still next to it.
+	 */
+	private void contactAttack(Player player) {
+		if (!(level() instanceof ServerLevel serverLevel)) {
+			return;
 		}
 
-		if (IntegrityState.get(level().getServer()) != null) {
-			IntegrityState.get(level().getServer()).drain(1);
-		}
+		player.hurtServer(serverLevel, Damage.unprocessable(level(), this), 6.0f);
+		player.knockback(0.6, getX() - player.getX(), getZ() - player.getZ());
+		player.displayClientMessage(net.minecraft.network.chat.Component
+				.literal("ERR_422: you are in the way")
+				.withStyle(net.minecraft.ChatFormatting.DARK_RED), true);
+		level().playSound(null, blockPosition(), ModSounds.ENTITY_ATTACK, SoundSource.HOSTILE, 1.5f, 0.7f);
+		dev.error404.event.ServerEvents.flashGlitch(level().getServer(), "ERR_422");
+		serverLevel.sendParticles(ParticleTypes.SCULK_SOUL, player.getX(), player.getY() + 1.2, player.getZ(),
+				24, 0.5, 0.7, 0.5, 0.04);
 	}
 
 	private boolean isObserved(Player player) {
@@ -430,8 +494,11 @@ public class Error422Entity extends Mob {
 			serverLevel.sendParticles(ParticleTypes.PORTAL, getX(), getY() + 1.4, getZ(), 60, 0.5, 1.0, 0.5, 0.1);
 			serverLevel.playSound(null, blockPosition(), ModSounds.STATIC_BURST, SoundSource.HOSTILE, 1.0f, 0.8f);
 
-			// Leaving behind a shard is the only reward the player gets for surviving it.
-			spawnAtLocation(serverLevel, new net.minecraft.world.item.ItemStack(dev.error404.ModItems.CORRUPT_SHARD, 1 + random.nextInt(2)));
+			// Surviving it is supposed to feel like surviving, not like farming: one shard
+			// drops, and only sometimes.
+			if (random.nextInt(3) == 0) {
+				spawnAtLocation(serverLevel, new net.minecraft.world.item.ItemStack(dev.error404.ModItems.CORRUPT_SHARD, 1));
+			}
 		}
 
 		discard();
@@ -461,6 +528,29 @@ public class Error422Entity extends Mob {
 		return true;
 	}
 
+	/**
+	 * Every player death in the session feeds it: it moves faster, and it stops pretending to
+	 * be a silhouette. The modifier is capped so a wipe does not make it unkillable-adjacent.
+	 */
+	public void feedOnDeath() {
+		feasts++;
+
+		var speed = getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED);
+
+		if (speed != null) {
+			speed.setBaseValue(Math.min(0.42, 0.26 + feasts * 0.03));
+		}
+
+		if (level() instanceof ServerLevel serverLevel) {
+			serverLevel.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, getX(), getY() + 1.5, getZ(),
+					60, 0.4, 1.2, 0.4, 0.05);
+		}
+	}
+
+	public int feasts() {
+		return feasts;
+	}
+
 	@Override
 	public boolean removeWhenFarAway(double distance) {
 		return false;
@@ -476,6 +566,27 @@ public class Error422Entity extends Mob {
 		return 240;
 	}
 
+	/** Facing the player is the whole point, so it snaps instead of easing. */
+	private void face(Player player) {
+		double dx = player.getX() - getX();
+		double dz = player.getZ() - getZ();
+		double dy = player.getEyeY() - (getY() + getBbHeight() * 0.9);
+		float yaw = (float) (Math.toDegrees(Math.atan2(dz, dx)) - 90.0);
+		float pitch = (float) (-Math.toDegrees(Math.atan2(dy, Math.sqrt(dx * dx + dz * dz))));
+		setYRot(yaw);
+		yHeadRot = yaw;
+		setXRot(Mth.clamp(pitch, -80.0f, 80.0f));
+	}
+
+	@Override
+	public void setTarget(@javax.annotation.Nullable LivingEntity target) {
+		super.setTarget(target);
+
+		if (target instanceof Player player) {
+			face(player);
+		}
+	}
+
 	@Override
 	protected net.minecraft.sounds.SoundEvent getAmbientSound() {
 		return ModSounds.ENTITY_AMBIENT;
@@ -486,6 +597,7 @@ public class Error422Entity extends Mob {
 		super.addAdditionalSaveData(output);
 		output.putBoolean("dormant", dormant);
 		output.putInt("despawn_timer", despawnTimer);
+		output.putInt("feasts", feasts);
 	}
 
 	@Override
@@ -493,5 +605,6 @@ public class Error422Entity extends Mob {
 		super.readAdditionalSaveData(input);
 		dormant = input.getBooleanOr("dormant", false);
 		despawnTimer = input.getIntOr("despawn_timer", 20 * 90);
+		feasts = input.getIntOr("feasts", 0);
 	}
 }
