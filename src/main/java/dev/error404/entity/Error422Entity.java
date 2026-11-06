@@ -328,6 +328,13 @@ public class Error422Entity extends Mob {
 			return;
 		}
 
+		// Safe mode: it still reaches for the world, but nothing is actually removed.
+		if (!dev.error404.Error404Config.get().realBlockDeletion) {
+			serverLevel.playSound(null, blockPosition(), ModSounds.CHUNK_DELETE, SoundSource.HOSTILE, 0.6f, 1.3f);
+			serverLevel.sendParticles(ParticleTypes.PORTAL, getX(), getY() + 1.0, getZ(), 24, 1.0, 1.2, 1.0, 0.05);
+			return;
+		}
+
 		for (int i = 0; i < 6; i++) {
 			BlockPos pos = BlockPos.containing(
 					getX() + (random.nextDouble() - 0.5) * 6,
@@ -357,6 +364,10 @@ public class Error422Entity extends Mob {
 			return;
 		}
 
+		if (!dev.error404.Error404Config.get().realBlockDeletion) {
+			return;
+		}
+
 		for (int dx = -4; dx <= 4; dx++) {
 			for (int dz = -4; dz <= 4; dz++) {
 				for (int dy = -1; dy <= 3; dy++) {
@@ -365,7 +376,13 @@ public class Error422Entity extends Mob {
 					String path = net.minecraft.core.registries.BuiltInRegistries.BLOCK
 							.getKey(state.getBlock()).getPath();
 
+					// Never removes its own null torches or anything a player could rely on
+					// for the anchor ritual.
 					if (path.contains("torch") || path.contains("lantern") || path.contains("candle")) {
+						if (dev.error404.deletion.DeletionRules.isProtected(serverLevel, pos)) {
+							continue;
+						}
+
 						serverLevel.removeBlock(pos, false);
 						serverLevel.playSound(null, pos, ModSounds.STATIC_BURST, SoundSource.BLOCKS, 0.5f, 1.4f);
 					}
