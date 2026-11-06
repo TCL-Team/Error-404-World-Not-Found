@@ -42,6 +42,86 @@ public final class HudGlitchRenderer {
 		HudElementRegistry.attachElementBefore(VanillaHudElements.CHAT, LAYER, HudGlitchRenderer::render);
 	}
 
+	/**
+	 * 0 = nothing nearby, 1 = it is touching you.
+	 *
+	 * <p>Only reacts to an entity the server already synced, so there is nothing to exploit
+	 * and nothing to desync: if the client can see it, the player can be scared by it.</p>
+	 */
+	private static float proximityDread(Minecraft client) {
+		if (client.player == null || client.level == null) {
+			return 0.0f;
+		}
+
+		double nearest = Double.MAX_VALUE;
+
+		for (net.minecraft.world.entity.Entity entity : client.level.entitiesForRendering()) {
+			if (entity instanceof dev.error404.entity.Error422Entity) {
+				nearest = Math.min(nearest, entity.distanceTo(client.player));
+			}
+		}
+
+		if (nearest > 24.0) {
+			return 0.0f;
+		}
+
+		return (float) (1.0 - Math.min(1.0, nearest / 24.0));
+	}
+
+	/**
+	 * The screen stops being reliable when it is close: a hard vignette that tightens, a
+	 * chromatic red/cyan split on the edges, and, at maximum dread, four-pixel horizontal
+	 * tears that do not move like anything the player's brain can parse.
+	 */
+	private static void renderProximityDread(GuiGraphics graphics, Minecraft client, int width, int height, float dread) {
+		boolean calm = ClientState.photosensitive();
+		float scale = calm ? 0.3f : 1.0f;
+
+		// vignette: three nested bands, cheapest possible way to darken the edges
+		int bands = 3;
+
+		for (int i = 0; i < bands; i++) {
+			int inset = (int) ((1.0f - dread) * scale * (width * 0.02f)) + i * (width / 40);
+			int alpha = (int) (0x30 * dread * scale * (1.0f - i * 0.25f)) << 24;
+
+			if (alpha == 0) {
+				continue;
+			}
+
+			int colour = 0x00000000 | alpha;
+			graphics.fill(0, 0, width, inset, colour);
+			graphics.fill(0, height - inset, width, height, colour);
+			graphics.fill(0, 0, inset, height, colour);
+			graphics.fill(width - inset, 0, width, height, colour);
+		}
+
+		// chromatic split: thin red and cyan seams down the screen edges
+		if (dread > 0.35f && !calm) {
+			int edge = Math.max(2, (int) (6 * dread));
+			graphics.fill(0, 0, edge, height, 0x33FF2030);
+			graphics.fill(width - edge, 0, width, height, 0x3300E0FF);
+		}
+
+		// tearing: a few rows that are simply the wrong brightness
+		if (dread > 0.6f && !calm && client.player.tickCount % 7 < 3) {
+			RandomSource random = ClientState.seeded();
+			int tears = (int) (3 + dread * 5);
+
+			for (int i = 0; i < tears; i++) {
+				int y = random.nextInt(Math.max(1, height));
+				int thickness = 1 + random.nextInt(4);
+				int x0 = random.nextInt(Math.max(1, width / 2));
+				int x1 = x0 + random.nextInt(Math.max(1, width / 3));
+				graphics.fill(x0, y, Math.min(width, x1), Math.min(height, y + thickness), 0x1AFFFFFF);
+			}
+		}
+
+		// at maximum dread the hotbar itself flickers out of existence for a frame
+		if (dread > 0.9f && client.player.tickCount % 11 == 0) {
+			graphics.fill(0, height - 26, width, height, 0xCC000000);
+		}
+	}
+
 	private static void render(GuiGraphics graphics, DeltaTracker delta) {
 		Minecraft client = Minecraft.getInstance();
 
@@ -53,6 +133,15 @@ public final class HudGlitchRenderer {
 		int height = graphics.guiHeight();
 		int phase = ClientState.phase();
 		float intensity = phaseIntensity(phase);
+
+		// Is it looking at me, and how close is it?
+		float dread = proximityDread(client);
+
+		if (dread > 0.0f) {
+			renderProximityDread(graphics, client, width, height, dread);
+			// Proximity makes the whole overlay read worse, without ever flashing.
+			intensity = Math.min(1.0f, intensity + dread * 0.35f);
+		}
 
 		// --- scanlines: always there once the world starts desyncing
 		if (intensity > 0.0f) {
