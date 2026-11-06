@@ -139,9 +139,9 @@ public final class Error404Commands {
 		MinecraftServer server = context.getSource().getServer();
 		IntegrityState state = IntegrityState.get(server);
 
-		// The full undo: integrity back to 100, the ended flag cleared, every chunk the front
-		// touched regenerated from the seed, and the anomaly bookkeeping wiped.
-		int chunks = dev.error404.deletion.DeletionFront.restore(server);
+		// The full undo: integrity back to 100, the ended flag cleared, every block the front
+		// removed put back from the journal, and the anomaly bookkeeping wiped.
+		int blocks = dev.error404.deletion.DeletionFront.restore(server);
 		state.reopen();
 		state.setIntegrity(IntegrityState.MAX_INTEGRITY);
 		state.stop();
@@ -149,7 +149,7 @@ public final class Error404Commands {
 		dev.error404.event.ServerEvents.pushState(server);
 
 		reply(context.getSource(), "integrity restored to 100%", ChatFormatting.GREEN);
-		reply(context.getSource(), chunks + " deleted chunk(s) queued for regeneration on next visit", ChatFormatting.GRAY);
+		reply(context.getSource(), blocks + " block(s) put back from the deletion journal", ChatFormatting.GRAY);
 		reply(context.getSource(), "the world is no longer marked as ended - /error404 start begins a fresh session", ChatFormatting.GRAY);
 		return 1;
 	}

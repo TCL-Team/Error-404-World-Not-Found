@@ -156,6 +156,9 @@ public final class DeletionFront {
 					continue;
 				}
 
+				// Remember it before it is gone, so /error404 restore can really put it back.
+				DeletionJournal.record(chunkX, chunkZ, cursor, state2);
+
 				if (removed == 0 && random.nextBoolean()) {
 					// first block of a chunk announces itself
 					level.playSound(null, cursor, ModSounds.CHUNK_DELETE, SoundSource.BLOCKS, 0.7f, 1.0f);
@@ -189,27 +192,59 @@ public final class DeletionFront {
 		return removed > 0;
 	}
 
-	/** Puts the world back: everything the front touched gets regenerated on next visit. */
+	/**
+	 * Puts the world back, block by block, from {@link DeletionJournal}.
+	 *
+	 * <p>Restoring regenerates the chunk from the seed (so vanilla structures, ores and
+	 * terrain come back exactly as worldgen made them) and then replays the journal on top
+	 * of it - which is only ever the parts worldgen got right in the first place.</p>
+	 *
+	 * @return the number of blocks that were put back
+	 */
 	public static int restore(MinecraftServer server) {
 		IntegrityState state = IntegrityState.get(server);
 		ServerLevel level = server.overworld();
-		int count = 0;
 
 		if (level == null) {
 			return 0;
 		}
 
+		java.util.Map<Long, java.util.Deque<DeletionJournal.Entry>> journal = DeletionJournal.drain();
+		int restored = 0;
+
+		for (java.util.Map.Entry<Long, java.util.Deque<DeletionJournal.Entry>> chunk : journal.entrySet()) {
+			long key = chunk.getKey();
+			int x = (int) (key >> 32);
+			int z = (int) key;
+
+			// Only touch chunks the server already has: never force generation from a command.
+			if (!level.getChunkSource().hasChunk(x, z)) {
+				continue;
+			}
+
+			for (DeletionJournal.Entry entry : chunk.getValue()) {
+				BlockPos pos = entry.resolve(x, z);
+				level.setBlock(pos, entry.state(), Block.UPDATE_CLIENTS);
+				restored++;
+			}
+
+			level.sendParticles(ParticleTypes.END_ROD, (x << 4) + 8, level.getSeaLevel() + 2, (z << 4) + 8,
+					24, 4.0, 2.0, 4.0, 0.02);
+		}
+
+		// Anything that was marked deleted but not journaled (safe mode, or evicted from the
+		// journal) can only be re-rolled, so ask the server to reload those chunks.
 		for (long key : state.deletedChunks()) {
 			int x = (int) (key >> 32);
 			int z = (int) key;
 
-			// A generated-but-unsaved chunk is regenerated from the seed on next visit, which
-			// is exactly the "restore" we want; asking for it here just forces that work now.
-			level.getChunkSource().getChunk(x, z, net.minecraft.world.level.chunk.status.ChunkStatus.FULL, true);
-			count++;
+			if (level.getChunkSource().hasChunk(x, z)) {
+				level.getChunkSource().getChunk(x, z, net.minecraft.world.level.chunk.status.ChunkStatus.FULL, true);
+			}
 		}
 
 		state.clearDeletedChunks();
-		return count;
+		DeletionJournal.clear();
+		return restored;
 	}
 }
