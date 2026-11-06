@@ -645,7 +645,7 @@ public class Error422Entity extends Mob {
 			return false;
 		}
 
-		for (BlockPos anchor : IntegrityState.get(serverLevel.getServer()).anchorPositions()) {
+		for (BlockPos anchor : IntegrityState.get(serverLevel.getServer()).anchorPositions(serverLevel.dimension())) {
 			if (dev.error404.block.AnchorCoreBlock.protects(anchor, player.blockPosition())) {
 				return true;
 			}
@@ -756,7 +756,7 @@ public class Error422Entity extends Mob {
 			return false;
 		}
 
-		for (BlockPos anchor : IntegrityState.get(serverLevel.getServer()).anchorPositions()) {
+		for (BlockPos anchor : IntegrityState.get(serverLevel.getServer()).anchorPositions(serverLevel.dimension())) {
 			if (dev.error404.block.AnchorCoreBlock.protects(anchor, BlockPos.containing(x, anchor.getY(), z))) {
 				return true;
 			}
@@ -770,7 +770,7 @@ public class Error422Entity extends Mob {
 			return false;
 		}
 
-		for (BlockPos anchor : IntegrityState.get(serverLevel.getServer()).anchorPositions()) {
+		for (BlockPos anchor : IntegrityState.get(serverLevel.getServer()).anchorPositions(serverLevel.dimension())) {
 			if (dev.error404.block.AnchorCoreBlock.protects(anchor, blockPosition())) {
 				return true;
 			}

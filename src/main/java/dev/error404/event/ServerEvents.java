@@ -84,7 +84,7 @@ public final class ServerEvents {
 					return InteractionResult.FAIL;
 				}
 
-				state.addAnchor(target);
+				state.addAnchor(serverLevel.dimension(), target);
 				AnchorCoreBlock.onPlacedBy(serverPlayer, target);
 				dev.error404.Achievements.grant(serverPlayer, dev.error404.Achievements.ANCHOR_DOWN);
 				level.playSound(null, target, ModSounds.ANCHOR_HUM, net.minecraft.sounds.SoundSource.BLOCKS, 0.9f, 1.0f);
@@ -260,25 +260,23 @@ public final class ServerEvents {
 			return;
 		}
 
-		ServerLevel level = server.overworld();
-
-		if (level == null) {
-			return;
-		}
-
 		int charge = 0;
 
+		// every dimension: exploring the Nether used to be free, which made a nether hub the
+		// cheapest way to survive the mod
+		for (ServerLevel level : server.getAllLevels()) {
 		for (ServerPlayer player : level.players()) {
 			int cx = player.getBlockX() >> 4;
 			int cz = player.getBlockZ() >> 4;
 
 			for (int dx = -2; dx <= 2; dx++) {
 				for (int dz = -2; dz <= 2; dz++) {
-					if (state.markChunkSeen(cx + dx, cz + dz)) {
+					if (state.markChunkSeen(level.dimension(), cx + dx, cz + dz)) {
 						charge += cfg.newChunkDrainHundredths;
 					}
 				}
 			}
+		}
 		}
 
 		while (charge >= 100) {
@@ -298,18 +296,20 @@ public final class ServerEvents {
 			return;
 		}
 
-		ServerLevel level = server.overworld();
-
-		if (level == null) {
-			return;
-		}
-
 		boolean inside = false;
 
-		for (ServerPlayer player : level.players()) {
-			for (BlockPos anchor : state.anchorPositions()) {
-				if (AnchorCoreBlock.protects(anchor, player.blockPosition())) {
-					inside = true;
+		// an anchor in the Nether has to heal the world too, and only for players actually
+		// standing in it
+		for (ServerLevel level : server.getAllLevels()) {
+			for (ServerPlayer player : level.players()) {
+				for (BlockPos anchor : state.anchorPositions(level.dimension())) {
+					if (AnchorCoreBlock.protects(anchor, player.blockPosition())) {
+						inside = true;
+						break;
+					}
+				}
+
+				if (inside) {
 					break;
 				}
 			}

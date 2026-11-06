@@ -85,7 +85,7 @@ public final class HomeInvasion {
 			return;
 		}
 
-		if (inAnchorZone(state, camper)) {
+		if (inAnchorZone(level, state, camper)) {
 			STILL.put(key, 0);
 			return;
 		}
@@ -96,8 +96,8 @@ public final class HomeInvasion {
 		}
 	}
 
-	private static boolean inAnchorZone(IntegrityState state, ServerPlayer player) {
-		for (BlockPos anchor : state.anchorPositions()) {
+	private static boolean inAnchorZone(ServerLevel level, IntegrityState state, ServerPlayer player) {
+		for (BlockPos anchor : state.anchorPositions(level.dimension())) {
 			if (dev.error404.block.AnchorCoreBlock.protects(anchor, player.blockPosition())) {
 				return true;
 			}

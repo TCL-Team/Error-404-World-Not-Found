@@ -500,7 +500,11 @@ public final class Chaos {
 	}
 
 	private static boolean insideAnchor(IntegrityState state, ServerPlayer player) {
-		for (BlockPos anchor : state.anchorPositions()) {
+		if (!(player.level() instanceof ServerLevel playerLevel)) {
+			return false;
+		}
+
+		for (BlockPos anchor : state.anchorPositions(playerLevel.dimension())) {
 			if (dev.error404.block.AnchorCoreBlock.protects(anchor, player.blockPosition())) {
 				return true;
 			}

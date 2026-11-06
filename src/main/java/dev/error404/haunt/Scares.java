@@ -120,7 +120,7 @@ public final class Scares {
 	}
 
 	private static boolean insideAnchor(IntegrityState state, ServerPlayer player) {
-		for (var anchor : state.anchorPositions()) {
+		for (var anchor : state.anchorPositions(level.dimension())) {
 			if (dev.error404.block.AnchorCoreBlock.protects(anchor, player.blockPosition())) {
 				return true;
 			}

@@ -36,7 +36,15 @@ public class IntegrityState extends SavedData {
 			Codec.LONG.fieldOf("age_ticks").forGetter(state -> state.ageTicks),
 			Codec.INT.fieldOf("front_radius").forGetter(state -> state.frontRadius),
 			Codec.LONG.listOf().fieldOf("deleted_chunks").forGetter(state -> new ArrayList<>(state.deletedChunks)),
-			Codec.LONG.listOf().fieldOf("anchors").forGetter(state -> new ArrayList<>(state.anchors)),
+			Codec.STRING.listOf().fieldOf("anchors").forGetter(state -> {
+				List<String> encoded = new ArrayList<>();
+
+				for (Anchor anchor : state.anchors) {
+					encoded.add(anchor.dimension().identifier() + "|" + anchor.pos().asLong());
+				}
+
+				return encoded;
+			}),
 			Codec.STRING.listOf().fieldOf("found_anomalies").forGetter(state -> new ArrayList<>(state.foundAnomalies)),
 			Codec.INT.fieldOf("deaths").forGetter(state -> state.deaths)
 	).apply(instance, IntegrityState::new));
@@ -63,8 +71,15 @@ public class IntegrityState extends SavedData {
 	private int frontRadius = 4;
 	/** Chunk keys (x << 32 | z) touched by the front, for /error404 restore. */
 	private final Set<Long> deletedChunks = new LinkedHashSet<>();
-	/** Packed anchor-core positions. */
-	private final Set<Long> anchors = new LinkedHashSet<>();
+	/**
+	 * Packed anchor-core positions, <b>with their dimension</b>.
+	 *
+	 * <p>An anchor used to be stored as a bare {@link BlockPos}, which meant an anchor placed in
+	 * the Nether protected a sphere of the same coordinates in the overworld and did nothing at
+	 * all where it was actually built. That is the escape hatch failing silently, which is the
+	 * worst possible bug in this mod.</p>
+	 */
+	private final Set<Anchor> anchors = new LinkedHashSet<>();
 	/** Error codes of anomalies the player has run into. */
 	private final Set<String> foundAnomalies = new LinkedHashSet<>();
 	/** Live structures (name -> centre). Runtime copy mirrored from AnomalyManager. */
@@ -85,7 +100,7 @@ public class IntegrityState extends SavedData {
 	}
 
 	private IntegrityState(int integrity, boolean active, boolean ended, int ending, int phaseOrdinal, long sessionSeed,
-			int dataFragments, long ageTicks, int frontRadius, List<Long> deletedChunks, List<Long> anchors,
+			int dataFragments, long ageTicks, int frontRadius, List<Long> deletedChunks, List<String> anchors,
 			List<String> foundAnomalies, int deaths) {
 		this.integrity = clamp(integrity);
 		this.active = active;
@@ -96,7 +111,31 @@ public class IntegrityState extends SavedData {
 		this.ageTicks = ageTicks;
 		this.frontRadius = Math.max(1, frontRadius);
 		this.deletedChunks.addAll(deletedChunks);
-		this.anchors.addAll(anchors);
+		for (String encoded : anchors) {
+			// v1 files stored a bare long here; v2 stores "namespace:path|packed". A bare number
+			// is read back as an overworld anchor, which is exactly what it used to mean.
+			int split = encoded.indexOf('|');
+
+			if (split < 0) {
+				try {
+					this.anchors.add(new Anchor(net.minecraft.world.level.Level.OVERWORLD,
+							BlockPos.of(Long.parseLong(encoded))));
+				} catch (NumberFormatException ignored) {
+					// a corrupt entry must never stop the state from loading
+				}
+
+				continue;
+			}
+
+			try {
+				this.anchors.add(new Anchor(
+						net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION,
+								net.minecraft.resources.Identifier.parse(encoded.substring(0, split))),
+						BlockPos.of(Long.parseLong(encoded.substring(split + 1)))));
+			} catch (RuntimeException ignored) {
+				// same: skip, do not fail the whole save
+			}
+		}
 		this.foundAnomalies.addAll(foundAnomalies);
 		this.deaths = deaths;
 
@@ -302,23 +341,41 @@ public class IntegrityState extends SavedData {
 	/** Anchor cores as block positions, using vanilla's own long packing. */
 	public List<BlockPos> anchorPositions() {
 		List<BlockPos> positions = new ArrayList<>();
-		for (long packed : anchors) {
-			positions.add(BlockPos.of(packed));
+
+		for (Anchor anchor : anchors) {
+			positions.add(anchor.pos());
 		}
 
 		return positions;
 	}
 
-	public void addAnchor(BlockPos pos) {
-		if (anchors.add(pos.asLong())) {
+	/** Only the anchors built in one dimension. Everything that protects the player must use this. */
+	public List<BlockPos> anchorPositions(net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> dimension) {
+		List<BlockPos> positions = new ArrayList<>();
+
+		for (Anchor anchor : anchors) {
+			if (anchor.dimension().equals(dimension)) {
+				positions.add(anchor.pos());
+			}
+		}
+
+		return positions;
+	}
+
+	public void addAnchor(net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> dimension, BlockPos pos) {
+		if (anchors.add(new Anchor(dimension, pos))) {
 			setDirty();
 		}
 	}
 
 	public void removeAnchor(BlockPos pos) {
-		if (anchors.remove(pos.asLong())) {
+		if (anchors.removeIf(anchor -> anchor.pos().asLong() == pos.asLong())) {
 			setDirty();
 		}
+	}
+
+	/** An anchor core and the dimension it was placed in. */
+	public record Anchor(net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> dimension, BlockPos pos) {
 	}
 
 	// ------------------------------------------------------------------ anomalies
@@ -379,7 +436,18 @@ public class IntegrityState extends SavedData {
 	 * is seen, so the caller can charge integrity for it.
 	 */
 	public boolean markChunkSeen(int chunkX, int chunkZ) {
-		long key = ((long) chunkX << 32) | (chunkZ & 0xFFFFFFFFL);
+		return markChunkSeen(null, chunkX, chunkZ);
+	}
+
+	/**
+	 * Same, per dimension. Runtime-only, so keying it by dimension costs nothing and fixes a real
+	 * exploit: the Nether and the overworld share chunk coordinates, so walking a Nether hub used
+	 * to mark overworld chunks as already-explored and make them free.
+	 */
+	public boolean markChunkSeen(net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> dimension,
+			int chunkX, int chunkZ) {
+		long key = ((long) (dimension == null ? 0 : dimension.identifier().hashCode()) << 42)
+				^ (((long) chunkX << 32) | (chunkZ & 0xFFFFFFFFL));
 		return seenChunks.size() < 500_000 && seenChunks.add(key);
 	}
 

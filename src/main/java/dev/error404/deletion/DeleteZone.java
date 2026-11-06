@@ -355,7 +355,7 @@ public final class DeleteZone {
 
 		IntegrityState state = IntegrityState.get(level.getServer());
 
-		for (BlockPos anchor : state.anchorPositions()) {
+		for (BlockPos anchor : state.anchorPositions(level.dimension())) {
 			if (anchor.getX() >= minX - 12 && anchor.getX() <= maxX + 12
 					&& anchor.getZ() >= minZ - 12 && anchor.getZ() <= maxZ + 12) {
 				return true;

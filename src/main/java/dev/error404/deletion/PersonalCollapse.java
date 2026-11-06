@@ -198,7 +198,7 @@ public final class PersonalCollapse {
 			return true;
 		}
 
-		for (BlockPos anchor : state.anchorPositions()) {
+		for (BlockPos anchor : state.anchorPositions(level.dimension())) {
 			if (dev.error404.block.AnchorCoreBlock.protects(anchor, player.blockPosition())) {
 				return true;
 			}

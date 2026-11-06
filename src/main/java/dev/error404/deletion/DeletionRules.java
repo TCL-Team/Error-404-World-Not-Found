@@ -60,7 +60,7 @@ public final class DeletionRules {
 		IntegrityState integrity = IntegrityState.get(level.getServer());
 
 		// anchor cores create permanent stability zones
-		for (BlockPos anchor : integrity.anchorPositions()) {
+		for (BlockPos anchor : integrity.anchorPositions(level.dimension())) {
 			if (AnchorCoreBlock.protects(anchor, pos)) {
 				return true;
 			}
@@ -86,7 +86,7 @@ public final class DeletionRules {
 
 	/** Chunk-level check used by the front before it does any work at all. */
 	public static boolean isChunkProtected(ServerLevel level, int chunkX, int chunkZ) {
-		List<BlockPos> anchors = IntegrityState.get(level.getServer()).anchorPositions();
+		List<BlockPos> anchors = IntegrityState.get(level.getServer()).anchorPositions(level.dimension());
 
 		for (BlockPos anchor : anchors) {
 			int ax = anchor.getX() >> 4;
