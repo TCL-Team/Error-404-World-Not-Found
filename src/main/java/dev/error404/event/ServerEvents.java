@@ -49,6 +49,7 @@ public final class ServerEvents {
 			dev.error404.haunt.PhantomServer.reset();
 			dev.error404.haunt.HomeInvasion.reset();
 			dev.error404.haunt.Chaos.reset();
+			dev.error404.haunt.PathMemory.clear();
 		});
 
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> onJoin(server, handler.getPlayer()));
@@ -171,6 +172,11 @@ public final class ServerEvents {
 			dev.error404.haunt.PhantomServer.tick(server);
 			dev.error404.haunt.HomeInvasion.tick(server.overworld());
 			dev.error404.haunt.Chaos.tick(server);
+
+			// One path sample per second is enough to replay a minute of walking.
+			if (server.getTickCount() % 20 == 0) {
+				dev.error404.haunt.PathMemory.sample(server.overworld());
+			}
 			tickExplorationCost(server, state, cfg);
 			tickAnchorRecovery(server, state, cfg);
 		}

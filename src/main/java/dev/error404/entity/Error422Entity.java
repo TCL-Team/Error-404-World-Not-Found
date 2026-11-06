@@ -235,6 +235,20 @@ public class Error422Entity extends Mob {
 			return;
 		}
 
+		// CASCADE and later: it stops chasing you and starts walking your own route from a
+		// minute ago. You will recognise the movement before you recognise the thing doing it.
+		if (currentPhase().ordinal() >= Phase.CASCADE.ordinal()
+				&& player instanceof ServerPlayer serverPlayer) {
+			Vec3 memory = dev.error404.haunt.PathMemory.at(serverPlayer,
+					Math.max(1, 60 - currentPhase().ordinal() * 12));
+
+			if (memory != null && memory.distanceTo(position()) > 3.0) {
+				getNavigation().moveTo(memory.x, memory.y, memory.z, 1.05);
+				face(player);
+				return;
+			}
+		}
+
 		if (!isObserved(player) && abilityCooldown == 0) {
 			double distance = distanceTo(player);
 
