@@ -164,15 +164,37 @@ def tex_missing_texture():
 
 
 def tex_void_stone():
-    img = Image.new("RGBA", (16, 16), (10, 10, 13, 255))
+    """
+    Void stone is not "black rock" - it is the *absence* of the block that used to be
+    here. So it is a dark tile with a faint dead grid and a few pixels that still flicker
+    magenta, as if the world were still trying to load them.
+    """
+    img = Image.new("RGBA", (16, 16), (12, 11, 15, 255))
     d = ImageDraw.Draw(img)
-    for i in range(0, 16, 8):
-        d.line([(i, 0), (i, 15)], fill=(22, 30, 36, 255))
-        d.line([(0, i), (15, i)], fill=(22, 30, 36, 255))
-    for _ in range(10):
-        x, y = random.randint(0, 15), random.randint(0, 15)
-        d.point((x, y), fill=GRID)
-    return Image.alpha_composite(img, noise_layer((16, 16), 16, seed=7))
+
+    # deep, uneven grain so it does not read as a flat colour in-game
+    for y in range(16):
+        for x in range(16):
+            v = random.randint(0, 9)
+            d.point((x, y), fill=(12 + v, 11 + v, 15 + v, 255))
+
+    # a dead grid, 4px pitch, only partly drawn - like a chunk that failed to load
+    for i in range(0, 16, 4):
+        for j in range(0, 16, 4):
+            if random.random() < 0.75:
+                d.line([(i, j), (i + 3, j)], fill=(30, 28, 38, 255))
+            if random.random() < 0.75:
+                d.line([(i, j), (i, j + 3)], fill=(30, 28, 38, 255))
+
+    # two surviving "unloaded" pixels and a cold rim
+    for _ in range(2):
+        d.point((random.randint(0, 15), random.randint(0, 15)), fill=(228, 0, 232, 255))
+
+    for _ in range(3):
+        x, y = random.randint(1, 14), random.randint(1, 14)
+        d.point((x, y), fill=(46, 58, 72, 255))
+
+    return img
 
 
 def tex_null_torch_block():
