@@ -98,8 +98,8 @@ Prebuilt nahi — ek ruleset se ad-hoc bante hain, isliye har playthrough alag:
 ## Build / run (local)
 
 ```bash
-# Java 21 chahiye
-./gradlew build        # jar -> build/libs/error404-1.21.11-<version>.jar
+# JDK 25 chahiye (Loom 1.19 ka requirement; mod khud Java 21 bytecode hai)
+./gradlew build        # jar -> build/libs/error404-<version>+1.21.11.jar
 ./gradlew runClient    # mod ke saath Minecraft launch
 ```
 

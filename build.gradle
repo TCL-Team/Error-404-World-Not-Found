@@ -41,6 +41,8 @@ processResources {
 }
 
 tasks.withType(JavaCompile).configureEach {
+	// Loom 1.19 runs on JDK 25, but the mod targets Java 21 bytecode so the jar keeps
+	// working on Minecraft 1.21.11 servers running a 21 JVM.
 	it.options.release = 21
 	it.options.encoding = "UTF-8"
 }

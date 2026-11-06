@@ -33,8 +33,9 @@ Target: **Minecraft Java 1.21.11 + Fabric**. Yahi document code phase ka bluepri
 | Fabric Loader | `0.20.1` | |
 | Fabric API | `0.141.6+1.21.11` | official example mod ke saath match |
 | Loom | `1.19-SNAPSHOT` | plugin id `net.fabricmc.fabric-loom-remap` |
-| Gradle | `9.8.2` (wrapper) | |
-| Java | `21` (`release=21`) | MC 1.21.11 ka runtime |
+| Gradle | `9.8.2` (wrapper) | wrapper jar repo me committed hai |
+| Java (build) | **JDK 25** | Loom 1.19.x ka minimum runtime |
+| Java (bytecode) | `--release 21` | jar 1.21.11 ke 21 JVM par bhi chale |
 | Mappings | `loom.officialMojangMappings()` | |
 | Mod id | `error404` | group/package `dev.error404` |
 
