@@ -26,6 +26,7 @@ public class Error404Client implements ClientModInitializer {
 		EntityRendererRegistry.register(ModEntities.ERROR_422, Error422Renderer::new);
 
 		HudGlitchRenderer.register();
+		dev.error404.client.render.TitleScreenGlitch.register();
 		VoidAmbience.register();
 
 		ClientPlayNetworking.registerGlobalReceiver(StateSyncPayload.ID, (payload, context) ->

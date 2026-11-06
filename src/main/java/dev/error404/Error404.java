@@ -35,6 +35,7 @@ public class Error404 implements ModInitializer {
 
 		// 2. networking
 		ModNetworking.initialize();
+		registerTitlePack();
 
 		// 3. runtime systems
 		Error404Commands.register();
