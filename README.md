@@ -110,25 +110,43 @@ CI har push par GitHub Actions se build hota hai (`.github/workflows/build.yml`)
 | Milestone | Kya | State |
 |---|---|---|
 | Design (v0.1 docs) | lore, phases, anomalies, entity, endings, safety | ✅ locked |
-| **v0.1 code** | Fabric 1.21.11 project, integrity director, `/error404` commands, JSON config, CI build | ✅ **build green** (jar ~85 KB) |
-| v0.2 | chunk deletion (hardcore preset) + void sky/fog | ⏳ next |
-| v0.3 | anomaly structures + data fragments | ⏳ |
-| v0.4 | 422 entity + Mix AI | ⏳ |
-| v0.5 | endings, anchor core, backup/restore, polish | ⏳ |
+| **v0.1 code** | Fabric 1.21.11 project, integrity director, `/error404` commands, JSON config, CI build | ✅ build green |
+| **v0.2 assets** | 19 original synthesised sounds, textures, models, blockstates, item defs, lang, recipes | ✅ in game |
+| **v0.2 world** | chunk deletion front (hardcore), void_stone residue, restore path, world backup | ✅ in game |
+| **v0.3 anomalies** | 12 procedural structures, discovery logging, revoke, anomaly manager | ✅ in game |
+| **v0.4 entity** | 422 - 3 textures, custom model, Mix AI (stalker -> stare rule), glow, vanish loot | ✅ in game |
+| **v0.5 endings** | SALVAGE / DELETE / 0x00, anchor ritual, advancements, restore hardening | ✅ in game |
+| **v0.6 polish** | HUD glitch layer, fog/void horizon, ambience cross-fade, photosensitivity mode | ✅ in game |
 
-Build status: `.github/workflows/build.yml` — push par JDK 25 + Gradle 9.8.2, jar artifact upload.
+Har push par GitHub Actions build hota hai (JDK 25 + Gradle 9.8.2, jar artifact upload).
+Latest verified jar: **~1.4 MB** (`error404-jar` artifact).
 
-## In-game commands (v0.1, operator only)
+## In-game commands (operator only)
 
 ```
 /error404 status                 integrity, phase, session seed
 /error404 start | stop           session control
-/error404 restore                integrity 100%, world un-ended
+/error404 restore                integrity 100%, world un-ended, deleted chunks regenerate
 /error404 phase <name>           force a phase (testing)
 /error404 setintegrity <0-100>   jump to a value
 /error404 demo                   15x pacing for a ~5 min full run
-/error404 reload                 reload config/error404.json
+/error404 summon                 spawn 422 six blocks in front of you
+/error404 anomaly <code>         force one structure (ERR_404_A ... ERR_404_X)
+/error404 ending <s|d|null>      trigger SALVAGE / DELETE / 0x00
+/error404 backup                 write a world zip immediately
+/error404 reload | config save   config file round-trip
 ```
+
+## Content
+
+- **5 phases** — SIGNAL → DESYNC → DELETION → CASCADE → ANNEXATION (integrity 100 → 0)
+- **12 anomalies** — half house, staircase to nowhere, chunk seam, mirror village, load-bar wall,
+  door to room, sinkhole, archive, inverted tree, memory of home, the last chunk, revoke
+- **1 entity** — 422, three texture variants (base / missing-texture / the face), 3 blocks tall
+- **4 items / 4 blocks** — data fragment, corrupt shard, error log, void pearl · anchor core,
+  missing texture, void stone, null torch
+- **19 sounds** — all synthesised from scratch in `tools/gen_sounds.py` (no third-party audio)
+- **3 endings + 7 advancements**
 
 ## License
 

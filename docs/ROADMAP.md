@@ -118,46 +118,29 @@ Error-404-World-Not-Found/
 
 ---
 
-## 3. Milestones
+## 3. Milestones — all shipped, CI-verified
 
-Har milestone ke baad jar CI par build hona chahiye.
+Har milestone ke baad jar GitHub Actions par build hota hai (latest run: green).
 
-### v0.1 — SKELETON (foundation)
-- Gradle project, fabric.mod.json, entrypoints, mixin config.
-- `/error404 status` command.
-- Integrity SavedData + Phase enum + per-tick director (abhi koi deletion nahi, sirf counter + chat lines).
-- Config file with safety defaults.
-- **AC:** game launch hota hai, `/error404 status` integrity dikhata hai, integrity time ke saath girti hai.
+| | Milestone | Kya bana | State |
+|---|---|---|---|
+| **v0.1** | Skeleton | Gradle project, `fabric.mod.json`, entrypoints, mixin configs, `IntegrityState` SavedData, 5-phase enum, per-tick director, JSON config, `/error404` command tree | ✅ |
+| **v0.2** | Deletion | `DeletionFront` (1 chunk/pass, 256 blocks, never blocks the tick), `DeletionRules`, `void_stone` residue, `WorldBackup` (region zip, 6h debounce, 2 GB cap), full restore path | ✅ |
+| **v0.2b** | Assets | 19 synthesised OGGs (`tools/gen_sounds.py`), 13 textures + 3 entity skins (`tools/gen_textures.py`), models/blockstates/item defs, lang, 6 recipes | ✅ |
+| **v0.3** | Anomalies | 12 procedural builders + `AnomalyManager` (placement, discovery, revoke, `freeze()`), error codes `ERR_404_A..X` | ✅ |
+| **v0.4** | Entity | `Error422Entity` (mode state machine, stare rule at P4, `vanish()` loot), custom 128x128 model, 3 textures, renderer with jitter + stare wobble | ✅ |
+| **v0.5** | Endings | `EndingManager` (SALVAGE / DELETE / 0x00), anchor ritual (8 fragments + right click), non-destructive archive, `restore` hardening, 7 advancements | ✅ |
+| **v0.6** | Polish | HUD glitch layer (scanlines, drifting ERR lines, phase flash, static, vignette), fog + void-horizon mixin, ambience cross-fade, photosensitivity + HUD sync flags | ✅ |
+| **v1.0** | Release | CurseForge/Modrinth metadata, banner + trailer, optional Mod Menu GUI | ⏳ |
 
-### v0.2 — DELETION (core horror)
-- `DeletionFront`: integrity < 60% par chunk deletion budget (2 chunks/sec), surface-down decay.
-- `DeletionRules`: player radius 8, spawn/bed/chest protection, creative/spectator skip.
-- Client: void sky + fog + grid, deletion ke saath sync (chunk ke andar ground gayab dikhe).
-- Phase transition overlay + sound stinger.
-- **AC:** gameplay me chunks visually khaali hote hain, duniya corrupt nahi hoti, `/error404 stop` ke baad sab normal.
+### CI ke baad kya bacha hai (honest list)
 
-### v0.3 — ANOMALIES (structures)
-- `AnomalyPlacer` + 6 v1 anomalies (null_hut, staircase_to_nowhere, memory_of_home, chunk_seam, the_sinkhole, the_last_chunk).
-- Har anomaly ka apna error code + sound stinger; `revoke` event (structure dissolve).
-- `data_fragment` item anomaly chests me.
-- **AC:** P2 ke baad ek-ek karke structures spawn hote hain, 100+ blocks par tiled nahi dikhte.
-
-### v0.4 — THE ENTITY (Mix AI)
-- `Error422Entity` + model + 3 textures + renderer (missing-texture checker pattern original).
-- Goals: OBSERVE (freeze on look), APPROACH (out of frame), PRESENCE, HUNT.
-- **Mix AI (locked):** P1–P3 me classic stalker (koi look-rule nahi, sirf presence), P4 me look-rule unlock:
-  3s se zyada dekhna = damage event, ignore = safe. (Unlock ke saath ek ek hi chat cue aata hai: `ERR_422: it can see that you can see it.`)
-- Sounds: whisper, dial-up chirp, sub hit, delayed footsteps.
-- **AC:** entity player ko stalk karti hai, dekhne par freeze hoti hai, ignore karne par gayab.
-
-### v0.5 — ENDINGS + POLISH
-- Anchor Core + crafting, 3 endings, `/error404 restore`, world backup.
-- Error Log item, dummy lang (en_us + hi_in flavour), sound master.
-- Balance pass: 30-min demo mode (`/error404 demo`), telemetry-free logging.
-
-### v1.0 — RELEASE
-- CurseForge/Modrinth metadata, jar naming `error404-1.21.11-1.0.0.jar`, icon, banner, trailer script.
-- Optional: Mod Menu integration (config GUI) — needs extra dep, default OFF.
+- **In-game feel pass:** sirf player verify kar sakta hai — sound mix levels, fog aggressiveness,
+  422 ki pacing, anomaly density. Sab `config/error404.json` se tunable hai.
+- **Mod Menu / config GUI** — optional dep, abhi file-based config.
+- **hi_in lang file** — flavour lines, abhi `en_us` complete hai.
+- **Dedicated-server soak test** — code MSPT-flat hai (1 chunk / pass), par 4+ ghante ka run
+  bina test kiye claim nahi kar sakta.
 
 ---
 

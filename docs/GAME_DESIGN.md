@@ -238,9 +238,21 @@ Integrity 0 + player ne 422 ko 3 baar 3 second se zyada dekha → "0x00 ending":
 - `error_log` item ka GUI (v2), v1 me book.
 - Phase transitions par action-bar / title, aur chat me `[Server]` fake lines.
 
-**Commands** (`/error404`)
-`status`, `start`, `stop`, `phase <p0..p4>`, `setintegrity <0-100>`, `anomaly <id>`, `summon422`, `despawn422`,
-`restore` (deleted chunks ko wapas generate), `backup`, `config <key> <value>`, `hud <bool>`, `demo` (30 min ko 3 min me compress).
+**Commands** (`/error404`, operator only — v0.6 implementation)
+
+| Command | Kya karta hai |
+|---|---|
+| `status` | integrity, phase, session seed, fragments, uptime |
+| `start` / `stop` | session control (stop = world chhodna band, integrity wahi rahti hai) |
+| `restore` | integrity 100 + `ended` clear + deleted chunks regenerate + stare count reset |
+| `phase <signal\|desync\|deletion\|cascade\|annexation>` | phase force (integrity bhi set hoti hai) |
+| `setintegrity <0-100>` | direct value |
+| `demo` | 15x pacing — full 100→0 run ~5 min |
+| `summon` | 422 ko 6 block aage spawn |
+| `anomaly <ERR_404_A..X>` | ek structure abhi banao |
+| `ending <salvage\|delete\|null>` | ending trigger (preview/test) |
+| `backup` | world zip abhi likho |
+| `reload` / `config save` | config round-trip |
 
 ---
 
