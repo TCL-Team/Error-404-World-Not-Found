@@ -8,11 +8,13 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 
+import dev.error404.Error404;
 import dev.error404.Error404Config;
 import dev.error404.ModBlocks;
 import dev.error404.ModSounds;
@@ -76,7 +78,71 @@ public final class DeletionFront {
 		}
 
 		ServerPlayer anchorPlayer = level.players().get(server.overworld().random.nextInt(level.players().size()));
-		deleteOneChunk(level, state, anchorPlayer);
+
+		// Whole-chunk collapse in view is the default experience now; the old per-block
+		// peeling stays available for very slow configs (maxChunksPerSecond <= 1).
+		if (cfg.maxChunksPerSecond >= 2) {
+			collapseVisibleChunk(level, state, anchorPlayer);
+		} else {
+			deleteOneChunk(level, state, anchorPlayer);
+		}
+	}
+
+	/**
+	 * The version of this that players actually notice.
+	 *
+	 * <p>Picks a chunk that is <b>inside the player's view cone</b>, 4-9 chunks out, and
+	 * collapses it in one pass. Someone watching the horizon sees a chunk-sized hole appear
+	 * with particles, not "some blocks turned to air behind a hill". If no chunk in view is
+	 * available (looking straight up, indoors, underground) it falls back to the nearest ring
+	 * so the front never stalls.</p>
+	 */
+	private static void collapseVisibleChunk(ServerLevel level, IntegrityState state, ServerPlayer player) {
+		Vec3 look = player.getViewVector(1.0f);
+		java.util.List<net.minecraft.world.level.ChunkPos> visible = new java.util.ArrayList<>();
+		java.util.List<net.minecraft.world.level.ChunkPos> ring = new java.util.ArrayList<>();
+		int maxRadius = Math.min(9, Math.max(4, state.frontRadius() + 2));
+
+		for (net.minecraft.world.level.ChunkPos pos : ChunkCollapse.candidates(level, player, 3, maxRadius)) {
+			ring.add(pos);
+
+			double dx = (pos.x << 4) + 8 - player.getX();
+			double dz = (pos.z << 4) + 8 - player.getZ();
+			double distance = Math.sqrt(dx * dx + dz * dz);
+
+			if (distance < 1.0) {
+				continue;
+			}
+
+			// dot > 0.35 is roughly the middle third of the screen
+			if ((look.x * dx + look.z * dz) / distance > 0.35) {
+				visible.add(pos);
+			}
+		}
+
+		net.minecraft.world.level.ChunkPos target = null;
+
+		if (!visible.isEmpty()) {
+			target = visible.get(level.random.nextInt(visible.size()));
+		} else if (!ring.isEmpty()) {
+			target = ring.get(level.random.nextInt(ring.size()));
+		}
+
+		if (target == null) {
+			return;
+		}
+
+		int removed = ChunkCollapse.collapse(level, target.x, target.z, true);
+
+		if (removed > 0) {
+			state.drain(1);
+
+			if (level.random.nextInt(6) == 0) {
+				state.setFrontRadius(state.frontRadius() + 1);
+			}
+
+			Error404.LOGGER.info("[error404] collapsed chunk [{}, {}] in view ({} blocks removed)", target.x, target.z, removed);
+		}
 	}
 
 	private static void deleteOneChunk(ServerLevel level, IntegrityState state, ServerPlayer player) {
