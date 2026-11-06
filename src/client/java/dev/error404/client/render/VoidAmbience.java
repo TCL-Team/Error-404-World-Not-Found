@@ -23,6 +23,7 @@ import dev.error404.client.ClientState;
 public final class VoidAmbience {
 	private static int ambienceTimer = 0;
 	private static boolean deletedAmbience = false;
+	private static boolean ambiencePlaying = false;
 
 	private VoidAmbience() {
 	}
@@ -32,6 +33,7 @@ public final class VoidAmbience {
 		ClientWorldEvents.AFTER_CLIENT_WORLD_CHANGE.register((client, level) -> {
 			ambienceTimer = 0;
 			deletedAmbience = false;
+			ambiencePlaying = false;
 		});
 	}
 
@@ -46,13 +48,16 @@ public final class VoidAmbience {
 		int phase = ClientState.phase();
 		float intensity = Mth.clamp(phase / 4.0f, 0.0f, 1.0f);
 
-		// Ambient bed: one looping music-free ambience, swapped between two moods.
-		if (ambienceTimer-- <= 0) {
+		// Ambient bed: a looping, music-free ambience that follows the phase. Phase 1 gets a
+		// heartbeat instead - the world is still quiet, something in it is not.
+		if (ambienceTimer-- <= 0 || !ambiencePlaying) {
 			ambienceTimer = 20 * 24;
 			boolean shouldBeDeleted = phase >= 2;
 
-			if (shouldBeDeleted != deletedAmbience) {
+			if (!ambiencePlaying || shouldBeDeleted != deletedAmbience) {
 				deletedAmbience = shouldBeDeleted;
+				ambiencePlaying = true;
+
 				// stop() takes the *sound event id*, not the sound-sheet path.
 				client.getSoundManager().stop(
 						(deletedAmbience ? ModSounds.AMBIENCE_CALM : ModSounds.AMBIENCE_DELETED).location(),
@@ -60,6 +65,16 @@ public final class VoidAmbience {
 				client.getSoundManager().play(net.minecraft.client.resources.sounds.SimpleSoundInstance.forLocalAmbience(
 						deletedAmbience ? ModSounds.AMBIENCE_DELETED : ModSounds.AMBIENCE_CALM, 1.0f, 0.55f));
 			}
+		}
+
+		// position-dependent dread: heartbeat runs while 422 is close, footsteps answer at night
+		if (phase >= 1 && level.getGameTime() % 40 == 0 && ClientState.integrity() < 90) {
+			playerHeartbeat(client, phase);
+		}
+
+		if (phase >= 2 && level.getGameTime() % 1200 == 0) {
+			client.level.playLocalSound(client.player.getX(), client.player.getY(), client.player.getZ(),
+					ModSounds.ERROR_TONE, SoundSource.AMBIENT, 0.25f, 0.45f, false);
 		}
 
 		if (phase >= 4 && client.level.getGameTime() % 260 == 0) {
@@ -74,6 +89,46 @@ public final class VoidAmbience {
 						ModSounds.FOOTSTEP_ECHO, SoundSource.PLAYERS, 0.5f, 0.9f, false);
 			}
 		}
+
+		if (phase >= 2 && client.level.getGameTime() % 600 == 0 && !isDay(level)) {
+			client.level.playLocalSound(client.player.getX(), client.player.getY(), client.player.getZ(),
+					ModSounds.WHISPER, SoundSource.AMBIENT, 0.3f, 0.75f, false);
+		}
+	}
+
+	/** Daytime check without a dimension helper: 0-11999 is day in the overworld cycle. */
+	private static boolean isDay(ClientLevel level) {
+		long timeOfDay = level.getDayTime() % 24000L;
+		return timeOfDay < 12000L;
+	}
+
+	/**
+	 * Heartbeat that gets faster the closer 422 is. Pure client-side: it only reacts to the
+	 * entity the server already synced, so there is nothing to exploit.
+	 */
+	private static void playerHeartbeat(Minecraft client, int phase) {
+		if (client.player == null || client.level == null) {
+			return;
+		}
+
+		double nearest = 999.0;
+
+		for (net.minecraft.world.entity.Entity entity : client.level.entitiesForRendering()) {
+			if (entity instanceof dev.error404.entity.Error422Entity) {
+				nearest = Math.min(nearest, entity.distanceTo(client.player));
+			}
+		}
+
+		if (nearest > 40.0) {
+			return;
+		}
+
+		float proximity = (float) (1.0 - Math.min(1.0, nearest / 40.0));
+		float volume = 0.15f + proximity * 0.55f;
+		float pitch = 0.7f + proximity * 0.5f + (phase >= 4 ? 0.15f : 0.0f);
+
+		client.level.playLocalSound(client.player.getX(), client.player.getY(), client.player.getZ(),
+				ModSounds.HEARTBEAT, SoundSource.AMBIENT, volume, pitch, false);
 	}
 
 	/** Fog colour interpolation target for the sky renderer (0 = normal, 1 = void). */
