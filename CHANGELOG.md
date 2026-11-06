@@ -44,6 +44,8 @@ Sab notable changes. Format [Keep a Changelog](https://keepachangelog.com/), ver
 
 ### Changed
 
+- Contact damage is capped at one hit per second; a full-health player survives ~3.5 s of contact
+  instead of dying on the first tick.
 - Anchor ritual commits fragments straight from the inventory (no 8 separate clicks).
 - `mod_version` 0.6.0 → 0.7.0.
 
