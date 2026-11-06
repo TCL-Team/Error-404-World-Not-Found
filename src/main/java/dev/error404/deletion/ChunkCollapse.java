@@ -74,7 +74,7 @@ public final class ChunkCollapse {
 						continue;
 					}
 
-					DeletionJournal.record(chunkX, chunkZ, cursor, state);
+					DeletionJournal.record(level.dimension(), chunkX, chunkZ, cursor, state);
 					level.setBlock(cursor, Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS);
 					removed++;
 				}

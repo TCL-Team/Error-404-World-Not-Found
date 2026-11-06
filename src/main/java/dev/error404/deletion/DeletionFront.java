@@ -300,7 +300,7 @@ public final class DeletionFront {
 				}
 
 				// Remember it before it is gone, so /error404 restore can really put it back.
-				DeletionJournal.record(chunkX, chunkZ, cursor, state2);
+				DeletionJournal.record(level.dimension(), chunkX, chunkZ, cursor, state2);
 
 				if (removed == 0 && random.nextBoolean()) {
 					// first block of a chunk announces itself
@@ -357,22 +357,35 @@ public final class DeletionFront {
 
 		for (java.util.Map.Entry<Long, java.util.Deque<DeletionJournal.Entry>> chunk : journal.entrySet()) {
 			long key = chunk.getKey();
-			int x = (int) (key >> 32);
-			int z = (int) key;
+			int x = DeletionJournal.chunkX(key);
+			int z = DeletionJournal.chunkZ(key);
+
+			// the journal keys carry a dimension hash now; restore into the dimension that lost
+			// the blocks, not into the overworld. Before this, a Nether cut was replayed into
+			// the overworld chunk with the same coordinates.
+			ServerLevel target = level;
+
+			for (ServerLevel candidate : server.getAllLevels()) {
+				if ((candidate.dimension().location().hashCode() & 0xFFFFFF) == DeletionJournal.dimensionHash(key)) {
+					target = candidate;
+					break;
+				}
+			}
 
 			// Only touch chunks the server already has: never force generation from a command.
-			if (!level.getChunkSource().hasChunk(x, z)) {
+			if (!target.getChunkSource().hasChunk(x, z)) {
 				continue;
 			}
 
 			for (DeletionJournal.Entry entry : chunk.getValue()) {
 				BlockPos pos = entry.resolve(x, z);
-				level.setBlock(pos, entry.state(), Block.UPDATE_CLIENTS);
+				target.setBlock(pos, entry.state(), Block.UPDATE_CLIENTS);
 				restored++;
 			}
 
-			level.sendParticles(ParticleTypes.END_ROD, (x << 4) + 8, level.getSeaLevel() + 2, (z << 4) + 8,
-					24, 4.0, 2.0, 4.0, 0.02);
+			target.sendParticles(ParticleTypes.END_ROD, (x << 4) + 8,
+					target.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (x << 4) + 8, (z << 4) + 8) + 2,
+					(z << 4) + 8, 24, 4.0, 2.0, 4.0, 0.02);
 		}
 
 		// Anything that was marked deleted but not journaled (safe mode, or evicted from the
@@ -381,8 +394,12 @@ public final class DeletionFront {
 			int x = (int) (key >> 32);
 			int z = (int) key;
 
-			if (level.getChunkSource().hasChunk(x, z)) {
-				level.getChunkSource().getChunk(x, z, net.minecraft.world.level.chunk.status.ChunkStatus.FULL, true);
+			for (ServerLevel candidate : server.getAllLevels()) {
+				if (candidate.getChunkSource().hasChunk(x, z)) {
+					candidate.getChunkSource().getChunk(x, z,
+							net.minecraft.world.level.chunk.status.ChunkStatus.FULL, true);
+					break;
+				}
 			}
 		}
 

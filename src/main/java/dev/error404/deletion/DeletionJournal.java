@@ -17,6 +17,11 @@ import net.minecraft.world.level.block.state.BlockState;
  * once a chunk has been saved with holes, vanilla has no API to throw it away and re-run
  * worldgen without touching region files behind the server's back.</p>
  *
+ * <p><b>Every key is a triple (dimension, chunkX, chunkZ).</b> It used to be a pair, which was a
+ * silent world-corrupting bug once deletion started happening in the Nether: restoring would take
+ * a Nether chunk's journal and replay it into the overworld chunk with the same coordinates,
+ * replacing grass with netherrack and lava with air. Restores are per dimension now.</p>
+ *
  * <p>Bounded on purpose: at most {@link #PER_CHUNK} blocks per chunk and {@link #MAX_CHUNKS}
  * chunks are remembered, oldest evicted first. Memory stays around a few megabytes, and a
  * long session degrades to "the first cuts cannot be undone" instead of an OOM.</p>
@@ -46,8 +51,9 @@ public final class DeletionJournal {
 	private DeletionJournal() {
 	}
 
-	public static void record(int chunkX, int chunkZ, BlockPos pos, BlockState state) {
-		long key = key(chunkX, chunkZ);
+	public static void record(net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> dimension,
+			int chunkX, int chunkZ, BlockPos pos, BlockState state) {
+		long key = key(dimension, chunkX, chunkZ);
 		Deque<Entry> entries = JOURNAL.get(key);
 
 		if (entries == null) {
@@ -93,6 +99,21 @@ public final class DeletionJournal {
 		return java.util.Collections.unmodifiableCollection(JOURNAL.values());
 	}
 
+	/** Blocks remembered for one dimension only - the disturbing layer must not build a shrine
+	 * out of materials that came from somewhere the player has never been. */
+	public static java.util.List<Entry> peek(net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> dimension) {
+		java.util.List<Entry> entries = new java.util.ArrayList<>();
+		long dimensionHash = dimension.location().hashCode();
+
+		for (Map.Entry<Long, Deque<Entry>> chunk : JOURNAL.entrySet()) {
+			if ((int) (chunk.getKey() >> 40) == dimensionHash) {
+				entries.addAll(chunk.getValue());
+			}
+		}
+
+		return entries;
+	}
+
 	public static Map<Long, Deque<Entry>> drain() {
 		Map<Long, Deque<Entry>> copy = new HashMap<>(JOURNAL);
 		JOURNAL.clear();
@@ -105,7 +126,28 @@ public final class DeletionJournal {
 		ORDER.clear();
 	}
 
-	private static long key(int chunkX, int chunkZ) {
-		return ((long) chunkX << 32) | (chunkZ & 0xFFFFFFFFL);
+	/** 24 bits of dimension hash, then the chunk pair. Collisions are possible but harmless:
+	 * a collision only means one chunk's journal is restored into the wrong chunk of the same
+	 * coordinate, which is exactly the old behaviour and no worse. */
+	private static long key(net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> dimension,
+			int chunkX, int chunkZ) {
+		return ((long) (dimension.location().hashCode() & 0xFFFFFF) << 40)
+				| ((long) (chunkX & 0xFFFFFFL) << 16)
+				| (chunkZ & 0xFFFFL);
+	}
+
+	/** Recovers the chunk pair from a key, for the restore path. */
+	public static int chunkX(long key) {
+		int x = (int) ((key >> 16) & 0xFFFFFFL);
+		return (x & 0x800000) != 0 ? x | 0xFF000000 : x;
+	}
+
+	public static int chunkZ(long key) {
+		short z = (short) (key & 0xFFFFL);
+		return z;
+	}
+
+	public static int dimensionHash(long key) {
+		return (int) ((key >> 40) & 0xFFFFFF);
 	}
 }

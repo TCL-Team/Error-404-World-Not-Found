@@ -281,17 +281,19 @@ public final class Disturbing {
 	private static List<BlockState> state(ServerLevel level) {
 		List<BlockState> types = new ArrayList<>();
 
-		for (var entry : dev.error404.deletion.DeletionJournal.peek()) {
-			for (var block : entry) {
-				BlockState s = block.state();
+		// only materials taken from this dimension, and never the mod's own void stone -
+		// a shrine made of void stone is just more deletion, not a memory of what was there
+		for (var block : dev.error404.deletion.DeletionJournal.peek(level.dimension())) {
+			BlockState s = block.state();
 
-				if (s.isAir() || !types.contains(s)) {
-					types.add(s);
-				}
+			if (s.isAir() || s.is(dev.error404.ModBlocks.VOID_STONE) || !types.contains(s)) {
+				continue;
+			}
 
-				if (types.size() >= 12) {
-					return types;
-				}
+			types.add(s);
+
+			if (types.size() >= 12) {
+				return types;
 			}
 		}
 

@@ -630,7 +630,7 @@ public class Error422Entity extends Mob {
 				BlockState bedState = serverLevel.getBlockState(bed);
 
 				if (bedState.is(net.minecraft.tags.BlockTags.BEDS)) {
-					dev.error404.deletion.DeletionJournal.record(bed.getX() >> 4, bed.getZ() >> 4, bed, bedState);
+					dev.error404.deletion.DeletionJournal.record(serverLevel.dimension(), bed.getX() >> 4, bed.getZ() >> 4, bed, bedState);
 					serverLevel.destroyBlock(bed, false, this, 512);
 				}
 			}
@@ -692,7 +692,7 @@ public class Error422Entity extends Mob {
 				}
 
 				// Every break is journaled, so /error404 restore still undoes it.
-				dev.error404.deletion.DeletionJournal.record(pos.getX() >> 4, pos.getZ() >> 4, pos, state);
+				dev.error404.deletion.DeletionJournal.record(serverLevel.dimension(), pos.getX() >> 4, pos.getZ() >> 4, pos, state);
 				serverLevel.destroyBlock(pos, false, this, 512);
 				serverLevel.playSound(null, pos, ModSounds.STATIC_BURST, SoundSource.HOSTILE, 0.9f, 0.7f);
 			}

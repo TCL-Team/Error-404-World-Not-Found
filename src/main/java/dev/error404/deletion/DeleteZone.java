@@ -262,7 +262,7 @@ public final class DeleteZone {
 					continue;
 				}
 
-				DeletionJournal.record(x >> 4, z >> 4, cursor, state);
+				DeletionJournal.record(level.dimension(), x >> 4, z >> 4, cursor, state);
 				level.setBlock(cursor, Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS);
 				removed++;
 				budget--;

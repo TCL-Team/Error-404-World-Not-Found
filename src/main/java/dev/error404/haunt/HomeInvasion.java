@@ -172,7 +172,7 @@ public final class HomeInvasion {
 				continue;
 			}
 
-			dev.error404.deletion.DeletionJournal.record(pos.getX() >> 4, pos.getZ() >> 4, pos, state);
+			dev.error404.deletion.DeletionJournal.record(level.dimension(), pos.getX() >> 4, pos.getZ() >> 4, pos, state);
 			level.removeBlock(pos, false);
 			level.playSound(null, pos, ModSounds.STATIC_BURST, SoundSource.BLOCKS, 0.5f, 1.5f);
 			removed++;
