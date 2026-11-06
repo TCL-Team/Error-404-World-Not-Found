@@ -31,6 +31,8 @@ public final class TitleScreenGlitch {
 	private TitleScreenGlitch() {
 	}
 
+	private static long openedAt;
+
 	/** Painted over vanilla's splash text, which the pack cannot reach. */
 	private static Component splashLine = Component.literal("ERR_404: world not found");
 
@@ -64,6 +66,10 @@ public final class TitleScreenGlitch {
 			// a stack trace printed where the joke should be, refreshed for every new screen
 			splashLine = Component.literal(SPLASHES[(int) (Math.random() * SPLASHES.length)])
 					.withStyle(ChatFormatting.RED);
+
+			// the drone itself is played by Error404Client.TitleSound; this only needs to
+			// know when the screen appeared, so the static burst lands after the fade-in
+			openedAt = System.currentTimeMillis();
 
 			ScreenEvents.afterRender(titleScreen).register((rendered, graphics, mouseX, mouseY, tickDelta) ->
 					render(graphics, rendered.width, rendered.height));
@@ -110,6 +116,19 @@ public final class TitleScreenGlitch {
 				int x0 = random.nextInt(width);
 				int w = 20 + random.nextInt(180);
 				graphics.fill(x0, y, Math.min(width, x0 + w), y + 1 + random.nextInt(3), 0x18FFFFFF);
+			}
+		}
+
+		// ten seconds in, the drone is interrupted once by a burst of static; the moment is
+		// long enough after load that it lands as a scare and not as a loading glitch
+		long openMs = System.currentTimeMillis() - openedAt;
+
+		if (openMs > 9000 && openMs % 14000 < 350 && !ClientState.photosensitive()) {
+			for (int i = 0; i < 140; i++) {
+				int y = random.nextInt(height);
+				int x0 = random.nextInt(width);
+				graphics.fill(x0, y, Math.min(width, x0 + 40 + random.nextInt(260)),
+						y + 1 + random.nextInt(4), 0x26FFFFFF);
 			}
 		}
 
