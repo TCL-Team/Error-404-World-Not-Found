@@ -122,6 +122,9 @@ public final class Chaos {
 			case "mobs" -> eventMobs(level, player);
 			case "teleport" -> eventTeleport(level, player);
 			case "message" -> eventMessage(server, level, player, state);
+			case "night" -> eventNight(level, player);
+			case "hunger" -> eventHunger(level, player);
+			case "silence" -> eventSilence(level, player);
 			default -> {
 				return null;
 			}
@@ -133,28 +136,34 @@ public final class Chaos {
 
 	public static java.util.List<String> events() {
 		return java.util.List.of("chunk", "inventory", "death", "doors", "sound", "lightning", "mobs",
-				"teleport", "message");
+				"teleport", "message", "night", "hunger", "silence");
 	}
 
 	private static void fire(MinecraftServer server, ServerLevel level, ServerPlayer player, IntegrityState state) {
 		int roll = level.random.nextInt(100);
 
-		if (roll < 22) {
+		if (roll < 20) {
 			eventChunkGone(level, player, state);
-		} else if (roll < 34) {
+		} else if (roll < 31) {
 			eventInventoryScramble(level, player);
-		} else if (roll < 46) {
+		} else if (roll < 42) {
 			eventSuddenDeath(level, player, state);
-		} else if (roll < 56) {
+		} else if (roll < 51) {
 			eventDoors(level, player);
-		} else if (roll < 66) {
+		} else if (roll < 60) {
 			eventSound(level, player);
-		} else if (roll < 76) {
+		} else if (roll < 69) {
 			eventLightning(level, player);
-		} else if (roll < 86) {
+		} else if (roll < 78) {
 			eventMobs(level, player);
-		} else if (roll < 94) {
+		} else if (roll < 85) {
 			eventTeleport(level, player);
+		} else if (roll < 90) {
+			eventNight(level, player);
+		} else if (roll < 95) {
+			eventHunger(level, player);
+		} else if (roll < 98) {
+			eventSilence(level, player);
 		} else {
 			eventMessage(server, level, player, state);
 		}
@@ -316,6 +325,85 @@ public final class Chaos {
 		level.playSound(null, back.x, back.y, back.z, sound, SoundSource.AMBIENT, 1.5f,
 				0.5f + level.random.nextFloat() * 0.3f);
 		LOG.add("behind_you");
+	}
+
+	/**
+	 * Midday becomes midnight in one tick.
+	 *
+	 * <p>Not a gradual dusk - the light just goes, the sky snaps to the night gradient, and
+	 * whatever was standing twenty blocks away is now only visible when it moves. The client
+	 * has to be told explicitly: the level's day time is authoritative on the server, but a
+	 * client that is not sent {@code ClientboundSetTimePacket} keeps rendering the old sky
+	 * until the next natural transition, which is exactly the "the sun did not move, the world
+	 * did" feeling this is after.</p>
+	 */
+	private static void eventNight(ServerLevel level, ServerPlayer player) {
+		long current = level.getDayTime();
+		long today = current - Math.floorMod(current, 24000L);
+
+		// 18000 is midnight; if it is already night, jump to the *next* night instead
+		long midnight = today + 18000L;
+
+		while (midnight <= current) {
+			midnight += 24000L;
+		}
+
+		level.setDayTime(midnight);
+		level.getServer().getPlayerList().broadcastAll(
+				new net.minecraft.network.protocol.game.ClientboundSetTimePacket(
+						level.getGameTime(), midnight, true));
+
+		level.playSound(null, player.blockPosition(), ModSounds.PHASE_SHIFT, SoundSource.AMBIENT, 1.2f, 0.4f);
+		player.displayClientMessage(net.minecraft.network.chat.Component
+				.literal("ERR_404: chunk lighting recalculated").withStyle(net.minecraft.ChatFormatting.DARK_GRAY), true);
+		LOG.add("night");
+	}
+
+	/**
+	 * Hunger, instantly.
+	 *
+	 * <p>Nothing on screen explains it, and the player has no way to tell whether they simply
+	 * forgot to eat. Applied as raw exhaustion rather than a hunger effect so it cannot be
+	 * cancelled, and capped so it never takes the last two points of food: starving to death
+	 * is not scary, it is tedious.</p>
+	 */
+	private static void eventHunger(ServerLevel level, ServerPlayer player) {
+		var food = player.getFoodData();
+		float target = Math.max(2.0f, food.getFoodLevel() - (4 + level.random.nextInt(6)));
+
+		if (food.getFoodLevel() > target) {
+			food.setFoodLevel((int) target);
+		}
+
+		food.setSaturation(0.0f);
+		player.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+				net.minecraft.world.effect.MobEffects.HUNGER, 20 * 20, 2));
+
+		level.playSound(null, player.blockPosition(), ModSounds.SUB_HIT, SoundSource.PLAYERS, 0.9f, 0.7f);
+		LOG.add("hunger");
+	}
+
+	/**
+	 * Silence.
+	 *
+	 * <p>Every sound within 24 blocks stops - footsteps, mobs, the ambience bed, the drone. It
+	 * lasts eight seconds, and it exists because the loudest thing a horror mod can do is
+	 * stop making noise: the player fills the gap themselves.</p>
+	 */
+	private static void eventSilence(ServerLevel level, ServerPlayer player) {
+		for (var other : level.players()) {
+			if (other.distanceTo(player) > 24) {
+				continue;
+			}
+
+			// a client-side packet, so it cannot be cancelled by a server-side effect
+			other.connection.send(new net.minecraft.network.protocol.game.ClientboundStopSoundPacket(null, null));
+
+			other.displayClientMessage(net.minecraft.network.chat.Component
+					.literal("\\").withStyle(net.minecraft.ChatFormatting.DARK_GRAY), true);
+		}
+
+		LOG.add("silence");
 	}
 
 	/** A bolt out of a clear sky, on the block the player is about to walk onto. */

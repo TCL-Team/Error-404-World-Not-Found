@@ -130,7 +130,8 @@ public final class Error404Commands {
 		reply(source, "/error404 summon - spawn 422 next to you", ChatFormatting.GRAY);
 		reply(source, "/error404 difficulty <chill|standard|nightmare> - how lethal 422 is", ChatFormatting.GRAY);
 		reply(source, "/error404 chaos on|off - random events (chunk loss, sudden death, ...)", ChatFormatting.GRAY);
-		reply(source, "/error404 chaos fire <event> - trigger one now", ChatFormatting.GRAY);
+		reply(source, "/error404 chaos fire <event> - trigger one now: " + String.join(" | ",
+				dev.error404.haunt.Chaos.events()), ChatFormatting.GRAY);
 		reply(source, "/error404 anomaly <code> - force one structure", ChatFormatting.GRAY);
 		reply(source, "/error404 backup - write a world zip right now", ChatFormatting.GRAY);
 		reply(source, "/error404 reload - reload config/error404.json", ChatFormatting.GRAY);
@@ -282,8 +283,23 @@ public final class Error404Commands {
 			return 0;
 		}
 
-		dev.error404.entity.ModEntities.ERROR_422.spawn(level, target,
+		var spawned = dev.error404.entity.ModEntities.ERROR_422.spawn(level, target,
 				net.minecraft.world.entity.EntitySpawnReason.COMMAND);
+
+		// Spawning it in the player's field of view would waste the one thing that makes 422
+		// work: it is always first seen in the corner of the screen or behind you. The command
+		// respects that - it puts it where a player is not looking.
+		if (spawned instanceof dev.error404.entity.Error422Entity entity) {
+			entity.setMode(dev.error404.entity.Error422Entity.Mode.OBSERVE);
+			entity.setTextureVariant(level.random.nextInt(3));
+
+			if (player.distanceTo(entity) < 32) {
+				entity.teleportTo(player.getX() - player.getLookAngle().x * 24,
+						player.getY(),
+						player.getZ() - player.getLookAngle().z * 24);
+			}
+		}
+
 		reply(context.getSource(), "422 spawned at " + target.toShortString(), ChatFormatting.DARK_RED);
 		return 1;
 	}

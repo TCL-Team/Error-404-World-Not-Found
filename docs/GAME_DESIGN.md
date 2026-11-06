@@ -337,15 +337,18 @@ a broken mod? Answer: a **named, bounded pool** of events with a visible cooldow
 
 | Event | Weight | Destructive | Recoverable |
 |---|---|---|---|
-| chunk gone | 22% | yes (1 chunk) | yes (journal) |
-| inventory scramble | 12% | no | yes (it is shuffled, not deleted) |
-| sudden death | 12% | kills at low health | no, but mercy rules apply |
-| doors open | 10% | no | yes |
-| sound behind you | 10% | no | n/a |
-| lightning ahead | 10% | no (visual only) | n/a |
-| mobs behind you | 10% | yes (fights) | yes (kill them) |
-| displacement | 8% | no | yes (walk back) |
-| fake message | 6% | no | n/a |
+| chunk gone | 20% | yes (1 chunk) | yes (journal) |
+| inventory scramble | 11% | no | yes (it is shuffled, not deleted) |
+| sudden death | 11% | kills at low health | no, but mercy rules apply |
+| doors open | 9% | no | yes |
+| sound behind you | 9% | no | n/a |
+| lightning ahead | 9% | no (visual only) | n/a |
+| mobs behind you | 9% | yes (fights) | yes (kill them) |
+| displacement | 7% | no | yes (walk back) |
+| fake message | 3% | no | n/a |
+| night | 5% | no | yes (sleep, or wait) |
+| hunger | 5% | no | yes (eat) |
+| silence | 3% | no | n/a |
 
 ### Visible collapse + personal collapse (v0.8.1)
 

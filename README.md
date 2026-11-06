@@ -53,6 +53,9 @@ DELETION phase ke baad, har 1–3 minute me duniya kuch aisa karti hai jo nahi h
 | `mobs` | tumhare peeche zombie/skeleton/creeper/enderman spawn, pehle se tumhe target karke |
 | `teleport` | 8–18 block door phenk diya (deewar ya lava me nahi) |
 | `message` | tumhare hi naam se ek fake diagnostic chat line |
+| `night` | dopahar me hi raat — sun hilta nahi, duniya hilti hai |
+| `hunger` | bhookh turant gir jaati hai, koi reason nahi (aakhri 2 point nahi jaate) |
+| `silence` | 24 block ke andar **saari awaazein** 8 second ke liye band |
 
 Anchor zone me chaos **kabhi** nahi hota. `/error404 chaos off` se poora band, `chaos fire <event>` se ek test.
 
