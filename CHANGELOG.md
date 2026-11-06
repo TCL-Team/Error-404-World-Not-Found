@@ -23,6 +23,9 @@ Sab notable changes. Format [Keep a Changelog](https://keepachangelog.com/), ver
 - **Difficulty presets** — `chill` / `standard` / `nightmare`, `/error404 difficulty` se live switch.
 - **Proximity dread overlay** — vignette, red/cyan seam, screen tearing, hotbar dropout (photosensitivity-safe).
 - **Emissive eye layers** — cold eyes always, red eyes only while the stare is live.
+- **Home invasion** — 100 s tak ek hi jagah camp karne par 422 base ke andar aa jaati hai, 12–18 block
+  peeche, aur ghar ki saari lights ek-ek karke band ho jaati hain. Anchor zone me trigger nahi hota.
+- **Ambience ducking** — uske 18 block ke andar aate hi world ka apna ambient bed band ho jaata hai.
 - **Phantom server haunting** — "left the game" / "joined the game" / chat lines in your own name /
   "removed from the whitelist" / footsteps behind you, all in vanilla server line format.
 - **Custom damage types** — `error404:unprocessable`, `error404:world_deleted` with own death messages.

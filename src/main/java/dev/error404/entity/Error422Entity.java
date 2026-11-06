@@ -61,6 +61,8 @@ public class Error422Entity extends Mob {
 	private int stareTicks;
 	private int abilityCooldown;
 	private int despawnTimer = 20 * 90;
+	/** Ticks until it may hit on contact again. */
+	private int contactCooldown;
 	/** How many player deaths this session has fed it. */
 	private int feasts;
 	/** Last known "you went there" position, set by items that move the player. */
@@ -142,6 +144,10 @@ public class Error422Entity extends Mob {
 
 		if (abilityCooldown > 0) {
 			abilityCooldown--;
+		}
+
+		if (contactCooldown > 0) {
+			contactCooldown--;
 		}
 
 		if (stalkTarget != null) {
@@ -544,6 +550,14 @@ public class Error422Entity extends Mob {
 		if (!(level() instanceof ServerLevel serverLevel)) {
 			return;
 		}
+
+		// One hit per second, not one per tick: without this it deletes a full-health player
+		// in under a second and there is no game left to play.
+		if (contactCooldown > 0) {
+			return;
+		}
+
+		contactCooldown = 20;
 
 		float contact = dev.error404.Difficulty.current().contactDamage;
 
