@@ -41,5 +41,6 @@
   "advancements.error404.ending_delete.description": "Let the integrity reach zero. There is nothing left to process.",
   "advancements.error404.ending_null.title": "0x00",
   "advancements.error404.ending_null.description": "Look at it three times. It remembers.",
-  "subtitles.error404.static_burst": "static"
+  "subtitles.error404.static_burst": "static",
+  "item.error404.error_422_spawn_egg": "422 Spawn Egg (staging only)"
 }

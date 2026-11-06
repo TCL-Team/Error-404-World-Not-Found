@@ -129,6 +129,22 @@ def tex_null_torch():
     return img
 
 
+def tex_spawn_egg():
+    """Spawn egg: black shell, one magenta seam and a red eye - recognisably 422."""
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    d.ellipse([4, 1, 11, 14], fill=(18, 18, 22, 255), outline=(70, 68, 78, 255))
+
+    for i in range(5):
+        d.point((6 + i, 5 + i // 2), fill=(228, 0, 232, 255))
+
+    d.point((7, 9), fill=(190, 24, 34, 255))
+    d.point((9, 9), fill=(190, 24, 34, 255))
+    d.point((4, 6), fill=(70, 68, 78, 255))
+    d.point((11, 6), fill=(70, 68, 78, 255))
+    return img
+
+
 def tex_void_pearl():
     img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
@@ -448,6 +464,7 @@ def main():
     save(tex_error_log(), "textures", "item", "error_log.png")
     save(tex_null_torch(), "textures", "item", "null_torch.png")
     save(tex_void_pearl(), "textures", "item", "void_pearl.png")
+    save(tex_spawn_egg(), "textures", "item", "error_422_spawn_egg.png")
 
     # ---- block textures
     save(tex_missing_texture(), "textures", "block", "missing_texture.png")
@@ -462,7 +479,7 @@ def main():
     save(tex_error_422_face(), "textures", "entity", "error_422_face.png")
 
     # ---- item models + 1.21.11 item definitions
-    for name in ("data_fragment", "corrupt_shard", "error_log", "null_torch", "void_pearl"):
+    for name in ("data_fragment", "corrupt_shard", "error_log", "null_torch", "void_pearl", "error_422_spawn_egg"):
         dump_json(item_model(name), "models", "item", f"{name}.json")
         dump_json(item_definition(name), "items", f"{name}.json")
 

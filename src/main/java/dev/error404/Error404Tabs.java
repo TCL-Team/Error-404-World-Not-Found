@@ -9,6 +9,8 @@ import net.minecraft.world.item.ItemStack;
 
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 
+import dev.error404.entity.ModEntities;
+
 /** One creative tab for everything the mod adds. */
 public final class Error404Tabs {
 	private Error404Tabs() {
@@ -30,6 +32,7 @@ public final class Error404Tabs {
 					output.accept(ModBlocks.MISSING_TEXTURE);
 					output.accept(ModBlocks.VOID_STONE);
 					output.accept(ModBlocks.NULL_TORCH);
+					output.accept(ModEntities.SPAWN_EGG_422);
 				})
 				.build());
 	}
