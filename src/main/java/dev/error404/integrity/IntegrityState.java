@@ -221,10 +221,8 @@ public class IntegrityState extends SavedData {
 
 		integrity = clamped;
 		setDirty();
-
-		if (integrity <= MIN_INTEGRITY && !ended) {
-			end(2);
-		}
+		// Deliberately does NOT end the world here: the director owns that decision so the
+		// right ending (including the secret 0x00) can be chosen and its finale played.
 	}
 
 	public void drain(int points) {

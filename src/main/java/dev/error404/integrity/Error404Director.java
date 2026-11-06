@@ -65,6 +65,13 @@ public final class Error404Director {
 			return;
 		}
 
+		// Check for zero before doing any work: integrity can also reach zero from the
+		// exploration cost or from 422's presence, not just from the passive drain.
+		if (state.integrity() <= 0) {
+			dev.error404.ending.EndingManager.triggerDelete(server);
+			return;
+		}
+
 		state.tickAge();
 
 		long ticksPerPoint = Math.max(1L, (20L * cfg.secondsPerIntegrityPoint) / demoMultiplier);
