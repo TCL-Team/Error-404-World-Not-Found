@@ -179,15 +179,18 @@ public final class Chaos {
 			return;
 		}
 
+		// 1024 blocks is exactly what DeletionJournal remembers per chunk: the hole is always
+		// fully recoverable, and it is capped so a single event cannot spike the server tick.
 		int removed = 0;
 		BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
 		int minY = level.getMinY() + 1;
+		int budget = DeletionJournal.PER_CHUNK;
 
-		for (int x = cx << 4; x < (cx << 4) + 16; x++) {
-			for (int z = cz << 4; z < (cz << 4) + 16; z++) {
+		for (int x = cx << 4; x < (cx << 4) + 16 && budget > 0; x++) {
+			for (int z = cz << 4; z < (cz << 4) + 16 && budget > 0; z++) {
 				int top = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
 
-				for (int y = top; y >= minY; y--) {
+				for (int y = top; y >= minY && budget > 0; y--) {
 					cursor.set(x, y, z);
 					BlockState blockState = level.getBlockState(cursor);
 
@@ -202,6 +205,7 @@ public final class Chaos {
 					DeletionJournal.record(cx, cz, cursor, blockState);
 					level.setBlock(cursor, Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS);
 					removed++;
+					budget--;
 				}
 			}
 		}
@@ -341,8 +345,8 @@ public final class Chaos {
 		EntityType<?> type = switch (level.random.nextInt(4)) {
 			case 0 -> EntityType.ZOMBIE;
 			case 1 -> EntityType.SKELETON;
-			case 2 -> EntityType.ENDERMAN;
-			default -> EntityType.WARDEN;
+			case 2 -> EntityType.CREEPER;
+			default -> EntityType.ENDERMAN;
 		};
 
 		var entity = type.create(level, EntitySpawnReason.EVENT);
