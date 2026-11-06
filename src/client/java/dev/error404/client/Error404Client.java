@@ -28,6 +28,7 @@ public class Error404Client implements ClientModInitializer {
 		HudGlitchRenderer.register();
 		dev.error404.client.render.TitleScreenGlitch.register();
 		VoidAmbience.register();
+		dev.error404.client.config.ConfigCommand.register();
 
 		ClientPlayNetworking.registerGlobalReceiver(StateSyncPayload.ID, (payload, context) ->
 				ClientState.apply(payload.integrity(), payload.phase(), payload.seed(), payload.fragments(), payload.ended(), payload.flags()));
