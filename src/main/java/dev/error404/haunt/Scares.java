@@ -50,6 +50,12 @@ public final class Scares {
 		}
 	}
 
+	/** Drops one player's cooldown entries on disconnect. */
+	public static void forget(java.util.UUID uuid) {
+		LAST_SCARE.remove(uuid);
+		AFTERSHOCK.remove(uuid);
+	}
+
 	public static void reset() {
 		LAST_SCARE.clear();
 		AFTERSHOCK.clear();

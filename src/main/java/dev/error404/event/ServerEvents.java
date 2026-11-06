@@ -62,6 +62,15 @@ public final class ServerEvents {
 
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> onJoin(server, handler.getPlayer()));
 
+		// Disconnect cleanup. Without this the mod kept a habit profile and a path history for
+		// every player who had ever joined, for the lifetime of the server process.
+		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+			var player = handler.getPlayer();
+			dev.error404.haunt.PlayerModel.forget(player.getUUID());
+			dev.error404.haunt.PathMemory.forget(player.getUUID());
+			dev.error404.haunt.Scares.forget(player.getUUID());
+		});
+
 		ServerTickEvents.END_SERVER_TICK.register(ServerEvents::onEndTick);
 
 		UseBlockCallback.EVENT.register((player, level, hand, hitResult) -> {

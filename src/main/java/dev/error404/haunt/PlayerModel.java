@@ -102,4 +102,9 @@ public final class PlayerModel {
 	public static void clear() {
 		HABITS.clear();
 	}
+
+	/** Disconnect cleanup: habits are rebuilt in a couple of minutes and must not leak. */
+	public static void forget(UUID uuid) {
+		HABITS.remove(uuid);
+	}
 }

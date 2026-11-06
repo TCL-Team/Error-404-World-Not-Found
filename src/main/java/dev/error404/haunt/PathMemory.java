@@ -89,7 +89,13 @@ public final class PathMemory {
 		PATHS.clear();
 	}
 
+	/** Forgets one player in one dimension (the key includes the dimension now). */
+	public static void forget(net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> dimension, UUID uuid) {
+		PATHS.remove(dimension.identifier() + "/" + uuid);
+	}
+
+	/** Forgets a player everywhere; called on disconnect so the map cannot grow forever. */
 	public static void forget(UUID uuid) {
-		PATHS.remove(uuid);
+		PATHS.keySet().removeIf(key -> key.endsWith("/" + uuid));
 	}
 }
