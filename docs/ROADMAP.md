@@ -131,16 +131,19 @@ Har milestone ke baad jar GitHub Actions par build hota hai (latest run: green).
 | **v0.4** | Entity | `Error422Entity` (mode state machine, stare rule at P4, `vanish()` loot), custom 128x128 model, 3 textures, renderer with jitter + stare wobble | ✅ |
 | **v0.5** | Endings | `EndingManager` (SALVAGE / DELETE / 0x00), anchor ritual (8 fragments + right click), non-destructive archive, `restore` hardening, 7 advancements | ✅ |
 | **v0.6** | Polish | HUD glitch layer (scanlines, drifting ERR lines, phase flash, static, vignette), fog + void-horizon mixin, ambience cross-fade, photosensitivity + HUD sync flags | ✅ |
-| **v1.0** | Release | CurseForge/Modrinth metadata, banner + trailer, optional Mod Menu GUI | ⏳ |
+| **v0.6.0** | Release | `release.yml` (tag → jar + notes), `CHANGELOG.md`, version bump, install docs, 5 languages | ✅ [v0.6.0](https://github.com/TCL-Team/Error-404-World-Not-Found/releases/tag/v0.6.0) |
+| **v1.0** | Distribution | CurseForge/Modrinth listing, banner + trailer, optional Mod Menu GUI | ⏳ |
 
 ### CI ke baad kya bacha hai (honest list)
 
 - **In-game feel pass:** sirf player verify kar sakta hai — sound mix levels, fog aggressiveness,
   422 ki pacing, anomaly density. Sab `config/error404.json` se tunable hai.
 - **Mod Menu / config GUI** — optional dep, abhi file-based config.
-- **hi_in lang file** — flavour lines, abhi `en_us` complete hai.
 - **Dedicated-server soak test** — code MSPT-flat hai (1 chunk / pass), par 4+ ghante ka run
   bina test kiye claim nahi kar sakta.
+- **CurseForge / Modrinth listing** — jar aur source ready hain, listing metadata baaki hai.
+- **Bonus anomaly (`ERR_404_X`)** — 12 builders shipped; design me 14 the. Jo bache hain unke naam
+  GDD me hain, gameplay unke bina complete hai.
 
 ---
 
