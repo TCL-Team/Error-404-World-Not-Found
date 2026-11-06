@@ -61,6 +61,7 @@ public final class EndingManager {
 		state.end(type.code());
 		AnomalyManager.clear();
 		playFinale(server, type);
+		awardEnding(server, type);
 
 		if (type == EndingType.DELETE) {
 			archiveWorld(server);
@@ -81,6 +82,7 @@ public final class EndingManager {
 		state.end(EndingType.SALVAGE.code());
 		ServerEvents.clearAnomaliesAfterSalvage(server);
 		playFinale(server, EndingType.SALVAGE);
+		awardEnding(server, EndingType.SALVAGE);
 
 		// The one thing that survives: a dormant 422, forty blocks behind the base.
 		ServerLevel level = server.overworld();
@@ -95,6 +97,19 @@ public final class EndingManager {
 		}
 
 		Error404.LOGGER.info("[error404] world salvaged by {}", player == null ? "console" : player.getName().getString());
+	}
+
+	/** Every player present gets the ending advancement, not just whoever was looking. */
+	private static void awardEnding(MinecraftServer server, EndingType type) {
+		String name = switch (type) {
+			case SALVAGE -> dev.error404.Achievements.ENDING_SALVAGE;
+			case DELETE -> dev.error404.Achievements.ENDING_DELETE;
+			case NULL -> dev.error404.Achievements.ENDING_NULL;
+		};
+
+		for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+			dev.error404.Achievements.grant(player, name);
+		}
 	}
 
 	/** A player stared at 422 for the full limit; three of those and the world goes quiet. */
