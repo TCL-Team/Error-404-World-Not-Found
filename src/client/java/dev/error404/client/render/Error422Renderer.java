@@ -22,6 +22,10 @@ public class Error422Renderer extends MobRenderer<Error422Entity, Error422Render
 	public Error422Renderer(EntityRendererProvider.Context context) {
 		super(context, new Error422Model(context.bakeLayer(ModModelLayers.ERROR_422)), 0.0f);
 		this.shadowRadius = 0.0f;
+		this.addLayer(new Error422EyesLayer(this));
+		// The red variant is added permanently; it is fully transparent unless the player is
+		// holding eye contact, so there is nothing to add or remove per frame.
+		this.addLayer(new Error422AngryEyesLayer(this));
 	}
 
 	@Override

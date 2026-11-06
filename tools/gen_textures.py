@@ -422,6 +422,23 @@ def tex_error_422():
     return img
 
 
+def tex_error_422_eyes(color):
+    """Eyes-only sheet: transparent except the two pupils, which is what the emissive layer draws."""
+    img = Image.new("RGBA", SHEET, (0, 0, 0, 0))
+    head = box_rect(HEAD_UV, 8, 8, 8)
+    x0, y0, x1, y1 = head["north"]
+    d = ImageDraw.Draw(img)
+
+    # two vertical slits, offset toward the middle of the face
+    mid = (y0 + y1) // 2
+    d.rectangle([x0 + 2, mid - 2, x0 + 3, mid + 2], fill=color)
+    d.rectangle([x0 + 5, mid - 2, x0 + 6, mid + 2], fill=color)
+    # a faint smear above, like light bleeding out of an empty head
+    d.point((x0 + 2, mid - 3), fill=color[:3] + (90,))
+    d.point((x0 + 6, mid - 3), fill=color[:3] + (90,))
+    return img
+
+
 def tex_error_422_missing():
     """'Failed to load': full missing-texture checker with the alpha keyed out in bands."""
     img = Image.new("RGBA", SHEET, (0, 0, 0, 0))
@@ -499,6 +516,8 @@ def main():
     save(tex_error_422(), "textures", "entity", "error_422.png")
     save(tex_error_422_missing(), "textures", "entity", "error_422_missing.png")
     save(tex_error_422_face(), "textures", "entity", "error_422_face.png")
+    save(tex_error_422_eyes((170, 240, 255, 255)), "textures", "entity", "error_422_eyes.png")
+    save(tex_error_422_eyes((255, 40, 40, 255)), "textures", "entity", "error_422_eyes_angry.png")
 
     # ---- item models + 1.21.11 item definitions
     for name in ("data_fragment", "corrupt_shard", "error_log", "null_torch", "void_pearl", "error_422_spawn_egg"):
