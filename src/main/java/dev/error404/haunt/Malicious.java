@@ -97,12 +97,13 @@ public final class Malicious {
 			return;
 		}
 
-		switch (level.random.nextInt(5)) {
+		switch (level.random.nextInt(6)) {
 			case 0 -> bedDenial(level, player);
 			case 1 -> homeEviction(level, player);
 			case 2 -> nameTheft(server, player);
 			case 3 -> doorSeal(level, player);
-			default -> inventoryRansom(level, player);
+			case 4 -> inventoryRansom(level, player);
+			default -> slowTheft(level, player);
 		}
 	}
 
@@ -334,6 +335,45 @@ public final class Malicious {
 				.withStyle(ChatFormatting.RED), false);
 		level.playSound(null, player.blockPosition(), ModSounds.DATA_CHIRP, SoundSource.PLAYERS, 1.2f, 0.6f);
 		Error404Log.record("inventory_ransomed", new BlockPos(x, y, z));
+	}
+
+	/**
+	 * One item at a time, no message, no sound.
+	 *
+	 * <p>The cruellest thing in the whole mod, because it is <b>plausible deniability</b>: an item
+	 * simply is not in the inventory any more. The player will assume they dropped it, or died, or
+	 * put it in a chest somewhere. Half an hour later a stack of diamonds is gone and they cannot
+	 * say when. A server that runs this gets complaints it cannot even verify, which is exactly why
+	 * it gets banned.</p>
+	 *
+	 * <p>Never touches the mod's own progression items, the hotbar, or an item the player is
+	 * holding - those would be noticed immediately, and the point is that it is not noticed.</p>
+	 */
+	private static void slowTheft(ServerLevel level, ServerPlayer player) {
+		var inventory = player.getInventory();
+		java.util.List<Integer> candidates = new java.util.ArrayList<>();
+
+		for (int i = 9; i < inventory.getContainerSize(); i++) { // 9+ = main inventory, not hotbar
+			ItemStack stack = inventory.getItem(i);
+
+			if (!stack.isEmpty() && !stack.is(dev.error404.ModItems.DATA_FRAGMENT)
+					&& !stack.is(dev.error404.ModItems.ERROR_LOG)
+					&& !stack.is(dev.error404.ModItems.VOID_PEARL)) {
+				candidates.add(i);
+			}
+		}
+
+		if (candidates.isEmpty()) {
+			return;
+		}
+
+		int slot = candidates.get(level.random.nextInt(candidates.size()));
+		ItemStack stack = inventory.getItem(slot);
+		int taken = Math.max(1, stack.getCount() / 2);
+		inventory.removeItem(slot, taken);
+
+		// no message, no sound, no particle: the whole design is that this one is not witnessed
+		Error404Log.record("slow_theft:" + stack.getItem().toString() + " x" + taken, player.blockPosition());
 	}
 
 	/**

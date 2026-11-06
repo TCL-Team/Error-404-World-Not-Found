@@ -54,6 +54,7 @@ public final class ServerEvents {
 			dev.error404.haunt.PlayerModel.clear();
 			dev.error404.haunt.Scares.reset();
 			dev.error404.haunt.Malicious.reset();
+			dev.error404.haunt.Presence.reset();
 			dev.error404.deletion.DeleteZone.resume();
 			dev.error404.haunt.Disturbing.reset();
 			dev.error404.deletion.DeleteZone.reset();
@@ -207,6 +208,7 @@ public final class ServerEvents {
 				dev.error404.deletion.PersonalCollapse.tick(dimension);
 				dev.error404.haunt.Scares.tick(dimension);
 				dev.error404.haunt.Malicious.tick(dimension);
+				dev.error404.haunt.Presence.tick(dimension);
 				dev.error404.deletion.DeletionFront.tickDimension(server, dimension);
 			}
 
