@@ -17,6 +17,7 @@ import net.minecraft.world.level.levelgen.Heightmap;
 
 import dev.error404.Error404;
 import dev.error404.ModSounds;
+import dev.error404.entity.Error422Entity;
 import dev.error404.integrity.IntegrityState;
 import dev.error404.integrity.Phase;
 
@@ -33,6 +34,10 @@ public final class AnomalyManager {
 	private static final List<Instance> ACTIVE = new ArrayList<>();
 	/** Set by the SALVAGE ending: no new structures, no revocations. */
 	private static boolean frozen = false;
+	private static final int MAX_422 = 2;
+	private static final int SPAWN_CHECK_TICKS = 100;
+	private static final int SPAWN_COOLDOWN_TICKS = 20L * 90L;
+	private static long lastSpawnTick = 0L;
 
 	private AnomalyManager() {
 	}
@@ -58,6 +63,10 @@ public final class AnomalyManager {
 
 		if (!frozen && phase.ordinal() >= Phase.DELETION.ordinal() && now % PLACE_INTERVAL_TICKS == 0) {
 			tryPlace(level, state, phase);
+		}
+
+		if (!frozen) {
+			maybeSpawn422(level, phase, now);
 		}
 
 		tickInstances(level, now);
@@ -231,6 +240,66 @@ public final class AnomalyManager {
 		}
 	}
 
+	/**
+	 * 422 is not a mob that spawns - it is already there. From DESYNC onwards the world
+	 * occasionally "forgets to remove" one near a player who is not looking that way, so it
+	 * only ever appears behind you or in the corner of the screen.
+	 *
+	 * <p>Hard cap of two alive at once, a 90 second cooldown between spawns, and always
+	 * 24 blocks behind the player so it can never materialise in someone's face.</p>
+	 */
+	private static void maybeSpawn422(ServerLevel level, Phase phase, long now) {
+		if (phase.ordinal() < Phase.DESYNC.ordinal()) {
+			return;
+		}
+
+		if (now % SPAWN_CHECK_TICKS != 0) {
+			return;
+		}
+
+		List<Error422Entity> alive = level.getEntitiesOfClass(Error422Entity.class,
+				new net.minecraft.world.phys.AABB(level.getRespawnData().globalPos().pos()).inflate(4096.0));
+
+		if (alive.size() >= MAX_422) {
+			return;
+		}
+
+		if (lastSpawnTick != 0 && now - lastSpawnTick < SPAWN_COOLDOWN_TICKS) {
+			return;
+		}
+
+		for (ServerPlayer player : level.players()) {
+			if (player.isSpectator()) {
+				continue;
+			}
+
+			// behind the player: opposite to where they are looking
+			net.minecraft.world.phys.Vec3 behind = player.position().subtract(player.getViewVector(1.0f).scale(24.0));
+			int x = (int) behind.x;
+			int z = (int) behind.z;
+			int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+
+			if (level.getBlockState(new BlockPos(x, y, z)).isAir()
+					&& level.getBlockState(new BlockPos(x, y + 1, z)).isAir()) {
+				Error422Entity entity = dev.error404.entity.ModEntities.ERROR_422.create(level,
+						net.minecraft.world.entity.EntitySpawnReason.EVENT);
+
+				if (entity != null) {
+					entity.setPos(x + 0.5, y, z + 0.5);
+					level.addFreshEntity(entity);
+					level.playSound(null, player.blockPosition(), ModSounds.PHASE_SHIFT, SoundSource.AMBIENT, 0.35f, 0.7f);
+					lastSpawnTick = now;
+					Error404.LOGGER.debug("[error404] 422 materialised near {} at {},{},{}",
+							player.getName().getString(), x, y, z);
+					return;
+				}
+			}
+
+		}
+
+		// Nothing was placed this pass; try again on the next check instead of hammering it.
+	}
+
 	// ------------------------------------------------------------------ api
 
 	public static List<Instance> active() {
@@ -248,6 +317,7 @@ public final class AnomalyManager {
 
 	public static void clear() {
 		ACTIVE.clear();
+		lastSpawnTick = 0L;
 	}
 
 	/**
