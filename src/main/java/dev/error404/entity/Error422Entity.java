@@ -271,6 +271,19 @@ public class Error422Entity extends Mob {
 		}
 
 		setTarget(player);
+
+		if (playerSafeFromUs(player)) {
+			// It paces the edge of the zone. It does not leave.
+			getNavigation().stop();
+			face(player);
+
+			if (tickCount % 100 == 0) {
+				level().playSound(null, blockPosition(), ModSounds.ERROR_BLIP, SoundSource.HOSTILE, 1.0f, 0.5f);
+			}
+
+			return;
+		}
+
 		getNavigation().moveTo(player, 1.35);
 		double distance = distanceTo(player);
 
@@ -338,6 +351,13 @@ public class Error422Entity extends Mob {
 
 		if (stareTicks == STARE_LIMIT_TICKS / 2) {
 			level().playSound(null, blockPosition(), ModSounds.WHISPER, SoundSource.HOSTILE, 1.0f, 0.7f);
+		}
+
+		// Staring does not just hurt you - it tells it exactly where you are.
+		if (stareTicks == STARE_LIMIT_TICKS / 3 && distanceTo(player) < 40.0) {
+			teleportToRing(player, Math.max(2.4, distanceTo(player) - 6.0));
+			face(player);
+			level().playSound(null, blockPosition(), ModSounds.PHASE_SHIFT, SoundSource.HOSTILE, 1.0f, 0.4f);
 		}
 
 		if (stareTicks >= STARE_LIMIT_TICKS) {
@@ -439,6 +459,21 @@ public class Error422Entity extends Mob {
 		}
 	}
 
+	/** True while the player stands inside an anchor zone (and the anchor still exists). */
+	private boolean playerSafeFromUs(Player player) {
+		if (!(level() instanceof ServerLevel serverLevel)) {
+			return false;
+		}
+
+		for (BlockPos anchor : IntegrityState.get(serverLevel.getServer()).anchorPositions()) {
+			if (dev.error404.block.AnchorCoreBlock.protects(anchor, player.blockPosition())) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	/** Straight line from its head to the player's eye, checked against the world. */
 	private boolean hasLineOfSightTo(Player player) {
 		return level().clip(new net.minecraft.world.level.ClipContext(
@@ -502,6 +537,40 @@ public class Error422Entity extends Mob {
 		dev.error404.event.ServerEvents.flashGlitch(level().getServer(), "ERR_422");
 		serverLevel.sendParticles(ParticleTypes.SCULK_SOUL, player.getX(), player.getY() + 1.2, player.getZ(),
 				24, 0.5, 0.7, 0.5, 0.04);
+	}
+
+	/**
+	 * It will not cross into an anchor's stability zone. That is what the anchor is *for*:
+	 * the one patch of world that has been processed, and it does not fit there. Standing in
+	 * one keeps you alive, which makes the ritual the difference between a story and a rage
+	 * quit.
+	 */
+	private boolean inSafeZoneAt(double x, double z) {
+		if (!(level() instanceof ServerLevel serverLevel)) {
+			return false;
+		}
+
+		for (BlockPos anchor : IntegrityState.get(serverLevel.getServer()).anchorPositions()) {
+			if (dev.error404.block.AnchorCoreBlock.protects(anchor, BlockPos.containing(x, anchor.getY(), z))) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private boolean inSafeZone() {
+		if (!(level() instanceof ServerLevel serverLevel)) {
+			return false;
+		}
+
+		for (BlockPos anchor : IntegrityState.get(serverLevel.getServer()).anchorPositions()) {
+			if (dev.error404.block.AnchorCoreBlock.protects(anchor, blockPosition())) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	private boolean isObserved(Player player) {
@@ -599,6 +668,15 @@ public class Error422Entity extends Mob {
 		double angle = random.nextDouble() * Math.PI * 2;
 		double x = player.getX() + Math.cos(angle) * radius;
 		double z = player.getZ() + Math.sin(angle) * radius;
+
+		// Never materialise inside an anchor's zone: that is the player's one safe place.
+		int guard = 0;
+
+		while (inSafeZoneAt(x, z) && guard++ < 8) {
+			angle += Math.PI / 3.0;
+			x = player.getX() + Math.cos(angle) * radius;
+			z = player.getZ() + Math.sin(angle) * radius;
+		}
 		int y = player.level().getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
 				BlockPos.containing(x, 0, z).getX(), BlockPos.containing(x, 0, z).getZ());
 
