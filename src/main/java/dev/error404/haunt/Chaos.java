@@ -91,15 +91,20 @@ public final class Chaos {
 			return;
 		}
 
-		nextTick = now + MIN_GAP + level.random.nextInt(MAX_GAP - MIN_GAP);
-
 		List<ServerPlayer> players = level.players();
-		ServerPlayer player = players.get(level.random.nextInt(players.size()));
 
-		// The anchor zone is the one promise the mod makes. Chaos respects it.
-		if (insideAnchor(state, player)) {
-			return;
+		// The anchor zone is the one promise the mod makes, so the roll has to pass for
+		// everybody in this dimension before chaos fires. It used to be rolled per event, which
+		// meant one player standing in a safe zone still ate a lightning bolt because the
+		// random target happened to be somebody else.
+		for (ServerPlayer candidate : players) {
+			if (insideAnchor(state, candidate)) {
+				return;
+			}
 		}
+
+		nextTick = now + MIN_GAP + level.random.nextInt(MAX_GAP - MIN_GAP);
+		ServerPlayer player = players.get(level.random.nextInt(players.size()));
 
 		fire(server, level, player, state);
 	}
