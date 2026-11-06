@@ -101,6 +101,45 @@ Jumpscare chhalaang deta hai. Yeh layer **rok deta hai**:
 
 Anchor zone me chaos **kabhi** nahi hota. `/error404 chaos off` se poora band, `chaos fire <event>` se ek test.
 
+### Sab jagah, ek saath (v0.9.2)
+
+Pehle Nether ya End me jaana asal me escape tha: 422 wahan follow nahi karta tha, chaos band ho jaata
+tha, deletion front wahan pahunchti hi nahi thi. Ab har system har dimension me chalta hai — aur
+anchor core bhi sirf apni dimension me protect karta hai, to "safe room" banane ke liye usi jagah
+anchor lagana padta hai jahan tum ho. Zone apni dimension yaad rakhte hain, isliye Nether ka hole
+overworld me nahi khulta. `restore` bhi per-dimension hai.
+
+### Ban layer (v0.9.2) — default **off**
+
+`banLayer` ek alag, jaan-boojh kar hostile layer hai. Ye "creepy" nahi, ye **anti-player** hai —
+cheezein cheenta hai, darata nahi:
+
+| Event | Kya jaata hai |
+|---|---|
+| BED DENIAL | tumhara spawn point, bina bataye |
+| HOME EVICTION | jis bed me so rahe ho, wo aur uske aas-paas ka floor |
+| NAME THEFT | tab list me tumhara naam, 30 s ke liye |
+| DOOR SEAL | jis darwaze se aaye, wo peeche se |
+| INVENTORY RANSOM | ek item type, 300 blocks door chest me |
+| SLOW THEFT | aadha stack, koi message nahi |
+| THE LOCKDOWN | ANNEXATION me 15% par, ek baar, sab kuch |
+| MOTD capture | server multiplayer list me apna naam badal deta hai |
+
+Default off kyunki ye asli me hostile hai, aur kyunki ek mod jo kisi ka server permanently
+mislabels kar de wo malware hai, horror mod nahi. On karne ke baad `/error404 restore`,
+`/error404 banlayer off`, config off, ya server stop — chaaron se poora undo hota hai.
+
+### Presence (v0.9.2) — bina kisi entity ke
+
+Duniya me kuch nahi hai. Sirf awaazein, un jaghon se jahan ek asli aadmi hota:
+
+- peeche se aate huye **chaar kadam**, jo ruk jaate hain
+- **teen knocks** us darwaze par jis taraf tum nahi dekh rahe
+- tumhari **apni saans**, zara si side me, zara si zyada loud
+
+Aur DESYNC se hi ek early cue (whisper only, face nahi): jo player apni duniya saaf rakhta hai, use
+bhi pehle ghante me pata chal jaata hai ki usne kya install kiya hai.
+
 ### Chunk collapse dikhta hai (v0.8.1)
 
 Pehle chunk kahin door gayab hota tha aur pata bhi nahi chalta tha. Ab do tarah se hota hai, aur dono
@@ -224,6 +263,8 @@ Pehli baar khelne se pehle:
 /error404 demo       # 15x pacing: poora 100% -> 0% run ~5 minute me
 /error404 status     # integrity, phase, session seed
 /error404 restore    # jo bhi delete hua, sab wapas
+/error404 banlayer   # hostile layer ki state + incident log
+/error404 banlayer on|off
 ```
 
 Mod **chupchaap** shuru hota hai — chat me kuch nahi likhta (`announceOnJoin=false`), kyunki horror
@@ -254,6 +295,7 @@ CI har push par GitHub Actions se build hota hai (`.github/workflows/build.yml`)
 | **v0.7 entity AI** | path replay, prediction, habit model, home invasion, wall break, sleep haunting, darkness aura | ✅ in game |
 | **v0.8 chaos** | chaos layer, proximity drone, death sting, all-English text, visible collapse front | ✅ [v0.8.0](https://github.com/TCL-Team/Error-404-World-Not-Found/releases/tag/v0.8.0) |
 | **v0.9.1** | 20x20 staged deletion zones, hidden command tree, jumpscares (5 justified triggers), disturbing layer (intruder, name signs, shrines, dread overlay) | ✅ in game |
+| **v0.9.2** | sab dimensions, per-dimension anchors + restore, ban layer (8 anti-player events, default off), Presence (footsteps/knocks/breathing with no entity), 12 bug fixes | ✅ in game |
 | **v0.8.1** | personal collapse, creepy title screen + original wordmark, 422 leash + early spawns | ✅ [v0.8.1](https://github.com/TCL-Team/Error-404-World-Not-Found/releases/tag/v0.8.1) |
 | **v0.6.0 release** | release workflow (tag → jar + notes), deletion journal (`restore` sach me wapas deta hai), natural 422 spawner, anchor ritual, 5 languages | ✅ [v0.6.0](https://github.com/TCL-Team/Error-404-World-Not-Found/releases/tag/v0.6.0) |
 

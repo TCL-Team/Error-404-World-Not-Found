@@ -2,6 +2,64 @@
 
 Sab notable changes. Format [Keep a Changelog](https://keepachangelog.com/), versioning [SemVer](https://semver.org/).
 
+## [0.9.2] - 2026-11-06
+
+**"Peeche dekho. Kuch nahi hai. Isi liye bura hai."** Nether/End ab safe room nahi, ek poori
+"ban-worthy" layer, aur ek aisa presence jo bina kisi entity ke hota hai.
+
+### Fixed (ye asli bugs the, dikhne wale nahi)
+
+- **Nether aur End me mod band ho jaata tha.** Lagbhag har system `server.overworld()` par chalta tha,
+  to Nether portal se bachna asal me escape tha: 422 follow nahi karta tha, chaos nahi hota tha,
+  deletion front wahan pahunchti hi nahi thi, exploration cost nahi lagti thi. Ab har system
+  `getAllLevels()` par chalta hai aur zone apni dimension yaad rakhta hai.
+- **`/error404 restore` Nether ka data overworld me likh deta tha.** Journal ka key sirf
+  (chunkX, chunkZ) tha, isliye Nether ke tode hue blocks overworld ke same coordinates par
+  "restore" ho jaate the — grass ki jagah netherrack. Ab key me dimension hai aur restore sahi
+  dimension me hota hai. Purane save files bhi load hote hain.
+- **Anchor core sirf apni dimension me protect karta hai.** Pehle Nether me rakha anchor overworld
+  ka same coordinate bachata tha aur jahan rakha tha wahan kuch nahi karta tha — yaani escape hatch
+  chup-chaap fail ho raha tha. Ab anchor dimension ke saath save hota hai (purane anchors overworld
+  maan liye jaate hain).
+- **Jumpscare aur crash overlay frame par tick ho rahe the, tick par nahi.** 240 fps par 9-tick
+  jumpscare 0.04 s chalta tha, 30 fps par 0.3 s. Ab dono `ClientTickEvents` se chalte hain.
+  Dread overlay ka clock bhi pehle kabhi start hi nahi hota tha (koi call site nahi tha).
+- **Zone me patli column chhoot jaati thi** jab wave ka budget column ke beech me khatam hota tha —
+  "deleted" area ke andar khade rehne wale blocks.
+- **Photosensitive mode intruder timer ko freeze kar deta tha**, to switch off karte hi ek queued
+  silhouette turant screen par aa jaata tha.
+- **Personal collapse portal ke through galat dimension me fire hota tha** (9 second countdown ke
+  beech Nether jaane par overworld me Nether ke coordinates par zone).
+- **Memory leak:**PlayerModel/PathMemory/Scares har us player ka data rakhte the jo kabhi join hua;
+  ab disconnect par saaf.
+- Zone ab apni actual surface se shuru hota hai (pehle poora budget aasman kha jaata tha), aur
+  dragon egg, end gateway, vault, trial spawner protect hain.
+
+### Added
+
+- **Ban layer** (`banLayer`, default **off**, config screen aur `/error404 banlayer on|off`):
+  - **BED DENIAL** — tumhara spawn point chala jaata hai, bina bataye. Agli death par pata chalta hai.
+  - **HOME EVICTION** — jis bed me so rahe ho, wahi bed aur uske aas-paas ka floor obsidian ban jaata hai.
+  - **NAME THEFT** — tab list me tumhara naam 30 second ke liye `ERR_404_xxx` ho jaata hai.
+  - **DOOR SEAL** — jis darwaze se aaye, wo peeche se band ho jaata hai.
+  - **INVENTORY RANSOM** — ek item type 300 blocks door ek chest me, coordinates ke saath. Chori nahi, ransom.
+  - **SLOW THEFT** — ek item type aadha gayab, koi message nahi, koi sound nahi. Sabse zyada chubhne wala.
+  - **THE LOCKDOWN** — ANNEXATION me 15% se neeche, ek baar: blindness, nausea, saare lights gayab,
+    spawn bed gaya, darwaza band, aur "nothing was saved" server-wide.
+  - **MOTD capture** — server multiplayer list me apna naam badal deta hai: `ERROR 404: World Not Found`.
+    `/error404 restore` par, config off par, aur server stop par wapas.
+- **Presence** — koi entity nahi, sirf awaazein jo ek asli aadmi ki jagah se aati hain:
+  peeche se aate huye chaar kadam jo ruk jaate hain; teen knocks us darwaze par jis taraf tum nahi
+  dekh rahe; aur tumhari apni saans, zara si side me, zara si zyada loud.
+- **DESYNC me ek early cue** — whisper only, face nahi. Jo player apni duniya saaf rakhta hai use
+  bhi pehle ghante me pata chal jaata hai ki kya install kiya hai.
+- **Off-axis ambience** — whisper head ke andar se nahi, kandhe ke peeche se.
+
+### Fixed (design)
+
+- Ban layer ka har action `/error404 restore`, `/error404 banlayer off`, config off, aur server stop
+  se undo hota hai. Names 30 second me khud wapas, MOTD restore par.
+
 ## [0.9.1] - 2026-11-06
 
 **"Woh chup-chaap tumhara naam likh raha hai."** 20x20 deletion, jumpscares, aur ek layer jo darata
