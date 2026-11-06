@@ -80,10 +80,27 @@ public class AnchorCoreBlock extends Block {
 			return InteractionResult.PASS;
 		}
 
+		int held = player.getInventory().countItem(dev.error404.ModItems.DATA_FRAGMENT);
+
+		// Fragments still in the inventory are committed on the spot - the player does not
+		// have to right-click each one first, the ritual is the moment that matters.
+		int missing = Math.min(8 - integrity.dataFragments(), held);
+
+		if (missing > 0) {
+			int taken = player.getInventory().clearOrCountMatchingItems(
+					stack -> stack.is(dev.error404.ModItems.DATA_FRAGMENT), missing, null);
+
+			for (int i = 0; i < taken; i++) {
+				integrity.addFragment();
+			}
+		}
+
 		if (integrity.dataFragments() < 8) {
 			player.displayClientMessage(net.minecraft.network.chat.Component
-					.literal("ERR_404: anchor needs 8 committed fragments (" + integrity.dataFragments() + "/8)")
+					.literal("ERR_404: anchor needs 8 fragments (" + integrity.dataFragments() + "/8 committed)")
 					.withStyle(net.minecraft.ChatFormatting.GRAY), true);
+			level.playSound(null, pos, dev.error404.ModSounds.ERROR_BLIP,
+					net.minecraft.sounds.SoundSource.BLOCKS, 0.8f, 0.7f);
 			return InteractionResult.CONSUME;
 		}
 
