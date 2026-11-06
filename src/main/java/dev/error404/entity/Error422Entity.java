@@ -141,6 +141,17 @@ public class Error422Entity extends Mob {
 			abilityCooldown--;
 		}
 
+		// ANNEXATION aura: darkness follows it. The player has to hold a light source, not
+		// just stand still and out-heal it.
+		if (phase == Phase.ANNEXATION && tickCount % 60 == 0) {
+			Player near = nearestPlayer();
+
+			if (near != null && distanceTo(near) < 20.0 && near instanceof net.minecraft.server.level.ServerPlayer sp) {
+				sp.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+						net.minecraft.world.effect.MobEffects.DARKNESS, 120, 0));
+			}
+		}
+
 		switch (mode()) {
 			case OBSERVE -> tickObserve(phase);
 			case APPROACH -> tickApproach();
@@ -264,6 +275,11 @@ public class Error422Entity extends Mob {
 			deleteLightAround();
 		}
 
+		// Doors are a suggestion. If it cannot reach you, it makes a hole.
+		if (tickCount % 20 == 0 && distance < 24.0 && !hasLineOfSightTo(player)) {
+			breakTowards(player);
+		}
+
 		// The stare rule: looking at a hunting 422 is the only thing that hurts it back.
 		if (distance < 24.0 && isObserved(player)) {
 			return;
@@ -357,6 +373,51 @@ public class Error422Entity extends Mob {
 		serverLevel.sendParticles(ParticleTypes.SCULK_SOUL, getX(), getY() + 2.2, getZ(), 40, 0.6, 0.8, 0.6, 0.03);
 
 		IntegrityState.get(level().getServer()).drain(2);
+	}
+
+	/** Straight line from its head to the player's eye, checked against the world. */
+	private boolean hasLineOfSightTo(Player player) {
+		return level().clip(new net.minecraft.world.level.ClipContext(
+				new Vec3(getX(), getY() + getBbHeight() * 0.9, getZ()),
+				player.getEyePosition(),
+				net.minecraft.world.level.ClipContext.Block.COLLIDER,
+				net.minecraft.world.level.ClipContext.Fluid.NONE, this)).getType()
+				== net.minecraft.world.phys.HitResult.Type.MISS;
+	}
+
+	/**
+	 * Removes what is in the way, one block at a time, from head height down. Cheap (four
+	 * blocks a second), permanent (it is not put back), and it means a player cannot simply
+	 * shut a door and wait.
+	 */
+	private void breakTowards(Player player) {
+		if (!(level() instanceof ServerLevel serverLevel)) {
+			return;
+		}
+
+		if (!dev.error404.Error404Config.get().realBlockDeletion) {
+			level().playSound(null, blockPosition(), ModSounds.CHUNK_DELETE, SoundSource.HOSTILE, 0.6f, 1.1f);
+			return;
+		}
+
+		Vec3 dir = new Vec3(player.getX() - getX(), 0.0, player.getZ() - getZ()).normalize();
+
+		for (int step = 1; step <= 2; step++) {
+			for (int dy = 0; dy <= 2; dy++) {
+				BlockPos pos = BlockPos.containing(getX() + dir.x * step, getY() + dy, getZ() + dir.z * step);
+				BlockState state = serverLevel.getBlockState(pos);
+
+				if (state.isAir() || state.hasBlockEntity()
+						|| dev.error404.deletion.DeletionRules.isProtected(serverLevel, pos)) {
+					continue;
+				}
+
+				// Every break is journaled, so /error404 restore still undoes it.
+				dev.error404.deletion.DeletionJournal.record(pos.getX() >> 4, pos.getZ() >> 4, pos, state);
+				serverLevel.destroyBlock(pos, false, this, 512);
+				serverLevel.playSound(null, pos, ModSounds.STATIC_BURST, SoundSource.HOSTILE, 0.9f, 0.7f);
+			}
+		}
 	}
 
 	/**
