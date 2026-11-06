@@ -56,6 +56,22 @@ public class ErrorLogItem extends Item {
 		lines.add(Component.literal("  fragments ...... " + state.dataFragments() + "/8").withStyle(ChatFormatting.AQUA));
 		lines.add(Component.literal("  uptime ......... " + (state.ageTicks() / 20L) + "s").withStyle(ChatFormatting.GRAY));
 		lines.add(Component.literal("  session seed ... " + Long.toHexString(state.sessionSeed())).withStyle(ChatFormatting.DARK_GRAY));
+		lines.add(Component.literal("  deaths ......... " + state.deaths()).withStyle(ChatFormatting.DARK_RED));
+		lines.add(Component.literal("  chunks lost .... " + state.deletedChunks().size()).withStyle(ChatFormatting.DARK_RED));
+		lines.add(Component.literal("  threat level ... " + dev.error404.Difficulty.current().id()).withStyle(ChatFormatting.RED));
+
+		// The part that makes the log worth carrying: it remembers what the world did to you.
+		var log = dev.error404.haunt.Chaos.sessionLog();
+
+		if (!log.isEmpty()) {
+			lines.add(Component.literal("  -- incident log --").withStyle(ChatFormatting.DARK_GRAY));
+			int from = Math.max(0, log.size() - 6);
+
+			for (int i = from; i < log.size(); i++) {
+				lines.add(Component.literal("  " + (i + 1) + ". " + log.get(i)).withStyle(ChatFormatting.GRAY));
+			}
+		}
+
 		lines.add(Component.literal("  \"" + state.phase().whisper() + "\"").withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
 		return lines;
 	}
