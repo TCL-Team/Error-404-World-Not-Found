@@ -69,6 +69,14 @@ public final class VoidAmbience {
 			}
 		}
 
+		// When it is close, the world's own soundtrack stops first. Silence is the cue.
+		if (ambiencePlaying && proximity(client) > 0.35f) {
+			client.getSoundManager().stop(ModSounds.AMBIENCE_CALM.location(), SoundSource.AMBIENT);
+			client.getSoundManager().stop(ModSounds.AMBIENCE_DELETED.location(), SoundSource.AMBIENT);
+			ambiencePlaying = false;
+			ambienceTimer = 20 * 8; // comes back a few seconds after it leaves
+		}
+
 		// position-dependent dread: heartbeat runs while 422 is close, footsteps answer at night
 		if (phase >= 1 && level.getGameTime() % 40 == 0 && ClientState.integrity() < 90) {
 			playerHeartbeat(client, phase);
@@ -96,6 +104,23 @@ public final class VoidAmbience {
 			client.level.playLocalSound(client.player.getX(), client.player.getY(), client.player.getZ(),
 					ModSounds.WHISPER, SoundSource.AMBIENT, 0.3f, 0.75f, false);
 		}
+	}
+
+	/** How close the nearest 422 is, as 0..1, for audio ducking. */
+	private static float proximity(Minecraft client) {
+		if (client.player == null || client.level == null) {
+			return 0.0f;
+		}
+
+		double nearest = Double.MAX_VALUE;
+
+		for (net.minecraft.world.entity.Entity entity : client.level.entitiesForRendering()) {
+			if (entity instanceof dev.error404.entity.Error422Entity) {
+				nearest = Math.min(nearest, entity.distanceTo(client.player));
+			}
+		}
+
+		return nearest > 18.0 ? 0.0f : (float) (1.0 - nearest / 18.0);
 	}
 
 	/** Daytime check without a dimension helper: 0-11999 is day in the overworld cycle. */
