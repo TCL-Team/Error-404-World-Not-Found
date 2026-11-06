@@ -95,6 +95,24 @@ Prebuilt nahi — ek ruleset se ad-hoc bante hain, isliye har playthrough alag:
 - 🛠 **[ROADMAP.md](docs/ROADMAP.md)** — 1.21.11 Fabric technical plan, milestones v0.1→v1.0, risks, CI
 - 🎨 **[docs/concept/](docs/concept/)** — concept art (logo, entity, anomalies, void)
 
+## Install
+
+1. **Fabric Loader 0.20.1+** for Minecraft **1.21.11** ([installer](https://fabricmc.net/use/installer/))
+2. **[Fabric API 0.141.6+1.21.11](https://modrinth.com/mod/fabric-api)**
+3. `error404-0.6.0.jar` from the [latest release](https://github.com/TCL-Team/Error-404-World-Not-Found/releases/latest)
+4. Dono jars `.minecraft/mods` me daalo, game start karo.
+
+Pehli baar khelne se pehle:
+
+```
+/error404 demo       # 15x pacing: poora 100% -> 0% run ~5 minute me
+/error404 status     # integrity, phase, session seed
+/error404 restore    # jo bhi delete hua, sab wapas
+```
+
+Mod **chupchaap** shuru hota hai — chat me kuch nahi likhta (`announceOnJoin=false`), kyunki horror
+ka pehla rule hai ki player ko pata na chale ki kuch galat hai.
+
 ## Build / run (local)
 
 ```bash
@@ -117,16 +135,18 @@ CI har push par GitHub Actions se build hota hai (`.github/workflows/build.yml`)
 | **v0.4 entity** | 422 - 3 textures, custom model, Mix AI (stalker -> stare rule), glow, vanish loot | ✅ in game |
 | **v0.5 endings** | SALVAGE / DELETE / 0x00, anchor ritual, advancements, restore hardening | ✅ in game |
 | **v0.6 polish** | HUD glitch layer, fog/void horizon, ambience cross-fade, photosensitivity mode | ✅ in game |
+| **v0.6.0 release** | release workflow (tag → jar + notes), deletion journal (`restore` sach me wapas deta hai), natural 422 spawner, anchor ritual, 5 languages | ✅ [v0.6.0](https://github.com/TCL-Team/Error-404-World-Not-Found/releases/tag/v0.6.0) |
 
-Har push par GitHub Actions build hota hai (JDK 25 + Gradle 9.8.2, jar artifact upload).
-Latest verified jar: **~1.4 MB** (`error404-jar` artifact).
+Har push par GitHub Actions build hota hai (JDK 25 + Gradle 9.8.2). `v*` tag push karne par
+`release.yml` jar + release notes publish karta hai.
+Latest verified jar: **error404-0.6.0.jar, 753 KB** (release `v0.6.0`).
 
 ## In-game commands (operator only)
 
 ```
 /error404 status                 integrity, phase, session seed
 /error404 start | stop           session control
-/error404 restore                integrity 100%, world un-ended, deleted chunks regenerate
+/error404 restore                integrity 100%, world un-ended, har deleted block journal se wapas
 /error404 phase <name>           force a phase (testing)
 /error404 setintegrity <0-100>   jump to a value
 /error404 demo                   15x pacing for a ~5 min full run
@@ -147,7 +167,9 @@ Latest verified jar: **~1.4 MB** (`error404-jar` artifact).
   missing texture, void stone, null torch
 - **19 sounds** — all synthesised from scratch in `tools/gen_sounds.py` (no third-party audio)
 - **3 endings + 7 advancements**
+- **5 languages** — en_us, en_gb, hi_in, de_de, ja_jp
+- **1 spawn egg** — 422 ke liye, sirf creative/staging (survival me kabhi nahi milta)
 
 ## License
 
-Code: MIT *(file add hote hi)* · Concept/art: © repo author. Minecraft assets ka koi use nahi — sab original ya vanilla references tak limited.
+Code: [MIT](LICENSE) · Concept/art: © repo author. Minecraft assets ka koi use nahi — sab original ya vanilla references tak limited.
