@@ -163,6 +163,8 @@ public final class Error404Commands {
 		state.setIntegrity(IntegrityState.MAX_INTEGRITY);
 		state.stop();
 		dev.error404.ending.EndingManager.resetStareCount();
+		dev.error404.haunt.Chaos.reset();
+		dev.error404.haunt.HomeInvasion.reset();
 		dev.error404.event.ServerEvents.pushState(server);
 
 		reply(context.getSource(), "integrity restored to 100%", ChatFormatting.GREEN);
