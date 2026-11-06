@@ -38,6 +38,30 @@ Player ka goal: **8 Data Fragments + Anchor Core** bana ke *The Last Chunk* par 
 | P3 | **CASCADE** | Deletion tez, structures khud mit-te hain, light khaa rahi hai |
 | P4 | **ANNEXATION** | Duniya floating fragments, 422 hunt, sirf Last Chunk bacha |
 
+### 422 kitni khatarnak hai (v0.7)
+
+Ye ek "boss" nahi hai, ye ek **cheez** hai jo tumhe process nahi kar pa rahi. Isliye uske paas health bar
+nahi hai — uske paas **rules** hain:
+
+| Rule | Kya hota hai | Kaise bachna hai |
+|---|---|---|
+| **Contact** | 3 block ke andar aate hi hit (6–10 dmg, silent) | door raho, anchor zone me jao |
+| **Stare** | 3 sec se zyada dekha → 3 dmg/sec, blindness, nausea. Har 3 sec me damage badhta hai | nazar hatao — **dekhna hi galti hai** |
+| **Chase** | tum use nahi dekhte → woh 2.5–10 block ka jump karke paas aa jaati hai | peeche mat dekho, seedha bhaago |
+| **Walls** | raasta band? woh deewar tod deti hai (realBlockDeletion on hone par) | deewar me chhupna kaam nahi karta |
+| **Sleep** | CASCADE ke baad sote hue pakad leti hai; bed tod deti hai | sone se pehle check karo ki woh paas nahi hai |
+| **Darkness** | ANNEXATION me 20 block ke andar andhera aura | torch/max light, ya anchor zone |
+| **Feeding** | har player death usse tez karta hai | — |
+| **Mercy** | tumhe maarne ke baad woh 5 minute ke liye chali jaati hai | apna saanp samet lo |
+| **Anchor** | anchor zone me woh **kabhi** nahi aati | yahi ek safe jagah hai |
+
+Screen bhi jhooth bolta hai: uske paas hone par vignette sikudta hai, red/cyan seam aata hai, aur
+screen tear hoti hai. `photosensitivity` on karne par ye sab 70% kam ho jaata hai.
+
+**Difficulty presets** (`/error404 difficulty <chill|standard|nightmare>`, live switch):
+`chill` = woh sirf dekhti hai · `standard` = upar wala table · `nightmare` = contact 10, stare 5+2/stage,
+10 tick me deewar todti hai, phase 1 se hi neend se utha deti hai, 3 ek saath.
+
 ### 422 ka do-faced AI (locked design)
 
 **P1–P3 tk woh classic stalker hai:** fog me khadi rehti hai, out-of-frame move karti hai, tumhare paas aakar rukti hai.
@@ -150,6 +174,7 @@ Latest verified jar: **error404-0.6.0.jar, 753 KB** (release `v0.6.0`).
 /error404 phase <name>           force a phase (testing)
 /error404 setintegrity <0-100>   jump to a value
 /error404 demo                   15x pacing for a ~5 min full run
+/error404 difficulty <preset>    chill | standard | nightmare — live, no restart
 /error404 summon                 spawn 422 six blocks in front of you
 /error404 anomaly <code>         force one structure (ERR_404_A ... ERR_404_X)
 /error404 ending <s|d|null>      trigger SALVAGE / DELETE / 0x00
@@ -162,7 +187,8 @@ Latest verified jar: **error404-0.6.0.jar, 753 KB** (release `v0.6.0`).
 - **5 phases** — SIGNAL → DESYNC → DELETION → CASCADE → ANNEXATION (integrity 100 → 0)
 - **12 anomalies** — half house, staircase to nowhere, chunk seam, mirror village, load-bar wall,
   door to room, sinkhole, archive, inverted tree, memory of home, the last chunk, revoke
-- **1 entity** — 422, three texture variants (base / missing-texture / the face), 3 blocks tall
+- **1 entity** — 422, three body variants (base / missing-texture / the face) + cold and red emissive
+  eyes, 3 blocks tall, contact + stare + chase + wall-breaking + sleep-haunting behaviour
 - **4 items / 4 blocks** — data fragment, corrupt shard, error log, void pearl · anchor core,
   missing texture, void stone, null torch
 - **19 sounds** — all synthesised from scratch in `tools/gen_sounds.py` (no third-party audio)

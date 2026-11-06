@@ -288,3 +288,37 @@ Horror mod jo duniya khaata hai, usme guardrails must hain:
 - **Anomalies procedural** hain, isliye har playthrough me structures alag dikhte hain (replay value).
 - **Look = damage** ka rule horror ko interactive banata hai, player ko agency deta hai.
 - **Non-destructive default** mod ko servers/streamers ke liye usable rakhta hai.
+
+---
+
+## 11. 422 — lethal kit (v0.7)
+
+Design rule: every ability must be **learnable** and **survivable**, or it is just a rage quit.
+422 has no health bar and cannot be killed; it is avoided, not fought.
+
+| Ability | Phase | Numbers (standard) | Counter |
+|---|---|---|---|
+| Contact | PRESENCE (P2+) | 6 dmg on contact, silent | distance, anchor zone |
+| Stare | ANNEXATION (P4), look-rule tier | 3 dmg/s, +1.5 per 3 s stage, blindness 2 s + nausea 5 s | look away |
+| Chase teleport | P2+ | 1 in 40 ticks, closes 2.5–10 blocks, never lands in an anchor zone | keep it visible |
+| Wall breaking | HUNT (P4) | 4 blocks per 20–10 ticks along the line to the player | open ground |
+| Sleep haunting | configurable (CASCADE default) | wakes the sleeper, destroys the bed, teleports adjacent in P4 | do not sleep near it |
+| Darkness aura | P4 | Darkness I, 6 s, refreshed every 3 s inside 20 blocks | light or anchor |
+| Death feeding | always | +0.03 movement speed per player death, cap 0.42 | — |
+| Mercy withdrawal | always | after a kill: vanishes nearby copies, 5 min spawn cooldown | respawn safely |
+
+### Threat presets
+
+| Preset | Contact | Stare | Walls | Sleep from | Max alive | Teleport 1-in |
+|---|---|---|---|---|---|---|
+| `chill` | 0 | 0 | never | never | 1 | 90 |
+| `standard` | 6 | 3 + 1.5/stage | every 20 t | CASCADE | 2 | 40 |
+| `nightmare` | 10 | 5 + 2/stage | every 10 t | DESYNC | 3 | 20 |
+
+Switched live with `/error404 difficulty <preset>`; persisted in `config/error404.json` as `difficulty`.
+
+### The one safe place
+
+Anchor cores create a 32-block stability zone. 422 cannot enter it, cannot teleport into it, and will
+pace the edge instead. That is the mechanical reason the anchor ritual exists: it is not a score, it is
+the only place in the world the entity has been told "already processed".

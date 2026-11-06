@@ -132,6 +132,7 @@ Har milestone ke baad jar GitHub Actions par build hota hai (latest run: green).
 | **v0.5** | Endings | `EndingManager` (SALVAGE / DELETE / 0x00), anchor ritual (8 fragments + right click), non-destructive archive, `restore` hardening, 7 advancements | ✅ |
 | **v0.6** | Polish | HUD glitch layer (scanlines, drifting ERR lines, phase flash, static, vignette), fog + void-horizon mixin, ambience cross-fade, photosensitivity + HUD sync flags | ✅ |
 | **v0.6.0** | Release | `release.yml` (tag → jar + notes), `CHANGELOG.md`, version bump, install docs, 5 languages | ✅ [v0.6.0](https://github.com/TCL-Team/Error-404-World-Not-Found/releases/tag/v0.6.0) |
+| **v0.7** | Threat | 422 lethal kit: contact, escalating stare, chase, wall-breaking, sleep haunting, darkness aura, death feeding, mercy withdrawal, anchor sanctuary, `chill/standard/nightmare` presets, proximity dread overlay, emissive eyes, phantom server chat | ✅ |
 | **v1.0** | Distribution | CurseForge/Modrinth listing, banner + trailer, optional Mod Menu GUI | ⏳ |
 
 ### CI ke baad kya bacha hai (honest list)
