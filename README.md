@@ -107,8 +107,16 @@ CI har push par GitHub Actions se build hota hai (`.github/workflows/build.yml`)
 
 ## Status
 
-**v0.1 skeleton in progress** — Gradle project + `/error404` commands + integrity state machine + config shipped.
-Next: v0.2 chunk deletion (see ROADMAP). Playable milestones tab hi honge jab visuals aa jayenge.
+| Milestone | Kya | State |
+|---|---|---|
+| Design (v0.1 docs) | lore, phases, anomalies, entity, endings, safety | ✅ locked |
+| **v0.1 code** | Fabric 1.21.11 project, integrity director, `/error404` commands, JSON config, CI build | ✅ **build green** (jar ~85 KB) |
+| v0.2 | chunk deletion (hardcore preset) + void sky/fog | ⏳ next |
+| v0.3 | anomaly structures + data fragments | ⏳ |
+| v0.4 | 422 entity + Mix AI | ⏳ |
+| v0.5 | endings, anchor core, backup/restore, polish | ⏳ |
+
+Build status: `.github/workflows/build.yml` — push par JDK 25 + Gradle 9.8.2, jar artifact upload.
 
 ## In-game commands (v0.1, operator only)
 
