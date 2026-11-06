@@ -24,6 +24,13 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      # Catches what a compiler cannot: a sound referenced by name that does not exist, a
+      # translation key with no translation, a model pointing at a missing texture, a locale
+      # that drifted away from en_us. Cheap (pure Python) and it fails the build.
+      - name: Static audit
+        shell: bash
+        run: python3 tools/audit.py
+
       - name: Build (compile + jar)
         id: gradle
         shell: bash
