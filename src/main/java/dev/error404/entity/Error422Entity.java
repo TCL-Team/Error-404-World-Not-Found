@@ -67,6 +67,17 @@ public class Error422Entity extends Mob {
 	private int despawnTimer = 20 * 600;
 	/** It is never allowed to be further than this from the nearest player. */
 	private static final double LEASH_RADIUS = 40.0;
+	/**
+	 * Continuous seconds of eye contact allowed before it takes the sight back.
+	 *
+	 * <p>This is the rule that makes watching it feel dangerous without borrowing a single
+	 * mechanic from another mod: it does not punish you for looking (that only happens in
+	 * ANNEXATION, through {@link #punish}), it punishes you for <em>staring</em> - and the
+	 * punishment is that it vanishes from where you were looking and is somewhere else the
+	 * next time you turn your head.</p>
+	 */
+	private static final int WINDOW_TICKS = 45;
+	private int watchedTicks;
 	/** Ticks until it may hit on contact again. */
 	private int contactCooldown;
 	/** How many player deaths this session has fed it. */
@@ -173,6 +184,12 @@ public class Error422Entity extends Mob {
 			hauntSleepers(phase);
 		}
 
+		// Standing over a sleeping player without waking them: no damage, no sound, just the
+		// knowledge (on waking) that something was in the room the whole time.
+		if (tickCount % 60 == 0) {
+			watchSleepers();
+		}
+
 		if (dev.error404.Difficulty.current().darknessAura && phase == Phase.ANNEXATION && tickCount % 60 == 0) {
 			Player near = nearestPlayer();
 
@@ -181,6 +198,8 @@ public class Error422Entity extends Mob {
 						net.minecraft.world.effect.MobEffects.DARKNESS, 120, 0));
 			}
 		}
+
+		tickWindow(phase);
 
 		switch (mode()) {
 			case OBSERVE -> tickObserve(phase);
@@ -217,6 +236,60 @@ public class Error422Entity extends Mob {
 		}
 	}
 
+	/**
+	 * The window rule. A 422 that is being watched takes the sight back: a burst of static, and
+	 * it is gone from the exact spot the player was looking at.
+	 *
+	 * <p>Deliberately not damage in the early phases. Taking the thing away is scarier than
+	 * taking health, because it tells the player their eyes are not a defence - and it keeps
+	 * the mod survivable at `standard` while still refusing to be a photoshoot.</p>
+	 */
+	private void tickWindow(Phase phase) {
+		Player player = nearestPlayer();
+
+		if (player == null || !isObserved(player) || mode() == Mode.DORMANT) {
+			watchedTicks = Math.max(0, watchedTicks - 2);
+			return;
+		}
+
+		// In ANNEXATION, holding the stare is already punished by updateStare; this would
+		// otherwise yank it away mid-punishment and let the player cheat the look rule.
+		if (phase == Phase.ANNEXATION) {
+			watchedTicks = 0;
+			return;
+		}
+
+		watchedTicks++;
+
+		if (watchedTicks < WINDOW_TICKS || abilityCooldown > 0) {
+			return;
+		}
+
+		watchedTicks = 0;
+		abilityCooldown = 25;
+
+		level().playSound(null, blockPosition(), ModSounds.STATIC_BURST, SoundSource.HOSTILE, 1.0f, 0.55f);
+
+		if (level() instanceof ServerLevel serverLevel) {
+			serverLevel.sendParticles(ParticleTypes.PORTAL, getX(), getY() + 1.2, getZ(),
+					40, 0.4, 1.0, 0.4, 0.2);
+		}
+
+		// Out of the player's cone entirely, not merely further away: turning around has to
+		// find nothing, and then find it again somewhere else.
+		double angle = Math.atan2(getZ() - player.getZ(), getX() - player.getX())
+				+ (Math.PI * (0.6 + random.nextDouble() * 0.8)) * (random.nextBoolean() ? 1 : -1);
+		double distance = Math.max(14.0, distanceTo(player));
+
+		teleportTo(player.getX() + Math.cos(angle) * distance, player.getY(),
+				player.getZ() + Math.sin(angle) * distance);
+
+		if (player instanceof ServerPlayer serverPlayer) {
+			serverPlayer.displayClientMessage(net.minecraft.network.chat.Component
+					.literal("ERR_422: frame dropped").withStyle(net.minecraft.ChatFormatting.DARK_GRAY), true);
+		}
+	}
+
 	private Phase currentPhase() {
 		if (level().getServer() == null) {
 			return Phase.SIGNAL;
@@ -237,6 +310,36 @@ public class Error422Entity extends Mob {
 			case CASCADE -> nearestPlayerDistance() < 10.0 ? Mode.PRESENCE : Mode.APPROACH;
 			case ANNEXATION -> Mode.HUNT;
 		});
+	}
+
+	/**
+	 * Positions itself at the foot of a sleeping player's bed and does nothing at all.
+	 *
+	 * <p>No sound, no damage, no wake-up - {@link #hauntSleepers} does the violent version.
+	 * This is the quiet one: the player wakes up, looks around, and there is a tall black
+	 * thing at the end of the bed that was not there when they closed their eyes. It only
+	 * works because it is rare enough that the player is not expecting it.</p>
+	 */
+	private void watchSleepers() {
+		if (mode() == Mode.DORMANT) {
+			return;
+		}
+
+		for (Player player : level().players()) {
+			if (!(player instanceof ServerPlayer serverPlayer) || !serverPlayer.isSleeping()) {
+				continue;
+			}
+
+			if (distanceTo(serverPlayer) > 24.0 || random.nextInt(3) != 0) {
+				continue;
+			}
+
+			BlockPos bed = serverPlayer.getSleepingPos().orElse(serverPlayer.blockPosition());
+			teleportTo(bed.getX() + 0.5, bed.getY(), bed.getZ() + 2.5);
+			setDeltaMovement(Vec3.ZERO);
+			face(serverPlayer);
+			return;
+		}
 	}
 
 	// ------------------------------------------------------------------ behaviour
