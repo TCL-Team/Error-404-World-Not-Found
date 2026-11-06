@@ -205,6 +205,8 @@ public final class Error404Commands {
 		dev.error404.haunt.Chaos.reset();
 		dev.error404.haunt.HomeInvasion.reset();
 		dev.error404.haunt.Malicious.reset();
+		dev.error404.haunt.Presence.reset();
+		dev.error404.haunt.ServerSpine.reset(server);
 
 		// names taken by the ban layer come back immediately, not on the next tick
 		server.getPlayerList().getPlayers().forEach(player -> {
@@ -228,15 +230,20 @@ public final class Error404Commands {
 	 * server, and the warning is printed every single time, including in status.
 	 */
 	private static int setBanLayer(CommandContext<CommandSourceStack> context, boolean on) {
+		MinecraftServer server = context.getSource().getServer();
 		dev.error404.Error404Config.get().banLayer = on;
 		dev.error404.Error404Config.save();
 		dev.error404.haunt.Malicious.reset();
+		dev.error404.haunt.Presence.reset();
+		dev.error404.haunt.ServerSpine.reset(server);
 
 		reply(context.getSource(), "ban layer " + (on ? "ENABLED" : "disabled"),
 				on ? ChatFormatting.DARK_RED : ChatFormatting.GREEN);
 
 		if (on) {
 			reply(context.getSource(), "this removes spawn beds, player names, inventory items and doorways.",
+					ChatFormatting.RED);
+			reply(context.getSource(), "it also renames the server in the multiplayer list.",
 					ChatFormatting.RED);
 			reply(context.getSource(), "it is deliberately hostile. /error404 banlayer off undoes it.",
 					ChatFormatting.GRAY);

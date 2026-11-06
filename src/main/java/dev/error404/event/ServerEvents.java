@@ -188,6 +188,10 @@ public final class ServerEvents {
 			// Zones advance every tick: their own wave timer paces the blocks, and calling them
 			// from the (throttled) deletion front would slow the front down to a crawl.
 			dev.error404.haunt.Malicious.restoreNames(server);
+
+			if (server.getTickCount() % 20 == 0) {
+				dev.error404.haunt.ServerSpine.tick(server);
+			}
 			dev.error404.deletion.DeleteZone.tick(server.overworld());
 			DeletionFront.tick(server);
 			AnomalyManager.tick(server);
