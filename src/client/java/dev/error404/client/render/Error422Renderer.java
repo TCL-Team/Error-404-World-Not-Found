@@ -23,8 +23,7 @@ public class Error422Renderer extends MobRenderer<Error422Entity, Error422Render
 		super(context, new Error422Model(context.bakeLayer(ModModelLayers.ERROR_422)), 0.0f);
 		this.shadowRadius = 0.0f;
 		this.addLayer(new Error422EyesLayer(this));
-		// The red variant is added permanently; it is fully transparent unless the player is
-		// holding eye contact, so there is nothing to add or remove per frame.
+		// Drawn only during a live stare, so the colour change is a real warning signal.
 		this.addLayer(new Error422AngryEyesLayer(this));
 	}
 
