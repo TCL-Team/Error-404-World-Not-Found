@@ -48,6 +48,8 @@ tasks.withType(JavaCompile).configureEach {
 	// working on Minecraft 1.21.11 servers running a 21 JVM.
 	it.options.release = 21
 	it.options.encoding = "UTF-8"
+	// One CI run should surface every error, not just the first hundred.
+	it.options.compilerArgs += ["-Xmaxerrs", "500"]
 }
 
 java {

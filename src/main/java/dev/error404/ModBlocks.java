@@ -52,7 +52,7 @@ public final class ModBlocks {
 					.strength(0.0f)
 					.sound(SoundType.WOOD)
 					.lightLevel(state -> 15)
-					.noCollission()
+					.noCollision()
 					.noOcclusion(),
 			false);
 
