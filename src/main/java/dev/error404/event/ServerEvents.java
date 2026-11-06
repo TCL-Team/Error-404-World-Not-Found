@@ -50,6 +50,7 @@ public final class ServerEvents {
 			dev.error404.haunt.HomeInvasion.reset();
 			dev.error404.haunt.Chaos.reset();
 			dev.error404.haunt.PathMemory.clear();
+			dev.error404.deletion.PersonalCollapse.cancel();
 			dev.error404.haunt.PlayerModel.clear();
 		});
 
@@ -173,6 +174,20 @@ public final class ServerEvents {
 			dev.error404.haunt.PhantomServer.tick(server);
 			dev.error404.haunt.HomeInvasion.tick(server.overworld());
 			dev.error404.haunt.Chaos.tick(server);
+
+			// The chunk the player is standing in can be reclaimed. It is announced first.
+			dev.error404.deletion.PersonalCollapse.tick(server.overworld());
+
+			if (server.getTickCount() % 200 == 0) {
+				for (ServerPlayer player : server.overworld().players()) {
+					if (server.overworld().random.nextInt(3) == 0
+							&& dev.error404.deletion.PersonalCollapse.allowed(server.overworld(), player)) {
+						dev.error404.deletion.PersonalCollapse.start(server.overworld(), player,
+								dev.error404.deletion.PersonalCollapse.WARNING_TICKS);
+						break;
+					}
+				}
+			}
 
 			// One path sample per second is enough to replay a minute of walking.
 			if (server.getTickCount() % 20 == 0) {
