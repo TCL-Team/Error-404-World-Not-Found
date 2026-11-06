@@ -75,5 +75,7 @@
   "config.error404.difficulty": "Difficulty: %s",
   "subtitles.error404.scare_sting": "something hits the microphone",
   "subtitles.error404.scare_breath": "breathing, very close",
-  "subtitles.error404.scare_whisper_name": "a word, unfinished"
+  "subtitles.error404.scare_whisper_name": "a word, unfinished",
+  "config.error404.banLayer": "Ban layer",
+  "config.error404.banLayer.tooltip": "Takes your spawn point, your name, your items and the door behind you. Off by default because it is genuinely hostile."
 }

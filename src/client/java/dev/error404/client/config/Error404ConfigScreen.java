@@ -73,6 +73,15 @@ public final class Error404ConfigScreen extends Screen {
 				},
 				"config.error404.backupOnStart.tooltip"));
 
+		// --- the hostile layer -----------------------------------------------------
+		y += row;
+		this.addRenderableWidget(checkbox(left, y, "config.error404.banLayer",
+				config.banLayer, (box, value) -> {
+					config.banLayer = value;
+					Error404Config.save();
+				},
+				"config.error404.banLayer.tooltip"));
+
 		// --- the world being deleted ---------------------------------------------
 		y += row;
 		this.addRenderableWidget(checkbox(left, y, "config.error404.destructiveEnding",

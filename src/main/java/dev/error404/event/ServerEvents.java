@@ -54,8 +54,9 @@ public final class ServerEvents {
 			dev.error404.haunt.PlayerModel.clear();
 			dev.error404.haunt.Scares.reset();
 			dev.error404.haunt.Malicious.reset();
-			dev.error404.haunt.Presence.reset();
 			dev.error404.deletion.DeleteZone.resume();
+			dev.error404.haunt.ServerSpine.restore(server);
+			dev.error404.haunt.Presence.reset();
 			dev.error404.haunt.Disturbing.reset();
 			dev.error404.deletion.DeleteZone.reset();
 			dev.error404.commands.CommandGate.reset();
