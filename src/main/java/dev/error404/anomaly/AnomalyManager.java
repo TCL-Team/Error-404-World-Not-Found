@@ -36,7 +36,7 @@ public final class AnomalyManager {
 	private static boolean frozen = false;
 	private static final int MAX_422 = 2;
 	private static final int SPAWN_CHECK_TICKS = 100;
-	private static final int SPAWN_COOLDOWN_TICKS = 20L * 90L;
+	private static final int SPAWN_COOLDOWN_TICKS = 20 * 90;
 	private static long lastSpawnTick = 0L;
 
 	private AnomalyManager() {
