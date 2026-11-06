@@ -43,16 +43,31 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
           # Also surface the failure as check-run annotations, so a remote agent can read it
-          # through the GitHub API without downloading artifacts.
-          mapfile -t lines < <(grep -nE "error:|FAILURE:|Caused by:|Could not|Unresolved|Execution failed|What went wrong|A problem occurred" build.log | head -40)
+          # through the GitHub API without downloading artifacts. javac puts the useful
+          # detail ("symbol:", "location:", "required:") on the lines *after* "error:",
+          # so each annotation carries the error line plus its following context.
+          mapfile -t lines < <(awk '
+            /error:/ {
+              buf = $0
+              for (i = 1; i <= 4; i++) {
+                if (getline nxt <= 0) break
+                if (nxt ~ /error:/) break
+                buf = buf " | " nxt
+              }
+              gsub(/[[:space:]]+/, " ", buf)
+              print buf
+              next
+            }
+            /FAILURE:|Caused by:|Could not resolve|Execution failed|What went wrong|A problem occurred/ { print }
+          ' build.log | head -40)
           if [ ${#lines[@]} -eq 0 ]; then
             mapfile -t lines < <(tail -40 build.log)
           fi
           i=0
           for line in "${lines[@]}"; do
             i=$((i+1))
-            safe=$(printf '%s' "$line" | tr '%' '_' | tr '\n' ' ')
-            echo "::error title=gradle-${i}::${safe:0:900}"
+            safe=$(printf '%s' "$line" | tr '%' '_' | tr '|' '/' | tr '\n' ' ' | sed 's/\r/ /g')
+            echo "::error title=gradle-${i}::${safe:0:4000}"
           done
 
       - name: Upload build log
