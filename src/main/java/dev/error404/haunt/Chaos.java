@@ -182,49 +182,20 @@ public final class Chaos {
 	 * else. This is the single most ERROR-422 thing the mod does.
 	 */
 	private static void eventChunkGone(ServerLevel level, ServerPlayer player, IntegrityState state) {
+		// Same geometry as everything else now: a 20x20 zone, staged over a couple of seconds,
+		// seeded a few chunks away in a random direction. The event fires and the world starts
+		// coming apart - the player has to turn their head to see it, and it is still going when
+		// they do.
 		int radius = 2 + level.random.nextInt(4);
 		int cx = (player.getBlockX() >> 4) + (level.random.nextBoolean() ? radius : -radius);
 		int cz = (player.getBlockZ() >> 4) + (level.random.nextInt(radius * 2 + 1) - radius);
 
-		if (dev.error404.deletion.DeletionRules.isChunkProtected(level, cx, cz)
-				|| state.hasDeletedChunk(cx, cz)) {
+		if (!dev.error404.deletion.DeleteZone.seed(level, cx, cz, 1)) {
 			return;
 		}
 
-		// 1024 blocks is exactly what DeletionJournal remembers per chunk: the hole is always
-		// fully recoverable, and it is capped so a single event cannot spike the server tick.
-		int removed = 0;
-		BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
-		int minY = level.getMinY() + 1;
-		int budget = DeletionJournal.PER_CHUNK;
-
-		for (int x = cx << 4; x < (cx << 4) + 16 && budget > 0; x++) {
-			for (int z = cz << 4; z < (cz << 4) + 16 && budget > 0; z++) {
-				int top = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
-
-				for (int y = top; y >= minY && budget > 0; y--) {
-					cursor.set(x, y, z);
-					BlockState blockState = level.getBlockState(cursor);
-
-					if (blockState.isAir()) {
-						continue;
-					}
-
-					if (dev.error404.deletion.DeletionRules.isProtected(level, cursor)) {
-						continue;
-					}
-
-					DeletionJournal.record(cx, cz, cursor, blockState);
-					level.setBlock(cursor, Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS);
-					removed++;
-					budget--;
-				}
-			}
-		}
-
-		state.markDeletedChunk(cx, cz);
 		state.drain(2);
-		LOG.add("chunk_gone @" + cx + "," + cz + " (" + removed + " blocks)");
+		LOG.add("chunk_gone @" + cx + "," + cz + " (20x20 zone)");
 
 		level.playSound(null, (cx << 4) + 8, level.getSeaLevel(), (cz << 4) + 8,
 				ModSounds.CHUNK_DELETE, SoundSource.AMBIENT, 1.6f, 0.6f);
@@ -232,7 +203,7 @@ public final class Chaos {
 				120, 8.0, 4.0, 8.0, 0.2);
 
 		if (level.random.nextBoolean()) {
-			player.sendSystemMessage(Component.literal("WARN: chunk [" + cx + ", " + cz
+			player.sendSystemMessage(Component.literal("WARN: a 20x20 region near [" + cx + ", " + cz
 					+ "] failed to load and was discarded").withStyle(ChatFormatting.RED));
 		}
 	}

@@ -79,12 +79,72 @@ public final class DeletionFront {
 
 		ServerPlayer anchorPlayer = level.players().get(server.overworld().random.nextInt(level.players().size()));
 
-		// Whole-chunk collapse in view is the default experience now; the old per-block
-		// peeling stays available for very slow configs (maxChunksPerSecond <= 1).
+		// The 20x20 advancing zone is the experience now: it eats the world in waves the
+		// player can watch, tile by tile, instead of a 16x16 chunk blinking out between two
+		// frames. Zones are seeded into the view cone and continue on their own from there.
+		DeleteZone.tick(level);
+
 		if (cfg.maxChunksPerSecond >= 2) {
-			collapseVisibleChunk(level, state, anchorPlayer);
+			seedVisibleZone(level, state, anchorPlayer);
 		} else {
 			deleteOneChunk(level, state, anchorPlayer);
+		}
+	}
+
+	/**
+	 * Seeds a 20x20 zone inside the player's view cone.
+	 *
+	 * <p>Same targeting rule as the old collapse (middle third of the screen, 3-9 chunks out,
+	 * fallback to the nearest ring so the front never stalls) but the payload is a zone that
+	 * then advances on its own for a couple of seconds and seeds neighbours, so what the player
+	 * sees is an edge of nothing travelling across the landscape rather than a square hole.</p>
+	 */
+	private static void seedVisibleZone(ServerLevel level, IntegrityState state, ServerPlayer player) {
+		Vec3 look = player.getViewVector(1.0f);
+		java.util.List<net.minecraft.world.level.ChunkPos> visible = new java.util.ArrayList<>();
+		java.util.List<net.minecraft.world.level.ChunkPos> ring = new java.util.ArrayList<>();
+		int maxRadius = Math.min(9, Math.max(4, state.frontRadius() + 2));
+
+		for (net.minecraft.world.level.ChunkPos pos : ChunkCollapse.candidates(level, player, 3, maxRadius)) {
+			ring.add(pos);
+
+			double dx = (pos.x << 4) + 8 - player.getX();
+			double dz = (pos.z << 4) + 8 - player.getZ();
+			double distance = Math.sqrt(dx * dx + dz * dz);
+
+			if (distance < 1.0) {
+				continue;
+			}
+
+			if ((look.x * dx + look.z * dz) / distance > 0.35) {
+				visible.add(pos);
+			}
+		}
+
+		net.minecraft.world.level.ChunkPos target = null;
+
+		if (!visible.isEmpty()) {
+			target = visible.get(level.random.nextInt(visible.size()));
+		} else if (!ring.isEmpty()) {
+			target = ring.get(level.random.nextInt(ring.size()));
+		}
+
+		if (target == null) {
+			return;
+		}
+
+		// nest 2 in the early phases, 1 later: the front should be big by the end of a run
+		int nest = state.phase().ordinal() >= Phase.CASCADE.ordinal() ? 2 : 1;
+
+		if (DeleteZone.seed(level, target.x, target.z, nest)) {
+			state.drain(1);
+
+			if (level.random.nextInt(6) == 0) {
+				state.setFrontRadius(state.frontRadius() + 1);
+			}
+
+			Error404.LOGGER.info("[error404] seeded 20x20 delete zone at chunk [{}, {}] (nest {})",
+					target.x, target.z, nest);
 		}
 	}
 

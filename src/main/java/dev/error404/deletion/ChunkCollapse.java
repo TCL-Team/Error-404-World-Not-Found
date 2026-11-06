@@ -32,6 +32,8 @@ public final class ChunkCollapse {
 	/** What DeletionJournal can remember for one chunk; collapses are always fully restorable. */
 	public static final int MAX_BLOCKS = DeletionJournal.PER_CHUNK;
 
+	/** Chunk-sized collapses are rare now (they are a safety net for the 20x20 zone front). */
+
 	private ChunkCollapse() {
 	}
 
@@ -118,6 +120,10 @@ public final class ChunkCollapse {
 	 * the block updates happen to be flushed, which is the difference between "a chunk was
 	 * deleted" and "the ground under me is gone".
 	 */
+	public static void syncToViewers(ServerLevel level, LevelChunk chunk) {
+		syncChunk(level, chunk);
+	}
+
 	private static void syncChunk(ServerLevel level, LevelChunk chunk) {
 		ClientboundLevelChunkWithLightPacket packet = new ClientboundLevelChunkWithLightPacket(
 				chunk, level.getChunkSource().getLightEngine(), null, null);

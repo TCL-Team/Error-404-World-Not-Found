@@ -40,6 +40,9 @@ public final class PersonalCollapse {
 	private static int countdown;
 	private static int chunkX;
 	private static int chunkZ;
+	/** The 20x20 zone is centred here, in block coords, at the moment the warning starts. */
+	private static int centreX;
+	private static int centreZ;
 
 	private PersonalCollapse() {
 	}
@@ -64,6 +67,8 @@ public final class PersonalCollapse {
 		countdown = Math.max(20, warningTicks);
 		chunkX = player.getBlockX() >> 4;
 		chunkZ = player.getBlockZ() >> 4;
+		centreX = player.getBlockX();
+		centreZ = player.getBlockZ();
 
 		player.sendSystemMessage(Component.literal("ERR_404: your chunk has no owner. it is being reclaimed.")
 				.withStyle(net.minecraft.ChatFormatting.DARK_RED));
@@ -125,11 +130,15 @@ public final class PersonalCollapse {
 			return;
 		}
 
-		boolean stillInside = (player.getBlockX() >> 4) == chunkX && (player.getBlockZ() >> 4) == chunkZ;
+		// The zone is 20x20 blocks and centred on where the player is standing, so "inside" is
+		// a rectangle rather than a chunk: a player who sprints two blocks sideways is still
+		// inside it, and that is intentional.
+		boolean stillInside = Math.abs(player.getBlockX() - centreX) <= DeleteZone.SIZE / 2
+				&& Math.abs(player.getBlockZ() - centreZ) <= DeleteZone.SIZE / 2;
 
-		int removed = ChunkCollapse.collapse(level, chunkX, chunkZ, true);
+		boolean seeded = DeleteZone.seedAtPlayer(level, player);
 
-		if (removed == 0) {
+		if (!seeded) {
 			return;
 		}
 
@@ -145,8 +154,8 @@ public final class PersonalCollapse {
 					.withStyle(net.minecraft.ChatFormatting.DARK_RED), false);
 		} else {
 			// They made it. Reward the sprint with the sound of the thing they escaped.
-			player.sendSystemMessage(Component.literal("ERR_404: chunk [" + chunkX + ", " + chunkZ
-					+ "] reclaimed. you are not in it.").withStyle(net.minecraft.ChatFormatting.GRAY));
+			player.sendSystemMessage(Component.literal("ERR_404: 20x20 zone at " + centreX + ", "
+					+ centreZ + " reclaimed. you are not in it.").withStyle(net.minecraft.ChatFormatting.GRAY));
 			level.playSound(null, player.blockPosition(), ModSounds.SUB_HIT, SoundSource.AMBIENT, 1.2f, 0.7f);
 		}
 

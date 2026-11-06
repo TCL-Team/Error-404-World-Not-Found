@@ -22,8 +22,15 @@ import net.minecraft.world.level.block.state.BlockState;
  * long session degrades to "the first cuts cannot be undone" instead of an OOM.</p>
  */
 public final class DeletionJournal {
-	/** Deepest slice a single chunk can remember (16x16 surface + a few layers is plenty). */
-	public static final int PER_CHUNK = 1024;
+	/**
+	 * Deepest slice a single chunk can remember.
+	 *
+	 * <p>Raised from 1024 when deletion became 20x20 zones: a 20x20 zone touches up to nine
+	 * chunks, and a chunk corner inside a zone can lose far more than 1024 blocks once the
+	 * zone eats a hillside. 4096 keeps one full zone per chunk fully restorable, which is the
+	 * promise {@code /error404 restore} makes.</p>
+	 */
+	public static final int PER_CHUNK = 4096;
 	public static final int MAX_CHUNKS = 512;
 
 	private static final Map<Long, Deque<Entry>> JOURNAL = new HashMap<>();

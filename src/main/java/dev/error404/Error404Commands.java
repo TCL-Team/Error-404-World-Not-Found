@@ -16,7 +16,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.permissions.Permissions;
 
 import dev.error404.integrity.Error404Director;
 import dev.error404.integrity.IntegrityState;
@@ -37,8 +36,15 @@ public final class Error404Commands {
 	}
 
 	private static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+		// `enable` is the only branch a player can reach before the gate is open: it is what
+		// opens the gate. Everything else stays invisible to them until then.
 		dispatcher.register(Commands.literal("error404")
-				.requires(Error404Commands::isOperator)
+				.then(Commands.literal("enable").executes(Error404Commands::gateOn))
+				.then(Commands.literal("disable").requires(dev.error404.commands.CommandGate::visible)
+						.executes(Error404Commands::gateOff)));
+
+		dispatcher.register(Commands.literal("error404")
+				.requires(dev.error404.commands.CommandGate::visible)
 				.executes(Error404Commands::status)
 				.then(Commands.literal("help").executes(Error404Commands::help))
 				.then(Commands.literal("status").executes(Error404Commands::status))
@@ -101,8 +107,29 @@ public final class Error404Commands {
 						.then(Commands.literal("save").executes(Error404Commands::saveConfig))));
 	}
 
-	private static boolean isOperator(CommandSourceStack source) {
-		return source.permissions().hasPermission(Permissions.COMMANDS_MODERATOR);
+	/**
+	 * Reveals the whole command tree to whoever runs this, then tells them, in the mod's voice,
+	 * that they have just made it worse.
+	 */
+	private static int gateOn(CommandContext<CommandSourceStack> context) {
+		if (!dev.error404.commands.CommandGate.enable(context.getSource())) {
+			reply(context.getSource(), "run this in game, as a player", ChatFormatting.RED);
+			return 0;
+		}
+
+		reply(context.getSource(), "error404: commands revealed for this session", ChatFormatting.DARK_GREEN);
+		reply(context.getSource(), "the mod was already running. now you can see it.", ChatFormatting.DARK_GRAY);
+		reply(context.getSource(), "you will need to do this again next session.", ChatFormatting.DARK_GRAY);
+		return 1;
+	}
+
+	private static int gateOff(CommandContext<CommandSourceStack> context) {
+		if (!dev.error404.commands.CommandGate.disable(context.getSource())) {
+			return 0;
+		}
+
+		reply(context.getSource(), "error404: commands hidden", ChatFormatting.DARK_GREEN);
+		return 1;
 	}
 
 	private static int status(CommandContext<CommandSourceStack> context) {
@@ -135,6 +162,8 @@ public final class Error404Commands {
 		reply(source, "/error404 anomaly <code> - force one structure", ChatFormatting.GRAY);
 		reply(source, "/error404 backup - write a world zip right now", ChatFormatting.GRAY);
 		reply(source, "/error404 reload - reload config/error404.json", ChatFormatting.GRAY);
+		reply(source, "/error404 disable - hide the whole tree again", ChatFormatting.GRAY);
+		reply(source, "note: commands stay hidden to players until they run /error404 enable", ChatFormatting.DARK_GRAY);
 		return 1;
 	}
 
