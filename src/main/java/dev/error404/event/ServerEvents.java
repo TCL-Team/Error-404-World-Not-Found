@@ -275,9 +275,38 @@ public final class ServerEvents {
 		IntegrityState state = IntegrityState.get(level.getServer());
 		state.drain(1);
 
+		// Find real headroom instead of assuming 16 blocks of it: teleporting a player into
+		// stone is a death sentence that has nothing to do with the entity.
+		int targetY = -1;
+
+		for (int dy = 12; dy <= 48; dy += 4) {
+			BlockPos candidate = player.blockPosition().above(dy);
+
+			if (level.getBlockState(candidate).isAir()
+					&& level.getBlockState(candidate.above()).isAir()
+					&& level.getBlockState(candidate.above(2)).isAir()) {
+				targetY = candidate.getY();
+				break;
+			}
+		}
+
+		if (targetY < 0) {
+			player.displayClientMessage(Component.literal("ERR_404: no gap big enough to fall through")
+					.withStyle(ChatFormatting.DARK_RED), true);
+			return false;
+		}
+
 		player.playSound(ModSounds.DATA_CHIRP, 1.0f, 0.6f);
-		player.teleportTo(player.getX(), player.getY() + 16, player.getZ());
+		player.teleportTo(player.getX(), targetY, player.getZ());
+		player.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+				net.minecraft.world.effect.MobEffects.SLOW_FALLING, 120, 0, false, false));
 		level.sendParticles(net.minecraft.core.particles.ParticleTypes.PORTAL, player.getX(), player.getY(), player.getZ(), 40, 0.5, 1.0, 0.5, 0.1);
+
+		// It follows the pearl. Not instantly - but it knows where you went.
+		for (dev.error404.entity.Error422Entity error422 : level.getEntitiesOfClass(
+				dev.error404.entity.Error422Entity.class, player.getBoundingBox().inflate(48.0))) {
+			error422.setStalkTarget(player.blockPosition());
+		}
 
 		if (!player.getAbilities().instabuild) {
 			player.getItemInHand(hand).shrink(1);

@@ -63,6 +63,8 @@ public class Error422Entity extends Mob {
 	private int despawnTimer = 20 * 90;
 	/** How many player deaths this session has fed it. */
 	private int feasts;
+	/** Last known "you went there" position, set by items that move the player. */
+	private BlockPos stalkTarget;
 	private boolean dormant;
 
 	public Error422Entity(EntityType<? extends Error422Entity> type, Level level) {
@@ -140,6 +142,14 @@ public class Error422Entity extends Mob {
 
 		if (abilityCooldown > 0) {
 			abilityCooldown--;
+		}
+
+		if (stalkTarget != null) {
+			getNavigation().moveTo(stalkTarget.getX() + 0.5, stalkTarget.getY(), stalkTarget.getZ() + 0.5, 1.3);
+
+			if (blockPosition().distSqr(stalkTarget) < 9.0) {
+				stalkTarget = null;
+			}
 		}
 
 		// ANNEXATION aura: darkness follows it. The player has to hold a light source, not
@@ -718,6 +728,11 @@ public class Error422Entity extends Mob {
 		}
 
 		discard();
+	}
+
+	/** Used by the void pearl: it saw where you went and it will walk there. */
+	public void setStalkTarget(BlockPos pos) {
+		this.stalkTarget = pos.immutable();
 	}
 
 	public void setDormant(boolean dormant) {
