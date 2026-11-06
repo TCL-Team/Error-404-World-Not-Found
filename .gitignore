@@ -1,0 +1,29 @@
+# Gradle / Loom
+.gradle/
+build/
+out/
+run/
+run-*/
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.classpath
+.project
+bin/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Minecraft runtime / logs
+logs/
+crash-reports/
+*.log
+
+# local backups made by the mod while testing
+error404_backups/

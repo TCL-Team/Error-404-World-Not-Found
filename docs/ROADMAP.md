@@ -1,0 +1,270 @@
+# ERROR 404: WORLD NOT FOUND — Technical Roadmap
+
+Target: **Minecraft Java 1.21.11 + Fabric**. Yahi document code phase ka blueprint hai.
+
+---
+
+## 0. Sandbox ki reality (padho pehle)
+
+Is repo ke dev sandbox me **JDK / Gradle / Maven repo access nahi hai** (outbound sirf `github.com`, npm, pypi).
+Matlab mod ko yahan `./gradlew build` se compile nahi kiya ja sakta.
+Isliye verification ka plan ye hai:
+
+- **GitHub Actions** par build workflow (`.github/workflows/build.yml`) — har push par `./gradlew build`,
+  log + jar artifact. Sandbox se `gh run view` / `gh run download` se result milta hai.
+- Local test user ke PC par: `./gradlew runClient` (Minecraft + mod launch).
+- Har milestone ke saath **smoke-test checklist** (Section 8) — Jo cheez CI verify nahi kar sakti (visuals, sound, feel),
+  woh checklist se verify hogi.
+
+> Agar chaho to main sandbox me **network ke bina bhi** structure + code likh sakta hoon, par tab compile errors ka
+> risk rahega. Workflow ke saath risk kam ho jaata hai — build fail hua to log se fix karenge.
+
+---
+
+## 1. Tech stack (locked)
+
+Target: **Minecraft Java 1.21.11 + Fabric**. Yahi document code phase ka blueprint hai.
+
+| Cheez | Version | Note |
+|---|---|---|
+| Minecraft | `1.21.11` | "Mounts of Mayhem", 9 Dec 2025 |
+| Fabric Loader | `0.20.1` | |
+| Fabric API | `0.141.6+1.21.11` | official example mod ke saath match |
+| Loom | `1.19-SNAPSHOT` | plugin id `net.fabricmc.fabric-loom-remap` |
+| Gradle | `9.8.2` (wrapper) | |
+| Java | `21` (`release=21`) | MC 1.21.11 ka runtime |
+| Mappings | `loom.officialMojangMappings()` | |
+| Mod id | `error404` | group/package `dev.error404` |
+
+**Split source sets:** `src/main` (server + common), `src/client` (render/sound/screen). Loom ka `splitEnvironmentSourceSets()`.
+
+**Loader choice ka reason:** Fabric — fast iteration, chhota jar, aur 1.21.11 ke liye official template ready hai.
+NeoForge port baad me (code me loader-specific sirf 3 jagah hoga: entrypoints, events, networking registration).
+
+### 1.21.11 mapping gotchas (bahut important)
+
+Yeh 1.21.9/1.21.11 me badla hai, purane tutorials galat hain:
+
+- `ResourceLocation` → **`Identifier`** (`net.minecraft.resources.Identifier.fromNamespaceAndPath(...)`)
+- NBT save/load → **`ValueInput` / `ValueOutput`** (`addAdditionalSaveData(ValueOutput)`), `Optional` returns (`getInt("x").orElse(0)`)
+- `SavedData` + **`SavedDataType`**, load via `level.getDataStorage().computeIfAbsent(TYPE)`
+- Entity rendering → **`EntityRenderState` / `extractRenderState`** pattern, `MobRenderer<T, S, M>`
+- HUD → **`HudElementRegistry.attachElementBefore(VanillaHudElements.CHAT, ...)`** (purana `HudRenderCallback` nahi)
+- Networking → `CustomPacketPayload` + `PayloadTypeRegistry.playS2C()/playC2S()` + `ClientPlayNetworking`
+- Commands permissions → `source.permissions().hasPermission(Permissions.COMMANDS_MODERATOR)`
+- Model layers → `EntityModelLayerRegistry.registerModelLayer` (Fabric), `PartNames.HEAD/BODY/...`
+- Data-driven stuff (blockstates/models) → naye `client/data/models` generators; hum json haath se likhenge
+
+---
+
+## 2. Repo structure (target)
+
+```
+Error-404-World-Not-Found/
+├── build.gradle                  # loom + deps
+├── gradle.properties             # versions (single source of truth)
+├── settings.gradle
+├── gradlew / gradle/wrapper/*    # Gradle 9.8.2
+├── LICENSE                       # MIT (recommend)
+├── README.md
+├── docs/
+│   ├── GAME_DESIGN.md            # concept (done)
+│   ├── ROADMAP.md                # this file
+│   └── concept/*.png             # concept art
+├── .github/workflows/build.yml   # CI: gradlew build
+└── src/
+    ├── main/java/dev/error404/
+    │   ├── Error404.java                 # ModInitializer, registry wiring
+    │   ├── ModRegistry.java              # items/blocks/entity/sounds (ek jagah)
+    │   ├── ModSounds.java
+    │   ├── config/ModConfig.java         # JSON config (hand-rolled, no deps)
+    │   ├── integrity/IntegrityState.java # SavedData: integrity, phase, seed, flags
+    │   ├── integrity/Phase.java          # enum P0..P4 + thresholds
+    │   ├── integrity/IntegrityDirector.java # per-tick server logic, phase transitions
+    │   ├── deletion/DeletionFront.java   # chunk delete/corrupt queue + budget
+    │   ├── deletion/DeletionRules.java   # protection rules (spawn/bed/player radius)
+    │   ├── anomaly/AnomalyType.java      # enum: 12 anomalies + metadata
+    │   ├── anomaly/AnomalyPlacer.java    # placement rules (80-140 blocks, P2+)
+    │   ├── anomaly/builders/*.java       # per-anomaly structure builders (server-side block placement)
+    │   ├── entity/Error422Entity.java
+    │   ├── entity/ModEntities.java       # EntityType + attributes
+    │   ├── entity/goals/*.java           # ObserveGoal, ApproachGoal, PresenceGoal, HuntGoal
+    │   ├── item/DataFragmentItem.java, CorruptShardItem.java, ErrorLogItem.java, NullTorchItem.java
+    │   ├── block/AnchorCoreBlock.java, MissingTextureBlock.java, VoidStoneBlock.java
+    │   ├── command/Error404Command.java  # /error404 ...
+    │   ├── network/ModNetworking.java    # payload registration
+    │   ├── network/payload/*.java        # SyncStateS2C, ClientEffectS2C, LookAt422C2S, ...
+    │   └── util/ErrorText.java           # random ERR_ lines generator
+    ├── main/resources/
+    │   ├── fabric.mod.json
+    │   ├── error404.mixins.json
+    │   ├── error404.classtweaker (only if needed)
+    │   ├── assets/error404/{icon.png, lang/en_us.json, textures/...}
+    │   ├── data/error404/{recipe, loot_table, tags, damage_type}
+    │   └── sounds.json + sounds/*.ogg
+    └── client/java/dev/error404/client/
+        ├── Error404Client.java           # renderers, hud, keybind, payload receivers
+        ├── render/Error422Renderer.java, Error422Model.java
+        ├── render/VoidSkyRenderer.java   # black void + grid + "loading bar" horizon
+        ├── render/HudGlitchRenderer.java # scanlines, ERR_ lines, integrity text (opt-in)
+        ├── render/StaticFlash.java       # fullscreen static overlay
+        ├── mixin/ChunkHidingMixin.java   # render-layer chunk hiding (RISK — see §6)
+        ├── mixin/FogMixin.java
+        └── sound/*.java                  # whisper, heartbeat, blip
+```
+
+---
+
+## 3. Milestones
+
+Har milestone ke baad jar CI par build hona chahiye.
+
+### v0.1 — SKELETON (foundation)
+- Gradle project, fabric.mod.json, entrypoints, mixin config.
+- `/error404 status` command.
+- Integrity SavedData + Phase enum + per-tick director (abhi koi deletion nahi, sirf counter + chat lines).
+- Config file with safety defaults.
+- **AC:** game launch hota hai, `/error404 status` integrity dikhata hai, integrity time ke saath girti hai.
+
+### v0.2 — DELETION (core horror)
+- `DeletionFront`: integrity < 60% par chunk deletion budget (2 chunks/sec), surface-down decay.
+- `DeletionRules`: player radius 8, spawn/bed/chest protection, creative/spectator skip.
+- Client: void sky + fog + grid, deletion ke saath sync (chunk ke andar ground gayab dikhe).
+- Phase transition overlay + sound stinger.
+- **AC:** gameplay me chunks visually khaali hote hain, duniya corrupt nahi hoti, `/error404 stop` ke baad sab normal.
+
+### v0.3 — ANOMALIES (structures)
+- `AnomalyPlacer` + 6 v1 anomalies (null_hut, staircase_to_nowhere, memory_of_home, chunk_seam, the_sinkhole, the_last_chunk).
+- Har anomaly ka apna error code + sound stinger; `revoke` event (structure dissolve).
+- `data_fragment` item anomaly chests me.
+- **AC:** P2 ke baad ek-ek karke structures spawn hote hain, 100+ blocks par tiled nahi dikhte.
+
+### v0.4 — THE ENTITY
+- `Error422Entity` + model + 3 textures + renderer (missing-texture checker pattern original).
+- Goals: OBSERVE (freeze on look), APPROACH (out of frame), PRESENCE, HUNT.
+- Look-rule: 3s se zyada dekhna = damage event. Ignore = safe.
+- Sounds: whisper, dial-up chirp, sub hit, delayed footsteps.
+- **AC:** entity player ko stalk karti hai, dekhne par freeze hoti hai, ignore karne par gayab.
+
+### v0.5 — ENDINGS + POLISH
+- Anchor Core + crafting, 3 endings, `/error404 restore`, world backup.
+- Error Log item, dummy lang (en_us + hi_in flavour), sound master.
+- Balance pass: 30-min demo mode (`/error404 demo`), telemetry-free logging.
+
+### v1.0 — RELEASE
+- CurseForge/Modrinth metadata, jar naming `error404-1.21.11-1.0.0.jar`, icon, banner, trailer script.
+- Optional: Mod Menu integration (config GUI) — needs extra dep, default OFF.
+
+---
+
+## 4. Data & state
+
+`IntegrityState` (SavedData, overworld):
+```java
+int integrity            // 0..100
+Phase phase              // P0..P4 (derived + latency: phase ek baar badha to wapas nahi)
+long sessionSeed         // deterministic client effects ke liye
+List<String> foundAnomalies  // error codes
+Set<Long> deletionQueue  // chunk keys (x, z) — restore ke liye
+int dataFragmentsCollected
+boolean ended            // 0/1/2
+BlockPos anchorPos       // Last Chunk
+```
+- Tick: `IntegrityDirector` 20 ticks me ek baar chalta hai (performance).
+- Drop rates: `-1 integrity / 60s` base, `-1 / 10s` naye chunk explore karne par (anti-rush), `-2` 422 ke 10 block ke andar.
+- Raise: Anchor Core zone me `+1 / 30s`, `data_fragment` use karne par `+6`.
+
+---
+
+## 5. Safety implementation (must)
+
+```
+config/error404.json
+{
+  "enabled": true,
+  "destructiveEnding": false,      // false => rename + backup only
+  "backupOnStart": true,
+  "realBlockDeletion": true,       // false => sirf render layer (safe mode)
+  "playerSafeRadius": 8,
+  "maxChunksPerSecond": 2,
+  "protectBlockEntities": true,    // chests, spawners, beds...
+  "dummyWorld": false,             // true => alag "error404_demo" world me hi deletion
+  "hud": false,
+  "phaseDurations": {...}
+}
+```
+- Session start: `saves/<world>/error404_backups/<timestamp>.zip` (region folder only).
+- `/error404 restore` → deleted chunks `chunk.setUnsaved(true)` + regeneration, integrity 100.
+
+---
+
+## 6. Risks & fallbacks
+
+| Risk | Impact | Fallback |
+|---|---|---|
+| **Chunk render hiding** ke liye mixin (`ViewArea` / `LevelRenderer`) 1.21.11 me signature badal sakta hai | build break | Pehle **void sky + dense fog + block decay** se same feel; mixin ko alag commit me rakho, flag ke peeche (`clientChunkHiding`), fail ho to disable |
+| Block decay slow machines par lag | stutter | Ek tick me max 64 block, section-wise, `ServerLevel` scheduler thread se |
+| Multiplayer desync (client static flash vs server state) | confusion | Sab kuch server-authoritative + `sessionSeed` se deterministic client visuals |
+| Entity model/render API change | entity invisible | Vanilla skeleton reuse (skeleton model + custom texture) as v0.3 fallback |
+| Deletion se player ka base kha jaana | data loss complaints | backup + protected radius + `/error404 restore` + creative skip |
+| 422 jumpscare se log complain karein (epilepsy) | harm | `photosensitivity` config flag: no rapid flashing, static ko "slow" mode me |
+
+---
+
+## 7. Assets plan
+
+| Asset | Count | Spec |
+|---|---|---|
+| Entity textures | 3 | 64x64: `error_422.png` (base), `error_422_missing.png`, `error_422_face.png` |
+| Item textures | 5 | 16x16, palette-clean (white/grey + red accent) |
+| Block textures | 3 | 16x16 |
+| GUI | 1 | `error_log.png` (v0.5) |
+| Item/entity models | 8 json | java block model |
+| Sounds | 14 | `.ogg` mono 44.1k, original synthesized (no copyright samples) |
+| Lang | 2 | `en_us.json`, `hi_in.json` (Hinglish flavour lines) |
+| Icon / banner | 2 | 128x128 icon, 1280x720 banner — docs/concept art se derive |
+
+Sab asset **original** honge (ERROR 422 ka koi asset use nahi).
+
+---
+
+## 8. Smoke-test checklist (manual, har milestone)
+
+- [ ] `./gradlew runClient` launch, crash nahi
+- [ ] naya world → 30 sec me P0 clear, integrity 100
+- [ ] `/error404 phase P2` → chunk deletion dikhti hai, FPS 60+
+- [ ] `/error404 anomaly null_hut` → structure spawn, error code chat me
+- [ ] `/error404 summon422` → entity dikhti hai, dekhne par freeze
+- [ ] 3s look → damage event, ignore → despawn
+- [ ] `/error404 stop` → sab normal, koi residual glitch nahi
+- [ ] `/error404 restore` → deleted area wapas
+- [ ] dedicated server: 2 clients, same phase dikhta hai
+- [ ] config edits reload (`/error404 config reload`)
+
+---
+
+## 9. GitHub CI workflow (proposed)
+
+```yaml
+name: build
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '21' }
+      - uses: gradle/actions/setup-gradle@v4
+      - run: ./gradlew build --stacktrace
+      - uses: actions/upload-artifact@v4
+        with: { name: error404-jar, path: build/libs/*.jar }
+```
+
+---
+
+## 10. Next actions (jab tum "code" bolo)
+
+1. gradle skeleton + CI workflow + `/error404 status` (v0.1) — ek PR.
+2. CI green hone ke baad v0.2 deletion.
+3. Assets tabs tak main placeholder textures banaunga (16x16 / 64x64 pixel-art), baad me polish.
