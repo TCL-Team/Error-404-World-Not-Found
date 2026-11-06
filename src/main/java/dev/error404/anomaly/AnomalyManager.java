@@ -41,7 +41,7 @@ public final class AnomalyManager {
 	 * distance and plays dead. The cooldown is per-session, so it is not a new timer.
 	 */
 	private static final int PRESSURE_INTERVAL = 20 * 45;
-	private static final int SPAWN_COOLDOWN_TICKS = 20 * 90;
+	private static final int SPAWN_COOLDOWN_TICKS = 20 * 45;
 	private static long lastSpawnTick = 0L;
 
 	private AnomalyManager() {
@@ -250,14 +250,12 @@ public final class AnomalyManager {
 	 * occasionally "forgets to remove" one near a player who is not looking that way, so it
 	 * only ever appears behind you or in the corner of the screen.
 	 *
-	 * <p>Hard cap of two alive at once, a 90 second cooldown between spawns, and always
+	 * <p>Hard cap from the difficulty preset, a 45 second cooldown between spawns, and always
 	 * 24 blocks behind the player so it can never materialise in someone's face.</p>
 	 */
 	private static void maybeSpawn422(ServerLevel level, Phase phase, long now) {
-		if (phase.ordinal() < Phase.DESYNC.ordinal()) {
-			return;
-		}
-
+		// From the first phase on, it exists. Earlier versions waited for DESYNC, which meant
+		// a player could spend twenty minutes in a quiet world wondering what the mod does.
 		if (now % SPAWN_CHECK_TICKS != 0) {
 			return;
 		}
