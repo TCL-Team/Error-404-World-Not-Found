@@ -22,6 +22,7 @@ import net.minecraft.world.level.block.entity.SignText;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BedPart;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.StandingSignBlock;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.levelgen.Heightmap;
 
@@ -72,11 +73,32 @@ public final class StructureKit {
 		return null;
 	}
 
+	/**
+	 * A sign with text on it.
+	 *
+	 * <p>{@code minecraft:oak_sign} in 1.21.11 is the <b>standing</b> sign - it has
+	 * {@code ROTATION} and {@code WATERLOGGED}, not {@code FACING}. Setting {@code FACING} on it
+	 * throws {@link IllegalArgumentException} before a single block is placed, which is why every
+	 * anomaly that writes a sign was failing to build and logging a stack trace on the server
+	 * thread. The {@code facing} argument is kept for callers but now only decides the rotation.</p>
+	 */
 	public static void sign(ServerLevel level, int x, int y, int z, String... lines) {
-		set(level, x, y, z, Blocks.OAK_SIGN.defaultBlockState().setValue(HorizontalDirectionalBlock.FACING, Direction.NORTH));
+		signFacing(level, x, y, z, Direction.NORTH, lines);
+	}
+
+	public static void signFacing(ServerLevel level, int x, int y, int z, Direction facing, String... lines) {
+		// 16 rotation steps per turn: 0 = south, 4 = west, 8 = north, 12 = east
+		int rotation = switch (facing) {
+			case NORTH -> 8;
+			case WEST -> 4;
+			case EAST -> 12;
+			default -> 0;
+		};
+
+		set(level, x, y, z, Blocks.OAK_SIGN.defaultBlockState().setValue(StandingSignBlock.ROTATION, rotation));
 
 		if (level.getBlockEntity(new BlockPos(x, y, z)) instanceof SignBlockEntity sign) {
-			SignText text = new SignText();
+			SignText text = sign.getText();
 
 			for (int i = 0; i < 4; i++) {
 				String line = i < lines.length ? lines[i] : "";
