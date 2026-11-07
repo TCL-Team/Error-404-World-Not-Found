@@ -2,6 +2,26 @@
 
 Sab notable changes. Format [Keep a Changelog](https://keepachangelog.com/), versioning [SemVer](https://semver.org/).
 
+## [0.9.5] - 2026-11-06
+
+**Creative inventory crash.** Screen khulte hi HUD layer vanilla ke GUI ke upar har frame me
+40 full-screen fills aur 5 line strings draw kar raha tha — creative inventory me 500+ slots aur
+har slot ka tooltip hota hai, to wahi frame sabse mehnga frame hai. Ab layer **screen khula hote hi
+band ho jaati hai**, aur agar phir bhi kuch throw kare to ek line log hoti hai (stack trace vanilla
+ke GUI code ko point karta tha, isliye pata hi nahi chalta tha ki kaun sa mod hai).
+
+### Fixed
+
+- **HUD glitch + dread layers kisi bhi screen ke saamne band** (creative inventory, chest, crafting).
+  Chat/escape/title screen par pehle jaisa.
+- **Ban layer creative aur spectator par band.** Creative me "cheez lena" ka koi matlab nahi — aur
+  lockdown ek banate hue build ke 24-block radius se saare lights uda deta tha. Creative testing
+  ki jagah hai; mod wahan test world nahi todna chahiye.
+- **Teeno overlay layers guarded** — koi exception GUI renderer me nahi ja sakta. Jo bhi ho, world
+  chalta rehta hai aur ek named log line aati hai.
+- **`CorruptShardItem.appendHoverText`** par explicit comment + null-safe signature: tooltip client
+  par banta hai aur har creative slot ke liye, to usme world/server ko chhoona allowed nahi.
+
 ## [0.9.4] - 2026-11-06
 
 **"Deletion dikh hi nahi rahi thi" ka jawab — teen bugs the, aur teeno ek hi cheez kar rahe the:
