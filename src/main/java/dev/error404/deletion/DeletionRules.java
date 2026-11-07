@@ -66,8 +66,11 @@ public final class DeletionRules {
 			}
 		}
 
-		// never delete around a living player
-		double safe = cfg.playerSafeRadius;
+		// Never delete the blocks a player is standing in or could step into. The tip-over radius
+		// (8) was a hole in the show: the front is seeded one chunk away, so the near edge of every
+		// zone fell inside 8 blocks and was skipped, leaving a protected strip exactly where the
+		// player was looking. Three blocks is what falling into a hole actually needs.
+		double safe = Math.min(3.0, Math.max(1.0, cfg.playerSafeRadius / 3.0));
 
 		for (ServerPlayer player : level.players()) {
 			if (player.isCreative() || player.isSpectator()) {

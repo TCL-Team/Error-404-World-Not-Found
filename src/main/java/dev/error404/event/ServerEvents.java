@@ -59,6 +59,7 @@ public final class ServerEvents {
 			dev.error404.haunt.Presence.reset();
 			dev.error404.haunt.Disturbing.reset();
 			dev.error404.deletion.DeleteZone.reset();
+			dev.error404.deletion.DeletionFront.resetSample();
 			dev.error404.commands.CommandGate.reset();
 		});
 

@@ -47,6 +47,14 @@ public final class DeleteZone {
 	public static final int WAVE_INTERVAL = 8;
 	/** Blocks removed per wave, before the wave is allowed to spill into the next tick. */
 	public static final int TICK_BUDGET = 1600;
+	/**
+	 * How deep the visible pass cuts below the zone's top, in blocks.
+	 *
+	 * <p>6 is enough that the player sees a pit with edges rather than a flat replacement of
+	 * grass, and shallow enough that the first pass finishes in seconds. Anything deeper and the
+	 * zone takes a full minute before it looks like anything happened.</p>
+	 */
+	public static final int SURFACE_DEPTH = 6;
 	/** How many zones may be eating the world at once. */
 	public static final int MAX_ACTIVE = 3;
 	/** Nesting limit, so a session cannot turn the whole save into a queue. */
@@ -87,6 +95,14 @@ public final class DeleteZone {
 
 		// a bottom-up walk inside the current column so the hole deepens visibly
 		private int cursorY;
+		/**
+		 * Depth limit for the pass the zone is currently running.
+		 *
+		 * <p>{@link #minY} is bedrock; this is where the current pass stops. The visible surface
+		 * pass stops {@link #SURFACE_DEPTH} below the top so a zone reads as deleted within
+		 * seconds, then the trench pass runs the rest of the way down.</p>
+		 */
+		private int floorY;
 		private boolean columnDone = true;
 
 		private Zone(int originX, int originZ, int minY, int topY, int nest,
@@ -98,6 +114,7 @@ public final class DeleteZone {
 			this.nest = nest;
 			this.dimension = dimension;
 			this.cursorY = topY;
+			this.floorY = Math.max(minY, topY - SURFACE_DEPTH);
 		}
 
 		private int nextX() {
@@ -110,6 +127,17 @@ public final class DeleteZone {
 
 		private boolean finished() {
 			return column >= SIZE * SIZE;
+		}
+
+		/**
+		 * Swaps the zone into the deep pass: column counter back to zero, cursor back to the top,
+		 * floor dropped to bedrock. Runs once per zone, after the visible slice is already gone.
+		 */
+		private void beginTrench() {
+			this.column = 0;
+			this.columnDone = false;
+			this.cursorY = this.floorY;
+			this.floorY = this.minY;
 		}
 	}
 
@@ -219,10 +247,16 @@ public final class DeleteZone {
 			int removed = eat(target, zone);
 
 			if (zone.finished()) {
-				iterator.remove();
-				IntegrityState.get(level.getServer()).drain(1);
-				spawnNeighbours(level, zone);
-				continue;
+				// surface pass done: the zone now reads as deleted and the front can move on.
+				// The trench pass keeps eating underneath it in the background.
+				if (zone.floorY > zone.minY) {
+					zone.beginTrench();
+				} else {
+					iterator.remove();
+					IntegrityState.get(level.getServer()).drain(1);
+					spawnNeighbours(level, zone);
+					continue;
+				}
 			}
 
 			if (removed > 0) {
@@ -231,7 +265,17 @@ public final class DeleteZone {
 		}
 	}
 
-	/** Runs one wave: eats up to {@link #WAVE_COLUMNS} columns, {@link #TICK_BUDGET} blocks. */
+	/**
+	 * Runs one surface pass: up to {@link #WAVE_COLUMNS} columns, {@link #TICK_BUDGET} blocks,
+	 * but never deeper than {@link #SURFACE_DEPTH} below the zone's top.
+	 *
+	 * <p>This used to run from the surface down to bedrock in one go. A 20x20 zone is 400
+	 * columns of ~185 blocks each, so a single zone removed about 74,000 blocks in 40 seconds -
+	 * four thousand per second - which stalls the server for everyone on it and, worse, means the
+	 * first thing the player sees is a perfectly clean square hole rather than ground falling
+	 * apart. Depth comes off in two passes now: the visible slice first, then a trench pass that
+	 * runs after the zone has already read as deleted.</p>
+	 */
 	private static int eat(ServerLevel level, Zone zone) {
 		int budget = TICK_BUDGET;
 		int removed = 0;
@@ -249,7 +293,7 @@ public final class DeleteZone {
 				zone.columnDone = false;
 			}
 
-			for (int y = zone.cursorY; y >= zone.minY && budget > 0; y--) {
+			for (int y = zone.cursorY; y >= zone.floorY && budget > 0; y--) {
 				cursor.set(x, y, z);
 				BlockState state = level.getBlockState(cursor);
 				zone.cursorY = y - 1;
@@ -270,7 +314,7 @@ public final class DeleteZone {
 
 			// Only advance the column when it was actually finished. Advancing after a budget
 			// cut-off left vertical slivers of world standing inside a hole.
-			if (zone.cursorY < zone.minY) {
+			if (zone.cursorY < zone.floorY) {
 				zone.columnDone = true;
 				zone.column++;
 				columns++;
@@ -347,8 +391,11 @@ public final class DeleteZone {
 	/** Refuses a zone that would contain or reach anything the mod promised not to touch. */
 	public static boolean activates(ServerLevel level, int minX, int minZ, int maxX, int maxZ) {
 		for (ServerPlayer player : level.players()) {
-			if (player.getBlockX() >= minX - 2 && player.getBlockX() <= maxX + 2
-					&& player.getBlockZ() >= minZ - 2 && player.getBlockZ() <= maxZ + 2) {
+			// The zone's own footprint only. The old 2-block buffer around it meant that a zone
+			// seeded "near" a player was refused, which is why the front kept skipping the one
+			// zone the player would actually have been able to see.
+			if (player.getBlockX() >= minX && player.getBlockX() <= maxX
+					&& player.getBlockZ() >= minZ && player.getBlockZ() <= maxZ) {
 				return true;
 			}
 		}

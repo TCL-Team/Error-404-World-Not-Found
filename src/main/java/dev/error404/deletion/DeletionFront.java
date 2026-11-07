@@ -42,6 +42,13 @@ public final class DeletionFront {
 	 * SALVAGE: the front stops for the rest of the session. Already-deleted chunks stay
 	 * deleted until {@code /error404 restore} regenerates them.
 	 */
+	/** One "sample" zone per session, at DESYNC, before full-rate deletion starts. */
+	private static boolean sampleSeeded;
+
+	public static void resetSample() {
+		sampleSeeded = false;
+	}
+
 	public static void hold(MinecraftServer server) {
 		IntegrityState.get(server).stop();
 	}
@@ -70,7 +77,21 @@ public final class DeletionFront {
 
 		Phase phase = state.phase();
 
-		if (phase.ordinal() < Phase.DELETION.ordinal()) {
+		// A single "sample" hole at DESYNC: one shallow zone, journal-ed like everything else, so
+		// the player meets the mod's central idea within the first five minutes instead of twelve.
+		// Full-speed deletion still starts at DELETION.
+		if (phase.ordinal() < Phase.DESYNC.ordinal()) {
+			return;
+		}
+
+		if (phase == Phase.DESYNC) {
+			if (sampleSeeded || state.integrity() > 55) {
+				return;
+			}
+
+			sampleSeeded = true;
+			ServerPlayer first = level.players().get(level.random.nextInt(level.players().size()));
+			seedVisibleZone(level, state, first);
 			return;
 		}
 
@@ -110,9 +131,12 @@ public final class DeletionFront {
 		Vec3 look = player.getViewVector(1.0f);
 		java.util.List<net.minecraft.world.level.ChunkPos> visible = new java.util.ArrayList<>();
 		java.util.List<net.minecraft.world.level.ChunkPos> ring = new java.util.ArrayList<>();
-		int maxRadius = Math.min(9, Math.max(4, state.frontRadius() + 2));
+		// Rings start two chunks out and close in: the front has to be *visible*, not merely
+		// happening. It used to sit at four chunks (64 blocks), which from a standing position is
+		// past the far side of a forest and reads as nothing happening at all.
+		int maxRadius = Math.min(9, Math.max(3, state.frontRadius() + 2));
 
-		for (net.minecraft.world.level.ChunkPos pos : ChunkCollapse.candidates(level, player, 3, maxRadius)) {
+		for (net.minecraft.world.level.ChunkPos pos : ChunkCollapse.candidates(level, player, 2, maxRadius)) {
 			ring.add(pos);
 
 			double dx = (pos.x << 4) + 8 - player.getX();
@@ -168,9 +192,12 @@ public final class DeletionFront {
 		Vec3 look = player.getViewVector(1.0f);
 		java.util.List<net.minecraft.world.level.ChunkPos> visible = new java.util.ArrayList<>();
 		java.util.List<net.minecraft.world.level.ChunkPos> ring = new java.util.ArrayList<>();
-		int maxRadius = Math.min(9, Math.max(4, state.frontRadius() + 2));
+		// Rings start two chunks out and close in: the front has to be *visible*, not merely
+		// happening. It used to sit at four chunks (64 blocks), which from a standing position is
+		// past the far side of a forest and reads as nothing happening at all.
+		int maxRadius = Math.min(9, Math.max(3, state.frontRadius() + 2));
 
-		for (net.minecraft.world.level.ChunkPos pos : ChunkCollapse.candidates(level, player, 3, maxRadius)) {
+		for (net.minecraft.world.level.ChunkPos pos : ChunkCollapse.candidates(level, player, 2, maxRadius)) {
 			ring.add(pos);
 
 			double dx = (pos.x << 4) + 8 - player.getX();

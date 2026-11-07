@@ -69,7 +69,10 @@ public final class AnomalyManager {
 		Phase phase = state.phase();
 		long now = state.ageTicks();
 
-		if (!frozen && phase.ordinal() >= Phase.DELETION.ordinal() && now % PLACE_INTERVAL_TICKS == 0) {
+		// Structures from DESYNC (~4-5 min in), not DELETION (~12 min). Before this the first
+		// five minutes of a session were indistinguishable from vanilla, which is exactly why the
+		// mod felt like nothing was happening.
+		if (!frozen && phase.ordinal() >= Phase.DESYNC.ordinal() && now % PLACE_INTERVAL_TICKS == 0) {
 			tryPlace(level, state, phase);
 		}
 
@@ -263,8 +266,8 @@ public final class AnomalyManager {
 	 * 24 blocks behind the player so it can never materialise in someone's face.</p>
 	 */
 	private static void maybeSpawn422(ServerLevel level, Phase phase, long now) {
-		// From the first phase on, it exists. Earlier versions waited for DESYNC, which meant
-		// a player could spend twenty minutes in a quiet world wondering what the mod does.
+		// It exists from the first minute on. Waiting for a phase meant a player could spend the
+		// first half hour in a completely ordinary world and conclude the mod did nothing.
 		if (now % SPAWN_CHECK_TICKS != 0) {
 			return;
 		}

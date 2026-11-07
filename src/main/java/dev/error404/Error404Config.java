@@ -63,7 +63,15 @@ public final class Error404Config {
 
 	// --- integrity pacing ------------------------------------------------------
 	/** Seconds of survival per 1% of integrity lost (hardcore preset = 45). */
-	public int secondsPerIntegrityPoint = 45;
+	/**
+	 * Seconds of play per point of integrity, before difficulty scaling.
+	 *
+	 * <p>12, down from 45. At 45 the first piece of world deletion - integrity 40, i.e. phase
+	 * DELETION - did not happen until <b>45 minutes</b> into a session, so a player who played a
+	 * normal evening never saw the mod do anything. Twelve puts the first hole at roughly eight
+	 * minutes: still slow enough to feel like the world decaying rather than a countdown.</p>
+	 */
+	public int secondsPerIntegrityPoint = 12;
 	/** Extra integrity lost per brand new chunk the player uncovers, in hundredths of a point. */
 	public int newChunkDrainHundredths = 2;
 	/** Integrity regained per 30s inside an anchor zone. */

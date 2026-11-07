@@ -44,9 +44,9 @@ public final class Chaos {
 	/** Nothing fires before the world is already visibly broken. */
 	private static final int MIN_PHASE = Phase.DELETION.ordinal();
 	/** First event is at least 90 s in, then a gap of 60-180 s. */
-	private static final int FIRST_DELAY = 20 * 90;
-	private static final int MIN_GAP = 20 * 60;
-	private static final int MAX_GAP = 20 * 180;
+	private static final int FIRST_DELAY = 20 * 45;
+	private static final int MIN_GAP = 20 * 30;
+	private static final int MAX_GAP = 20 * 90;
 
 	private static long nextTick = 0L;
 	private static int fired = 0;
