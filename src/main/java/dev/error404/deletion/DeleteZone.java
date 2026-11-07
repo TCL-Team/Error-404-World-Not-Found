@@ -46,7 +46,16 @@ public final class DeleteZone {
 	/** Ticks between waves: 8 ticks is 0.4 s, so a 20x20 zone goes in about 2 seconds. */
 	public static final int WAVE_INTERVAL = 8;
 	/** Blocks removed per wave, before the wave is allowed to spill into the next tick. */
-	public static final int TICK_BUDGET = 1600;
+	/**
+	 * Hard cap on block writes per wave, per zone.
+	 *
+	 * <p>1600, down to 320. Three active zones at 1600 with an 8-tick wave interval is 600 block
+	 * writes <em>per tick</em> plus a chunk resync, which on a phone is a multi-second stall - the
+	 * log from the 0.9.5 session shows the integrated server running 334 ticks behind. 320 per
+	 * wave still removes ~40 blocks a tick per zone, which at 60 fps is indistinguishable from
+	 * instant, and it is 5x lighter on the tick thread.</p>
+	 */
+	public static final int TICK_BUDGET = 320;
 	/**
 	 * How deep the visible pass cuts below the zone's top, in blocks.
 	 *
@@ -333,7 +342,9 @@ public final class DeleteZone {
 			}
 		}
 
-		if (chunk != null) {
+		// Only resync when the wave actually removed nothing and the section can be stale, not on
+		// every wave: block updates already carry the change to the client.
+		if (chunk != null && removed == 0) {
 			ChunkCollapse.syncToViewers(level, chunk);
 		}
 

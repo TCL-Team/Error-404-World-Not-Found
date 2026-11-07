@@ -72,7 +72,13 @@ public final class AnomalyManager {
 		// Structures from DESYNC (~4-5 min in), not DELETION (~12 min). Before this the first
 		// five minutes of a session were indistinguishable from vanilla, which is exactly why the
 		// mod felt like nothing was happening.
-		if (!frozen && phase.ordinal() >= Phase.DESYNC.ordinal() && now % PLACE_INTERVAL_TICKS == 0) {
+		// `now % INTERVAL` is true in *every* dimension on the same tick, so a player who has visited
+		// the Nether and the End got three placements per interval, each one a full structure build
+		// on the tick thread. Offset the interval per dimension and stagger the worlds.
+		int stagger = (int) Math.floorMod(level.dimension().identifier().hashCode(), PLACE_INTERVAL_TICKS);
+
+		if (!frozen && phase.ordinal() >= Phase.DESYNC.ordinal()
+				&& now % PLACE_INTERVAL_TICKS == stagger) {
 			tryPlace(level, state, phase);
 		}
 
@@ -126,7 +132,12 @@ public final class AnomalyManager {
 				continue;
 			}
 
-			level.getChunk(x >> 4, z >> 4); // make sure the region exists before we build in it
+			// Never force generation: on a phone, generating a 140-block-away chunk inside a tick is
+			// the expensive half of the stall. Only build where the server already has terrain.
+			if (!level.getChunkSource().hasChunk(x >> 4, z >> 4)) {
+				continue;
+			}
+
 			int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
 			BlockPos pos = new BlockPos(x, y, z);
 
