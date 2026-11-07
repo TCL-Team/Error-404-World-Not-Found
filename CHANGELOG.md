@@ -2,6 +2,40 @@
 
 Sab notable changes. Format [Keep a Changelog](https://keepachangelog.com/), versioning [SemVer](https://semver.org/).
 
+## [0.9.4] - 2026-11-06
+
+**"Deletion dikh hi nahi rahi thi" ka jawab — teen bugs the, aur teeno ek hi cheez kar rahe the:
+hole kabhi tumhare saamne banta hi nahi tha.**
+
+### Fixed (deletion)
+
+- **Zone poore world depth ka tha.** Wave surface se bedrock tak jaata tha: 400 columns x ~185
+  blocks = ~74,000 blocks per zone, 4,000 blocks/second. Isse server stall, aur pehli cheez jo
+  player dekhta tha wo ek saaf square hole tha. Ab **do pass**: pehle 6 block gehri surface pass
+  (seconds me dikhti hai, edges ke saath), phir **trench pass** jo peeche bhoomi khata rehta hai.
+- **Front ka ring 4 chunks (64 block) door tha.** Us doori par jungle ke us paar kuch bhi dikhta
+  nahi. Ab rings **2 chunks** se shuru hoti hain aur view cone me seed hoti hain.
+- **`activates()` zone ko player ke 2 block ke andar bhi refuse kar deta tha**, isliye jo zone
+  dikh sakta tha wahi skip ho jaata tha. Ab sirf zone ka apna footprint check hota hai.
+- **`playerSafeRadius = 8`** har block ko protect karta tha jo player ke 8 block me ho. Front 1
+  chunk door seed hota hai, to zone ka paas wala kinara exactly wahan protect ho jaata tha jahan
+  player dekh raha tha — ek protected patti, hamesha. Ab 3 blocks.
+
+### Changed (pacing — "maza nahi aa raha" ka asli reason)
+
+- **45 s → 12 s per integrity point.** Pehli deletion 45 minute par aati thi. Ab ~12 minute, aur
+  DESYNC (~5 min) par ek **sample zone** — ek chhota asli hole, journal-ed, taaki tumhe pehle
+  paanch minute me pata chal jaaye ki ye mod kya karta hai.
+- **Chaos 90 s baad shuru (pehle 90 s + 60-180 s gap)**, ab gap 30-90 s.
+- **Anomaly structures DESYNC se** (pehle DELETION se) — pehle 12 minute vanilla jaise nahi lagte.
+- **422 pehle minute se** exist karta hai (pehle phase ka wait karta tha).
+
+### Added
+
+- **`/error404 demo <0-100>`** — integrity seedha set karo aur phase aage badha do. `/error404 demo 40`
+  se deletion turant shuru. `/error404 demo` se current state.
+- Operator ko join par ek baar hint ki commands chhupi hui hain aur kaise kholni hain.
+
 ## [0.9.3] - 2026-11-06
 
 **"Server list me tumhara server ab tumhara nahi lagta."** Chaar gaaps band: MOTD ab default hai,

@@ -57,6 +57,14 @@ public final class Error404Director {
 			}
 
 			Error404.LOGGER.info("[error404] session started (seed {})", state.sessionSeed());
+
+			// Operators get told how to test their own mod. Everyone else gets nothing: the whole
+			// design depends on the player not knowing the mod is talking to them.
+			if (player.hasPermissions(2)) {
+				player.sendSystemMessage(Component.literal("[error404] hidden commands are available: "
+						+ "/error404 enable, then /error404 demo 40 to see deletion now")
+						.withStyle(ChatFormatting.DARK_GRAY));
+			}
 		}
 	}
 

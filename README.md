@@ -101,6 +101,21 @@ Jumpscare chhalaang deta hai. Yeh layer **rok deta hai**:
 
 Anchor zone me chaos **kabhi** nahi hota. `/error404 chaos off` se poora band, `chaos fire <event>` se ek test.
 
+### Deletion ab dikhti hai (v0.9.4)
+
+Pehle hole banta hi tumhare saamne nahi tha, teen wajah se: zone poore world depth ka tha (ek zone
+~74,000 blocks, 4,000/second — server stall, aur pehla nazara ek saaf square), front ka ring 64 block
+door tha (jungle ke us paar), aur `playerSafeRadius = 8` zone ka paas wala kinara protect kar deta tha.
+
+Ab: **do pass** — 6 block gehri surface pass jo seconds me edges ke saath dikhti hai, phir trench
+pass jo peeche bhoomi khata rehta hai. Ring 2 chunks, aur protected patti gayi.
+
+Aur pacing: **45 s → 12 s per point**. Pehli deletion 45 minute par aati thi (yaani normal khelne me
+kabhi nahi); ab ~12 minute, aur DESYNC (~5 min) par ek chhota **sample zone** taaki pehle paanch
+minute me pata chal jaye ki mod karta kya hai.
+
+Turant dekhna hai? `/error404 enable` phir **`/error404 demo 40`** — session seedha DELETION par.
+
 ### Sab jagah, ek saath (v0.9.2)
 
 Pehle Nether ya End me jaana asal me escape tha: 422 wahan follow nahi karta tha, chaos band ho jaata
@@ -305,6 +320,7 @@ CI har push par GitHub Actions se build hota hai (`.github/workflows/build.yml`)
 | **v0.9.1** | 20x20 staged deletion zones, hidden command tree, jumpscares (5 justified triggers), disturbing layer (intruder, name signs, shrines, dread overlay) | ✅ in game |
 | **v0.9.2** | sab dimensions, per-dimension anchors + restore, ban layer (8 anti-player events, default off), Presence (footsteps/knocks/breathing with no entity), 12 bug fixes | ✅ in game |
 | **v0.9.3** | MOTD default on, journal 128 chunks + honest restore report, front 4 chunks/s, presence (door behind you, indoor steps, chest lid) | ✅ in game |
+| **v0.9.4** | deletion dikhne lagti hai (surface pass + trench, 2-chunk ring, no protected strip), pacing 45s→12s per point, `/error404 demo` | ✅ in game |
 | **v0.8.1** | personal collapse, creepy title screen + original wordmark, 422 leash + early spawns | ✅ [v0.8.1](https://github.com/TCL-Team/Error-404-World-Not-Found/releases/tag/v0.8.1) |
 | **v0.6.0 release** | release workflow (tag → jar + notes), deletion journal (`restore` sach me wapas deta hai), natural 422 spawner, anchor ritual, 5 languages | ✅ [v0.6.0](https://github.com/TCL-Team/Error-404-World-Not-Found/releases/tag/v0.6.0) |
 
