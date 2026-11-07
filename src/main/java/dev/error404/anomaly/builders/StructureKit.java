@@ -98,7 +98,7 @@ public final class StructureKit {
 		set(level, x, y, z, Blocks.OAK_SIGN.defaultBlockState().setValue(StandingSignBlock.ROTATION, rotation));
 
 		if (level.getBlockEntity(new BlockPos(x, y, z)) instanceof SignBlockEntity sign) {
-			SignText text = sign.getText();
+			SignText text = new SignText();
 
 			for (int i = 0; i < 4; i++) {
 				String line = i < lines.length ? lines[i] : "";
