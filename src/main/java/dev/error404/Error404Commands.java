@@ -51,6 +51,10 @@ public final class Error404Commands {
 				.then(Commands.literal("start").executes(Error404Commands::start))
 				.then(Commands.literal("stop").executes(Error404Commands::stop))
 				.then(Commands.literal("restore").executes(Error404Commands::restore))
+				.then(Commands.literal("demo")
+						.executes(Error404Commands::demoStatus)
+						.then(Commands.argument("integrity", IntegerArgumentType.integer(0, 100))
+								.executes(Error404Commands::demoSet)))
 				.then(Commands.literal("banlayer")
 						.executes(Error404Commands::banLayerStatus)
 						.then(Commands.literal("on").executes(ctx -> setBanLayer(ctx, true)))
@@ -261,6 +265,51 @@ public final class Error404Commands {
 					ChatFormatting.GRAY);
 		}
 
+		return 1;
+	}
+
+	/**
+	 * Sets integrity directly, so the mod can be inspected without waiting out the pacing.
+	 *
+	 * <p>This exists because the most common complaint about this mod is "nothing happens", and
+	 * the honest answer to it is a command that puts you in the interesting part of the timeline
+	 * immediately. Everything downstream - zones, 422, chaos, endings - reacts to this value, so
+	 * one number is enough to demonstrate the whole mod.</p>
+	 */
+	private static int demoSet(CommandContext<CommandSourceStack> context) {
+		MinecraftServer server = context.getSource().getServer();
+		IntegrityState state = IntegrityState.get(server);
+		int value = IntegerArgumentType.getInteger(context, "integrity");
+
+		if (!state.active()) {
+			state.start(server.overworld().getSeed() * 31L ^ System.nanoTime(), IntegrityState.MAX_INTEGRITY);
+		}
+
+		state.setIntegrity(value);
+
+		// phase is monotonic on purpose (a restored world never pretends to be healthy), so for a
+		// demo it has to be pushed forward by hand as well
+		while (state.shouldAdvancePhase()) {
+			state.advancePhase();
+		}
+
+		dev.error404.event.ServerEvents.pushState(server);
+
+		reply(context.getSource(), "integrity set to " + value + "% (" + state.phase().name() + ")",
+				ChatFormatting.YELLOW);
+		reply(context.getSource(), "deletion zones start at 40%, the first one lands the moment you look "
+				+ "at open ground", ChatFormatting.GRAY);
+		return 1;
+	}
+
+	private static int demoStatus(CommandContext<CommandSourceStack> context) {
+		IntegrityState state = IntegrityState.get(context.getSource().getServer());
+		reply(context.getSource(), "integrity " + state.integrity() + "% / phase " + state.phase().name()
+				+ " / zones " + dev.error404.deletion.DeleteZone.activeCount()
+				+ " / journaled chunks " + dev.error404.deletion.DeletionJournal.journaledBlocks(),
+				ChatFormatting.GRAY);
+		reply(context.getSource(), "/error404 demo <0-100> jumps the session to that integrity",
+				ChatFormatting.DARK_GRAY);
 		return 1;
 	}
 
