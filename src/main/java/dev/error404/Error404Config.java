@@ -73,7 +73,12 @@ public final class Error404Config {
 	/** Never delete blocks within this many blocks of a player. */
 	public int playerSafeRadius = 8;
 	/** Chunk budget per second for the deletion front. */
-	public int maxChunksPerSecond = 2;
+	/**
+	 * How fast the front travels, in chunks per second. 4, up from 2: at 2 the deletion was slow
+	 * enough to read as a glitch being fixed, at 4 it reads as the world losing. `chill` halves it
+	 * at runtime, so the safe preset is unaffected.
+	 */
+	public int maxChunksPerSecond = 4;
 	/** Protect chests, beds, spawners and other block entities. */
 	public boolean protectBlockEntities = true;
 

@@ -16,14 +16,13 @@ import dev.error404.integrity.Phase;
  *       {@code ERROR 404: World Not Found}. A player refreshing their multiplayer list sees the
  *       server renamed itself while they were playing, which is far more unsettling than anything
  *       that can happen in game, because it means the mod is not contained by the world.</li>
- *   <li><b>The version drifts.</b> The status ping reports a version that does not exist, so the
- *       server shows up red and "incompatible" in the multiplayer list while being perfectly
- *       joinable.</li>
+ *   <li><b>The player count lies too.</b> The MOTD says how many records are left to process, and
+ *       that number only goes down.</li>
  * </ul>
  *
- * <p>Both are restored on {@code /error404 restore}, on stop, and whenever the config is turned
- * off, because a mod that leaves somebody's server permanently mislabelled is malware, not a
- * horror mod.</p>
+ * <p>Restored on {@code /error404 restore}, on stop, and whenever the mod is turned off. That undo
+ * is not a courtesy - it is the difference between a mod that gets blacklisted and a mod that gets
+ * somebody banned from their own hosting.</p>
  */
 public final class ServerSpine {
 	private ServerSpine() {
@@ -37,10 +36,7 @@ public final class ServerSpine {
 	public static void tick(MinecraftServer server) {
 		IntegrityState state = IntegrityState.get(server);
 
-		// Off unless the ban layer is on. Renaming somebody's server in the multiplayer list is
-		// the single most hostile thing this mod can do, so it is never on by default.
-		if (!dev.error404.Error404Config.get().enabled || !dev.error404.Error404Config.get().banLayer
-				|| !state.active() || state.ended()) {
+		if (!dev.error404.Error404Config.get().enabled || !state.active() || state.ended()) {
 			restore(server);
 			return;
 		}
@@ -62,11 +58,11 @@ public final class ServerSpine {
 			dev.error404.Error404.LOGGER.warn("[error404] server MOTD captured: {}", originalMotd);
 		}
 
-		// stable per phase, not random: a motd that flickers looks like a bug, a motd that is
-		// wrong and stays wrong looks like the server is gone
+		// Stable per phase, not random: a motd that flickers reads as a bug, a motd that is wrong
+		// and stays wrong reads as the server being gone. The record count only ever goes down.
 		server.setMotd(switch (state.phase()) {
-			case DELETION -> "ERR_404 // region deleted";
-			case CASCADE -> "ERR_404 // cascade failure";
+			case DELETION -> "ERR_404 // region deleted // " + state.integrity() + "% remaining";
+			case CASCADE -> "ERR_404 // cascade failure // " + state.integrity() + "% remaining";
 			case ANNEXATION -> "ERROR 404: World Not Found";
 			default -> originalMotd == null ? server.getMotd() : originalMotd;
 		});

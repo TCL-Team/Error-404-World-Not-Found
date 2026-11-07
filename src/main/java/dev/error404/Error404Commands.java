@@ -217,6 +217,18 @@ public final class Error404Commands {
 
 		reply(context.getSource(), "integrity restored to 100%", ChatFormatting.GREEN);
 		reply(context.getSource(), blocks + " block(s) put back from the deletion journal", ChatFormatting.GRAY);
+
+		int dropped = dev.error404.deletion.DeletionFront.lastRestoreDropped();
+
+		if (dropped > 0) {
+			// honest, not comforting: the journal is bounded, and a player who waited too long
+			// gets told exactly how much world is not coming back
+			reply(context.getSource(), dropped + " block(s) could not be restored - the journal had "
+					+ "already let go of them", ChatFormatting.RED);
+		}
+
+		// the hostile layers are undone by restore as well, so nothing survives the escape hatch
+		dev.error404.haunt.ServerSpine.restore(server);
 		reply(context.getSource(), "the world is no longer marked as ended - /error404 start begins a fresh session", ChatFormatting.GRAY);
 		return 1;
 	}

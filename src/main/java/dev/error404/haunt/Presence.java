@@ -50,6 +50,9 @@ public final class Presence {
 	private static long nextFootsteps;
 	private static long nextKnock;
 	private static long nextBreath;
+	private static long nextDoor;
+	private static long nextIndoorStep;
+	private static long nextChest;
 	private static BlockPos lastPos;
 	private static int stillTicks;
 
@@ -58,6 +61,9 @@ public final class Presence {
 		nextFootsteps = 0L;
 		nextKnock = 0L;
 		nextBreath = 0L;
+		nextDoor = 0L;
+		nextIndoorStep = 0L;
+		nextChest = 0L;
 		lastPos = null;
 		stillTicks = 0;
 	}
@@ -83,10 +89,14 @@ public final class Presence {
 		drainQueue(now, level);
 
 		if (nextFootsteps == 0L) {
-			// first cue is never in the first two minutes of a world
+			// first cue is never in the first two minutes of a world, but after that the presence
+			// is never quiet for long: this is the layer that replaces "nothing is happening"
 			nextFootsteps = now + 20L * 120L;
-			nextKnock = now + 20L * (180L + level.random.nextInt(240));
-			nextBreath = now + 20L * (90L + level.random.nextInt(180));
+			nextKnock = now + 20L * (150L + level.random.nextInt(180));
+			nextBreath = now + 20L * (70L + level.random.nextInt(120));
+			nextDoor = now + 20L * (240L + level.random.nextInt(300));
+			nextIndoorStep = now + 20L * (90L + level.random.nextInt(150));
+			nextChest = now + 20L * (300L + level.random.nextInt(420));
 		}
 
 		ServerPlayer player = level.players().get(level.random.nextInt(level.players().size()));
@@ -96,20 +106,38 @@ public final class Presence {
 		}
 
 		if (now >= nextFootsteps) {
-			nextFootsteps = now + 20L * (300L + level.random.nextInt(420));
+			nextFootsteps = now + 20L * (150L + level.random.nextInt(240));
 			footsteps(level, player);
 			return;
 		}
 
 		if (now >= nextKnock) {
-			nextKnock = now + 20L * (420L + level.random.nextInt(600));
+			nextKnock = now + 20L * (210L + level.random.nextInt(300));
 			knock(level, player);
 			return;
 		}
 
 		if (now >= nextBreath) {
-			nextBreath = now + 20L * (240L + level.random.nextInt(360));
+			nextBreath = now + 20L * (120L + level.random.nextInt(180));
 			breathe(level, player);
+			return;
+		}
+
+		if (now >= nextIndoorStep) {
+			nextIndoorStep = now + 20L * (150L + level.random.nextInt(240));
+			indoorStep(level, player);
+			return;
+		}
+
+		if (now >= nextDoor) {
+			nextDoor = now + 20L * (300L + level.random.nextInt(420));
+			openBehind(level, player);
+			return;
+		}
+
+		if (now >= nextChest) {
+			nextChest = now + 20L * (360L + level.random.nextInt(480));
+			openChest(level, player);
 		}
 	}
 
@@ -213,6 +241,139 @@ public final class Presence {
 		stillTicks = 0;
 		level.playSound(null, player.getX(), player.getEyeY() - 0.2, player.getZ(),
 				SoundEvents.AMBIENT_UNDERWATER_LOOP, SoundSource.AMBIENT, 0.35f, 1.6f);
+	}
+
+	/**
+	 * A door opens behind you.
+	 *
+	 * <p>Vanilla door sound, at the nearest door that is <b>behind</b> the player, and the door is
+	 * left exactly as it was - no block is touched, nothing is opened. The sound alone is enough:
+	 * a player will walk back to check, find a closed door, and doubt their memory. If they are
+	 * looking at the door, it never fires, which is what keeps it from being an obvious lie.</p>
+	 */
+	private static void openBehind(ServerLevel level, ServerPlayer player) {
+		double yaw = Math.toRadians(player.getYRot());
+		double lookX = -Math.sin(yaw);
+		double lookZ = Math.cos(yaw);
+		BlockPos best = null;
+		double bestScore = Double.NEGATIVE_INFINITY;
+
+		for (BlockPos pos : BlockPos.betweenClosed(player.blockPosition().offset(-16, -4, -16),
+				player.blockPosition().offset(16, 4, 16))) {
+			var state = level.getBlockState(pos);
+
+			if (!state.is(net.minecraft.tags.BlockTags.WOODEN_DOORS)) {
+				continue;
+			}
+
+			double dx = pos.getX() + 0.5 - player.getX();
+			double dz = pos.getZ() + 0.5 - player.getZ();
+			double distance = Math.max(0.001, Math.sqrt(dx * dx + dz * dz));
+
+			if (distance > 16.0) {
+				continue;
+			}
+
+			double facing = (dx * lookX + dz * lookZ) / distance;
+
+			// behind only: anything the player is looking at would be noticed as fake
+			if (facing > -0.2) {
+				continue;
+			}
+
+			double score = -facing - distance * 0.02;
+
+			if (score > bestScore) {
+				bestScore = score;
+				best = pos.immutable();
+			}
+		}
+
+		if (best == null) {
+			return;
+		}
+
+		QUEUE.addLast(new Cue(level, best.getX() + 0.5, best.getY() + 0.5, best.getZ() + 0.5,
+				SoundEvents.WOODEN_DOOR_OPEN, SoundSource.BLOCKS, 1.0f, 0.92f, (int) level.getGameTime()));
+	}
+
+	/**
+	 * Footsteps somewhere inside the base the player built.
+	 *
+	 * <p>Not behind them - <em>near</em> them, and quieter, as if whoever it is has been walking
+	 * around the same room for a while and is now going somewhere else. This is the cue that makes
+	 * a base stop feeling empty, and it is the reason people start walling off their own house.</p>
+	 */
+	private static void indoorStep(ServerLevel level, ServerPlayer player) {
+		// Only when there is actually a room: a step in an open field is just a step. Sampled on
+		// two rings around the player rather than the whole box - it is a cheap shape test, and it
+		// only runs when a cue is already due.
+		int walls = 0;
+		BlockPos origin = player.blockPosition();
+
+		for (int ring = 4; ring <= 6; ring += 2) {
+			for (int dx = -ring; dx <= ring; dx++) {
+				for (int dz = -ring; dz <= ring; dz++) {
+					if (Math.abs(dx) != ring && Math.abs(dz) != ring) {
+						continue; // perimeter only
+					}
+
+					for (int dy = 0; dy <= 3; dy++) {
+						if (level.getBlockState(origin.offset(dx, dy, dz)).isSolidRender()) {
+							walls++;
+						}
+					}
+				}
+			}
+		}
+
+		if (walls < 30) {
+			return;
+		}
+
+		double angle = level.random.nextDouble() * Math.PI * 2;
+		double distance = 3.0 + level.random.nextDouble() * 3.0;
+		double x = player.getX() + Math.cos(angle) * distance;
+		double z = player.getZ() + Math.sin(angle) * distance;
+
+		QUEUE.addLast(new Cue(level, x, player.getY() + 0.1, z, SoundEvents.GRASS_STEP,
+				SoundSource.AMBIENT, 0.55f, 0.8f, (int) level.getGameTime()));
+		QUEUE.addLast(new Cue(level, x, player.getY() + 0.1, z, SoundEvents.GRASS_STEP,
+				SoundSource.AMBIENT, 0.5f, 0.78f, (int) level.getGameTime() + 6));
+	}
+
+	/**
+	 * A chest lid opens somewhere behind the player.
+	 *
+	 * <p>Nothing is taken and nothing is opened: it is the sound, at a real chest, moments after
+	 * the player walked past it. The player opens that chest, finds everything still there, and
+	 * has no explanation for what they heard. Costs nothing, and it is the single cue that most
+	 * reliably makes people stop using a storage room.</p>
+	 */
+	private static void openChest(ServerLevel level, ServerPlayer player) {
+		BlockPos best = null;
+		double bestDistance = 24.0 * 24.0;
+
+		for (BlockPos pos : BlockPos.betweenClosed(player.blockPosition().offset(-24, -6, -24),
+				player.blockPosition().offset(24, 6, 24))) {
+			if (!level.getBlockState(pos).is(Blocks.CHEST)) {
+				continue;
+			}
+
+			double distance = player.blockPosition().distSqr(pos);
+
+			if (distance < bestDistance) {
+				bestDistance = distance;
+				best = pos.immutable();
+			}
+		}
+
+		if (best == null) {
+			return;
+		}
+
+		QUEUE.addLast(new Cue(level, best.getX() + 0.5, best.getY() + 0.5, best.getZ() + 0.5,
+				SoundEvents.CHEST_OPEN, SoundSource.BLOCKS, 0.9f, 0.85f, (int) level.getGameTime()));
 	}
 
 	private static boolean insideAnchor(IntegrityState state, ServerPlayer player) {

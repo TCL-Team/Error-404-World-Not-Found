@@ -75,6 +75,11 @@ public final class DeletionFront {
 		}
 
 		int chunksPerSecond = Math.max(1, cfg.maxChunksPerSecond);
+
+		// chill is the preset that must stay survivable: half speed, never zero
+		if (dev.error404.Difficulty.current() == dev.error404.Difficulty.CHILL) {
+			chunksPerSecond = Math.max(1, chunksPerSecond / 2);
+		}
 		int period = Math.max(1, 20 / chunksPerSecond);
 
 		if (server.getTickCount() % period != 0) {
@@ -344,6 +349,13 @@ public final class DeletionFront {
 	 *
 	 * @return the number of blocks that were put back
 	 */
+	/** Blocks the last restore could not put back because the journal had already evicted them. */
+	private static int lastRestoreDropped;
+
+	public static int lastRestoreDropped() {
+		return lastRestoreDropped;
+	}
+
 	public static int restore(MinecraftServer server) {
 		IntegrityState state = IntegrityState.get(server);
 		ServerLevel level = server.overworld();
@@ -404,7 +416,9 @@ public final class DeletionFront {
 		}
 
 		state.clearDeletedChunks();
+		int dropped = DeletionJournal.journaledBlocks();
 		DeletionJournal.clear();
+		lastRestoreDropped = dropped;
 		return restored;
 	}
 }

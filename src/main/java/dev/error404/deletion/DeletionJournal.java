@@ -36,7 +36,16 @@ public final class DeletionJournal {
 	 * promise {@code /error404 restore} makes.</p>
 	 */
 	public static final int PER_CHUNK = 4096;
-	public static final int MAX_CHUNKS = 512;
+	/**
+	 * How many chunks can be undone.
+	 *
+	 * <p>128, down from 512. Deliberate: a 20x20 zone touches up to nine chunks and the front runs
+	 * at two chunks a second, so 128 chunks is roughly the first two minutes of real deletion.
+	 * Past that, {@code /error404 restore} puts back what it still has and honestly says how much
+	 * it dropped. The alternative - a big number that quietly promises a full undo - is a lie the
+	 * player only discovers after the damage is done.</p>
+	 */
+	public static final int MAX_CHUNKS = 128;
 
 	private static final Map<Long, Deque<Entry>> JOURNAL = new HashMap<>();
 	private static final Deque<Long> ORDER = new ArrayDeque<>();
