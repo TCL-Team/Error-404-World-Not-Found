@@ -57,7 +57,14 @@ public final class HudGlitchRenderer {
 
 		// the slow layer goes under the HUD, so chat and health stay readable
 		HudElementRegistry.attachElementBefore(VanillaHudElements.HOTBAR, LAYER_DREAD,
-				(context, delta) -> DreadOverlay.render(context, context.guiWidth(), context.guiHeight()));
+				(context, delta) -> {
+					// four full-screen gradient fills per frame is pointless while a GUI is up
+					if (Minecraft.getInstance().screen != null) {
+						return;
+					}
+
+					DreadOverlay.render(context, context.guiWidth(), context.guiHeight());
+				});
 	}
 
 	/**
@@ -144,6 +151,16 @@ public final class HudGlitchRenderer {
 		Minecraft client = Minecraft.getInstance();
 
 		if (client.player == null || client.options.hideGui) {
+			return;
+		}
+
+		// A screen is open. Vanilla draws the world behind it and then the screen on top, and
+		// the creative inventory is the single heaviest screen in the game (500+ slots, each
+		// with a tooltip). Drawing a full-screen scanline layer and up to five terminal lines
+		// over that every frame is what turns "opening my inventory" into a stutter, so the
+		// glitch layer stands down while any container-style screen is up. Chat, escape menu
+		// and the title screen still get it; a GUI the player is actively using does not.
+		if (client.screen != null) {
 			return;
 		}
 

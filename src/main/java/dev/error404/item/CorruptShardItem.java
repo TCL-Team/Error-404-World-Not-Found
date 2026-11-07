@@ -96,8 +96,13 @@ public class CorruptShardItem extends Item {
 	}
 
 	@Override
-	public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay display, Consumer<Component> adder, TooltipFlag flag) {
+	public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay display,
+			Consumer<Component> adder, TooltipFlag flag) {
 		super.appendHoverText(stack, context, display, adder, flag);
+
+		// Tooltips are built on the client, and the creative inventory builds one for every
+		// slot on open. Nothing in here may touch the world, the server, or a registry lookup:
+		// a tooltip is not allowed to be the thing that can throw.
 		adder.accept(Component.literal("a piece of a world that failed to load").withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
 		adder.accept(Component.literal("using it costs 2% integrity").withStyle(ChatFormatting.RED));
 	}

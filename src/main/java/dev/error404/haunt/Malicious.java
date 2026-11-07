@@ -90,6 +90,13 @@ public final class Malicious {
 
 		ServerPlayer player = level.players().get(level.random.nextInt(level.players().size()));
 
+		// The ban layer takes things. A creative player has nothing to take, and the lockdown
+		// would delete the lights out of a build they are in the middle of making. Creative is
+		// where people test the mod - it must not be where the mod wrecks their test world.
+		if (player.isCreative() || player.isSpectator()) {
+			return;
+		}
+
 		// the lockdown happens once, and only when the world is nearly gone
 		if (!lockdownDone && state.phase() == Phase.ANNEXATION && state.integrity() < 15) {
 			lockdownDone = true;
@@ -398,6 +405,9 @@ public final class Malicious {
 			var blockState = level.getBlockState(pos);
 
 			if (blockState.getLightEmission() > 0 && removed < 120) {
+				// never drop the light as an item: 120 item entities appearing at once is a
+				// client-side stutter on top of the darkness, and a creative player does not
+				// want the debris either
 				level.removeBlock(pos, false);
 				removed++;
 			}
