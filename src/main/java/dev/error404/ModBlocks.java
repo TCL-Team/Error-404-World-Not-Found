@@ -45,7 +45,15 @@ public final class ModBlocks {
 					.lightLevel(state -> 12)
 					.noOcclusion());
 
-	/** Light that 422 refuses to acknowledge. */
+	/**
+	 * Light that 422 refuses to acknowledge.
+	 *
+	 * <p>It has an item now. It used to be block-only, which meant the recipe that produces it
+	 * and the advancement that shows it as an icon both failed to parse at load: a datapack entry
+	 * that references an item which does not exist is dropped with an error, and the whole
+	 * advancement tree below it goes with it. A block a player can only obtain through
+	 * {@code /setblock} is not a block a player can find.</p>
+	 */
 	public static final Block NULL_TORCH = register("null_torch", NullTorchBlock::new,
 			BlockBehaviour.Properties.of()
 					.mapColor(MapColor.COLOR_BLACK)
@@ -53,8 +61,7 @@ public final class ModBlocks {
 					.sound(SoundType.WOOD)
 					.lightLevel(state -> 15)
 					.noCollision()
-					.noOcclusion(),
-			false);
+					.noOcclusion());
 
 	private static Block register(String name, Function<BlockBehaviour.Properties, Block> factory, BlockBehaviour.Properties properties) {
 		return register(name, factory, properties, true);

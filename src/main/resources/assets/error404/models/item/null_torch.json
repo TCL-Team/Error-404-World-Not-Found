@@ -1,6 +1,3 @@
 {
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "error404:item/null_torch"
-  }
+  "parent": "error404:block/null_torch"
 }
