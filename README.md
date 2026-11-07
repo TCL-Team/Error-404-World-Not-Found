@@ -129,16 +129,24 @@ Default off kyunki ye asli me hostile hai, aur kyunki ek mod jo kisi ka server p
 mislabels kar de wo malware hai, horror mod nahi. On karne ke baad `/error404 restore`,
 `/error404 banlayer off`, config off, ya server stop — chaaron se poora undo hota hai.
 
-### Presence (v0.9.2) — bina kisi entity ke
+### Presence (v0.9.2 → v0.9.3) — bina kisi entity ke
 
 Duniya me kuch nahi hai. Sirf awaazein, un jaghon se jahan ek asli aadmi hota:
 
 - peeche se aate huye **chaar kadam**, jo ruk jaate hain
 - **teen knocks** us darwaze par jis taraf tum nahi dekh rahe
 - tumhari **apni saans**, zara si side me, zara si zyada loud
+- **v0.9.3:** ek darwaza **peeche se khulta hai** (darwaza jaisa tha waisa hi rehta hai — tum wapas
+  jaake band darwaza dekhte ho aur apni yaad par shak karte ho)
+- **v0.9.3:** base ke **andar kadam**, jahan tum ho
+- **v0.9.3:** 24 block ke andar kisi **chest ka lid khulta hai**, kuch nikalta nahi
 
 Aur DESYNC se hi ek early cue (whisper only, face nahi): jo player apni duniya saaf rakhta hai, use
 bhi pehle ghante me pata chal jaata hai ki usne kya install kiya hai.
+
+**MOTD (v0.9.2 → default v0.9.3):** DELETION se server multiplayer list me khud ko rename karta hai.
+Ye `banLayer` ke bina bhi hota hai — mod ka sabse tez ban khinchne wala hissa, kyunki ye player ka
+kuch nahi, server owner ki cheez badalta hai. `/error404 restore` aur stop par wapas.
 
 ### Chunk collapse dikhta hai (v0.8.1)
 
@@ -296,6 +304,7 @@ CI har push par GitHub Actions se build hota hai (`.github/workflows/build.yml`)
 | **v0.8 chaos** | chaos layer, proximity drone, death sting, all-English text, visible collapse front | ✅ [v0.8.0](https://github.com/TCL-Team/Error-404-World-Not-Found/releases/tag/v0.8.0) |
 | **v0.9.1** | 20x20 staged deletion zones, hidden command tree, jumpscares (5 justified triggers), disturbing layer (intruder, name signs, shrines, dread overlay) | ✅ in game |
 | **v0.9.2** | sab dimensions, per-dimension anchors + restore, ban layer (8 anti-player events, default off), Presence (footsteps/knocks/breathing with no entity), 12 bug fixes | ✅ in game |
+| **v0.9.3** | MOTD default on, journal 128 chunks + honest restore report, front 4 chunks/s, presence (door behind you, indoor steps, chest lid) | ✅ in game |
 | **v0.8.1** | personal collapse, creepy title screen + original wordmark, 422 leash + early spawns | ✅ [v0.8.1](https://github.com/TCL-Team/Error-404-World-Not-Found/releases/tag/v0.8.1) |
 | **v0.6.0 release** | release workflow (tag → jar + notes), deletion journal (`restore` sach me wapas deta hai), natural 422 spawner, anchor ritual, 5 languages | ✅ [v0.6.0](https://github.com/TCL-Team/Error-404-World-Not-Found/releases/tag/v0.6.0) |
 

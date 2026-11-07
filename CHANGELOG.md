@@ -2,6 +2,34 @@
 
 Sab notable changes. Format [Keep a Changelog](https://keepachangelog.com/), versioning [SemVer](https://semver.org/).
 
+## [0.9.3] - 2026-11-06
+
+**"Server list me tumhara server ab tumhara nahi lagta."** Chaar gaaps band: MOTD ab default hai,
+journal jaldi thak jaata hai, front tez hai, aur presence ab kabhi chup nahi rehti.
+
+### Changed
+
+- **MOTD capture ab default on.** Pehle `banLayer` ke peeche tha; ab DELETION se hi server
+  multiplayer list me khud ko `ERR_404 // region deleted // 63% remaining` likhta hai, aur ANNEXATION
+  me `ERROR 404: World Not Found`. Ye sabse tez ban khinchne wala feature hai kyunki ye player ka
+  kuch nahi, **server owner ki cheez** badalta hai. `/error404 restore` aur server stop par wapas.
+- **Journal 512 → 128 chunks.** Ab `restore` pehle do minute ke baad kuch cheezein sach me wapas nahi
+  de sakta — aur jo nahi de sakta, wo command ab **saaf bata deta hai** ("N blocks could not be
+  restored - the journal had already let go of them") instead of chup-chaap jhooth bolne ke.
+- **Deletion front 2 → 4 chunks/second.** `chill` par aadha, to safe preset waisa hi rehta hai.
+- **Presence ab aggressive hai:** footsteps 5 min → 2.5-6 min, knocking 7-17 min → 3.5-8.5 min,
+  breathing 4-10 min → 2-5 min.
+
+### Added (presence)
+
+- **Darwaza peeche se khulta hai** — vanilla door sound us darwaze par jo tumhare peeche hai, aur darwaza
+  jaisa tha waisa hi rehta hai. Tum wapas jaake dekhte ho, band milta hai, aur apni yaad par shak karte ho.
+  Jo darwaza tum dekh rahe ho uspar ye kabhi fire nahi hota (warna jhooth pakda jaata).
+- **Base ke andar kadam** — chhoti si awaaz kamre me, jahan tum ho, 3-6 block door. Sirf tab jab waqai
+  deewarein hon (perimeter scan). Yahi wo cue hai jiske baad log apna hi ghar band karne lagte hain.
+- **Chest ka dhakna khulta hai** — 24 block ke andar kisi asli chest par lid ki awaaz. Kuch nikalta
+  nahi, kuch khulta nahi. Player wapas jaake dekhta hai, sab kuch jaisa tha waisa hi hota hai.
+
 ## [0.9.2] - 2026-11-06
 
 **"Peeche dekho. Kuch nahi hai. Isi liye bura hai."** Nether/End ab safe room nahi, ek poori

@@ -255,8 +255,8 @@ public final class Error404Commands {
 		if (on) {
 			reply(context.getSource(), "this removes spawn beds, player names, inventory items and doorways.",
 					ChatFormatting.RED);
-			reply(context.getSource(), "it also renames the server in the multiplayer list.",
-					ChatFormatting.RED);
+			reply(context.getSource(), "the server list already renames itself from DELETION on - that is "
+					+ "not part of this switch.", ChatFormatting.GRAY);
 			reply(context.getSource(), "it is deliberately hostile. /error404 banlayer off undoes it.",
 					ChatFormatting.GRAY);
 		}
