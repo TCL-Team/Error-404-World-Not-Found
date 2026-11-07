@@ -166,6 +166,20 @@ public final class DeleteZone {
 	 * @param nest how many neighbours this zone is still allowed to seed (0 = seed only this one)
 	 */
 	public static boolean seed(ServerLevel level, int chunkX, int chunkZ, int nest) {
+		return seed(level, chunkX, chunkZ, nest, false);
+	}
+
+	/**
+	 * Seeds a zone, optionally allowing it to be close to the player.
+	 *
+	 * <p>{@code allowNear} is what makes the front visible. The default refuses any zone whose
+	 * footprint contains a player, which is correct for safety but also means a zone seeded one
+	 * chunk in front of someone was rejected - so the deletion happened out past the trees and the
+	 * player saw nothing. With {@code allowNear} the zone is still refused if a player is literally
+	 * standing inside its footprint; the per-block protection in {@link DeletionRules} is what
+	 * keeps them from being dropped into it.</p>
+	 */
+	public static boolean seed(ServerLevel level, int chunkX, int chunkZ, int nest, boolean allowNear) {
 		int x = (chunkX << 4) + 8 - SIZE / 2;
 		int z = (chunkZ << 4) + 8 - SIZE / 2;
 
@@ -173,8 +187,9 @@ public final class DeleteZone {
 			return false;
 		}
 
-		if (activates(level, x, z, x + SIZE - 1, z + SIZE - 1)) {
-			return false; // would swallow a player, an anchor, spawn, or a protected block
+		// anchors and spawn are still absolute: a zone may never swallow them
+		if (activates(level, x, z, x + SIZE - 1, z + SIZE - 1, allowNear)) {
+			return false;
 		}
 
 		// Never start below the highest solid block in the zone, or the first wave spends its
@@ -401,13 +416,19 @@ public final class DeleteZone {
 
 	/** Refuses a zone that would contain or reach anything the mod promised not to touch. */
 	public static boolean activates(ServerLevel level, int minX, int minZ, int maxX, int maxZ) {
-		for (ServerPlayer player : level.players()) {
-			// The zone's own footprint only. The old 2-block buffer around it meant that a zone
-			// seeded "near" a player was refused, which is why the front kept skipping the one
-			// zone the player would actually have been able to see.
-			if (player.getBlockX() >= minX && player.getBlockX() <= maxX
-					&& player.getBlockZ() >= minZ && player.getBlockZ() <= maxZ) {
-				return true;
+		return activates(level, minX, minZ, maxX, maxZ, false);
+	}
+
+	public static boolean activates(ServerLevel level, int minX, int minZ, int maxX, int maxZ, boolean allowNear) {
+		if (!allowNear) {
+			for (ServerPlayer player : level.players()) {
+				// The zone's own footprint only. The old 2-block buffer around it meant that a zone
+				// seeded "near" a player was refused, which is why the front kept skipping the one
+				// zone the player would actually have been able to see.
+				if (player.getBlockX() >= minX && player.getBlockX() <= maxX
+						&& player.getBlockZ() >= minZ && player.getBlockZ() <= maxZ) {
+					return true;
+				}
 			}
 		}
 

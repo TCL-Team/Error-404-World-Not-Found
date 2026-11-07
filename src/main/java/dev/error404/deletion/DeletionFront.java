@@ -167,7 +167,7 @@ public final class DeletionFront {
 		// nest 2 in the early phases, 1 later: the front should be big by the end of a run
 		int nest = state.phase().ordinal() >= Phase.CASCADE.ordinal() ? 2 : 1;
 
-		if (DeleteZone.seed(level, target.x, target.z, nest)) {
+		if (DeleteZone.seed(level, target.x, target.z, nest, true)) {
 			state.drain(1);
 
 			if (level.random.nextInt(6) == 0) {
