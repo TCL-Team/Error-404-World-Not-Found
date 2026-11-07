@@ -208,6 +208,72 @@ def check_english():
                     break
 
 
+# --- 6. creative tab safety ------------------------------------------------------
+ITEMLESS_BLOCKS = re.compile(r"Blocks\.([A-Z_]+)")
+
+
+def register_call(body, open_paren):
+    """Returns the argument text of the register(...) call that starts at open_paren."""
+    depth = 0
+
+    for index in range(open_paren, len(body)):
+        char = body[index]
+
+        if char == "(":
+            depth += 1
+        elif char == ")":
+            depth -= 1
+
+            if depth == 0:
+                return body[open_paren + 1:index]
+
+    return ""
+
+
+def block_items():
+    """Block constants of error404 that registered an item, keyed by constant name."""
+    source = read(os.path.join(MAIN, "java", "dev", "error404", "ModBlocks.java"))
+    blocks, with_item = set(), set()
+
+    for match in re.finditer(r"public static final Block ([A-Z_]+)\s*=\s*register\(", source):
+        name = match.group(1)
+        args = register_call(source, match.end() - 1)
+        blocks.add(name)
+
+        # register(name, factory, properties) delegates and always makes an item; the four-arg
+        # form takes the boolean at the end and only blocks that pass false stay itemless.
+        if not re.search(r",\s*false\s*$", args):
+            with_item.add(name)
+
+    return blocks, with_item
+
+
+def check_creative_tab():
+    """A tab entry that is not a stack of exactly one item crashes the creative screen.
+
+    Minecraft's ItemDisplayBuilder throws IllegalArgumentException("Stack size must be exactly
+    1") inside the CreativeModeInventoryScreen constructor when the stack is anything else, and
+    that took the whole client down while the world saved itself on the way out. So: every
+    error404 block that reaches the tab needs its item, and a tab never calls
+    accept(new ItemStack(...)) directly - it goes through a validating helper instead.
+    """
+    package = os.path.join(MAIN, "java", "dev", "error404")
+    tabs = [os.path.join(package, name) for name in os.listdir(package) if name.endswith("Tabs.java")]
+
+    blocks, with_item = block_items()
+
+    for path in tabs:
+        body = read(path)
+        rel = os.path.relpath(path, ROOT)
+
+        for constant in ITEMLESS_BLOCKS.findall(body):
+            if constant in blocks and constant not in with_item:
+                fail("creative-tab", f"{rel}: Block '{constant}' has no item -> tab build crashes")
+
+        if "accept(newItemStack(" in body.replace(" ", "") and "private static void add(" not in body:
+            fail("creative-tab", f"{rel}: raw accept(new ItemStack(...)) with no validating helper")
+
+
 # --- 6. resources the mod declares ----------------------------------------------
 def check_metadata():
     meta = load_json(os.path.join(RES, "fabric.mod.json"))
@@ -236,6 +302,7 @@ def main():
     check_textures()
     check_english()
     check_metadata()
+    check_creative_tab()
 
     if findings:
         print(f"{len(findings)} finding(s):\n")
@@ -245,7 +312,7 @@ def main():
 
         return 1
 
-    print("audit clean: sounds, lang, textures, English, metadata")
+    print("audit clean: sounds, lang, textures, English, metadata, creative tab")
     return 0
 
 

@@ -2,6 +2,48 @@
 
 Sab notable changes. Format [Keep a Changelog](https://keepachangelog.com/), versioning [SemVer](https://semver.org/).
 
+## [0.9.6] - 2026-11-07
+
+**Asli crash mil gaya — aur wo HUD nahi tha.** Creative inventory kholte hi client band ho raha tha
+(`Stack size must be exactly 1`), game world save kar ke. Stack trace: `Error404Tabs` ka tab bana
+raha tha `null_torch` ka stack, par us block ka **item hi nahi tha** — `new ItemStack(block)` =
+AIR, count 0, aur Minecraft ka tab builder count 1 ke alawa kuch bhi accept nahi karta.
+
+### Fixed
+
+- **Creative tab crash (asli wajah).** `null_torch` ko item mil gaya (`BlockItem` + model + item
+  definition). Tab ab har entry `Item`/`Block` object se banata hai aur kuch bhi `AIR`, item-less
+  ya count != 1 ho to usko **skip** karta hai (ek warning log ke saath) — tab build ab kabhi throw
+  nahi kar sakta, chahe aage koi naya block bina item ke register ho jaye.
+- **`null_torch` ke saath 4 aur cheezein toot rahi thi.** Recipe, `first_signal` advancement ka icon,
+  aur uske niche ke `first_fragment`, `anchor_down`, `ending_salvage` — sab load par reject ho rahe
+  the kyunki ek datapack entry ne nonexistent item ko point kiya tha. Sab valid.
+- **Sign anomalies kabhi bana hi nahi.** `StructureKit` `oak_sign` par `FACING` set kar raha tha, par
+  1.21.11 me `oak_sign` ek **standing** sign hai (`ROTATION`, koi `FACING` nahi). Har sign-writing
+  anomaly exception ke saath mar rahi thi — ek block bhi place hone se pehle. Ab `ROTATION` set hota
+  hai aur sign ke text ka sahi 1.21.11 constructor use hota hai.
+- **`audit.py` ab creative tab check karta hai.** `ModBlocks` ke register calls parse karke pakadta
+  hai ki koi tab entry aise block ko point na kare jiska item nahi hai. Isi bug ko negative test se
+  verify kiya gaya.
+
+### Performance (phone par `Can't keep up!` 16 second tak)
+
+- **Delete zone waves 5x halka:** `TICK_BUDGET` 1600 → 320 block writes/tick. 3 zones ek saath chalne
+  par 600 writes/tick ho rahe the — har write ek block update.
+- **`syncToViewers` sirf zaroorat par:** har tick har chunk ke saare players ko resync kar raha tha;
+  ab sirf jab us chunk me kuch actually delete hua ho.
+- **Anomaly placement har dimension me ek saath chal raha tha.** `now % INTERVAL` har world me same
+  tick par true hota hai, to Nether aur End ghoomne wale ko 3 structures per interval mil rahe the.
+  Ab per-dimension stagger hai.
+- **Anomaly build ab forced chunk generation nahi karta.** 140 block door ka chunk tick ke andar
+  generate karna mobile par stall ka aadha hissa tha; ab sirf loaded terrain me banata hai.
+
+### Fixed (deletion, dobara)
+
+- **Zone jo player ke saamne banna chahiye tha, wahi reject ho raha tha** (`activates()` footprint
+  ke andar player dekh kar zone refuse kar deta tha). Ab front ka zone player ke paas ban sakta hai;
+  anchor aur world spawn ab bhi absolute — unke aas-paas kabhi delete nahi hota.
+
 ## [0.9.5] - 2026-11-06
 
 **Creative inventory crash.** Screen khulte hi HUD layer vanilla ke GUI ke upar har frame me
