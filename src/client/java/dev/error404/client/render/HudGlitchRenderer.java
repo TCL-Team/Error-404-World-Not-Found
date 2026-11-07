@@ -44,15 +44,21 @@ public final class HudGlitchRenderer {
 	}
 
 	public static void register() {
-		HudElementRegistry.attachElementBefore(VanillaHudElements.CHAT, LAYER, HudGlitchRenderer::render);
+		HudElementRegistry.attachElementBefore(VanillaHudElements.CHAT, LAYER, HudGlitchRenderer::guarded);
 
 		// the fake crash sits above everything else, including chat and the hotbar, and ticks on
 		// its own countdown so it disappears whether or not the player touches anything
 		HudElementRegistry.attachElementAfter(VanillaHudElements.MISC_OVERLAYS, LAYER_CRASH,
 				(context, delta) -> {
 					// clocks are advanced by ClientTickEvents; these only draw
-					FakeCrashOverlay.render(context, context.guiWidth(), context.guiHeight());
-					JumpscareOverlay.render(context, context.guiWidth(), context.guiHeight());
+					try {
+						FakeCrashOverlay.render(context, context.guiWidth(), context.guiHeight());
+						JumpscareOverlay.render(context, context.guiWidth(), context.guiHeight());
+					} catch (RuntimeException e) {
+						dev.error404.Error404.LOGGER.error("[error404] overlay layer threw", e);
+						FakeCrashOverlay.reset();
+						JumpscareOverlay.reset();
+					}
 				});
 
 		// the slow layer goes under the HUD, so chat and health stay readable
@@ -63,7 +69,11 @@ public final class HudGlitchRenderer {
 						return;
 					}
 
-					DreadOverlay.render(context, context.guiWidth(), context.guiHeight());
+					try {
+						DreadOverlay.render(context, context.guiWidth(), context.guiHeight());
+					} catch (RuntimeException e) {
+						dev.error404.Error404.LOGGER.error("[error404] dread layer threw", e);
+					}
 				});
 	}
 
@@ -146,6 +156,28 @@ public final class HudGlitchRenderer {
 			graphics.fill(0, height - 26, width, height, 0xCC000000);
 		}
 	}
+
+	/**
+	 * Draws, but never lets an exception escape into the GUI renderer.
+	 *
+	 * <p>A throw inside a HUD element does not draw a tidy error box - it unwinds the whole frame
+	 * and can take the client with it, and the stack trace points at vanilla's GUI code, so the
+	 * player has no way to tell which mod did it. This catches, logs one line naming the mod, and
+	 * skips the rest of the frame's effects. The world keeps running.</p>
+	 */
+	private static void guarded(GuiGraphics graphics, DeltaTracker delta) {
+		try {
+			render(graphics, delta);
+		} catch (RuntimeException | StackOverflowError e) {
+			if (!reportedError) {
+				reportedError = true;
+				dev.error404.Error404.LOGGER.error("[error404] HUD layer threw - disabling its effects "
+						+ "for this session (please report this with the stack below)", e);
+			}
+		}
+	}
+
+	private static boolean reportedError;
 
 	private static void render(GuiGraphics graphics, DeltaTracker delta) {
 		Minecraft client = Minecraft.getInstance();
